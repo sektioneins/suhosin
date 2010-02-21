@@ -253,6 +253,93 @@ static php_ps_globals_43_44 *session_globals = NULL;
 #define SESSION_G(v) (session_globals->v)
 #endif
 
+ps_serializer *_php_find_ps_serializer(char *name TSRMLS_DC);
+
+#define PS_ENCODE_VARS 											\
+	char *key;													\
+	uint key_length;											\
+	ulong num_key;												\
+	zval **struc;
+
+#define PS_ENCODE_LOOP(code) do {									\
+		HashTable *_ht = Z_ARRVAL_P(SESSION_G(http_session_vars));			\
+		int key_type;												\
+																	\
+		for (zend_hash_internal_pointer_reset(_ht);					\
+				(key_type = zend_hash_get_current_key_ex(_ht, &key, &key_length, &num_key, 0, NULL)) != HASH_KEY_NON_EXISTANT; \
+					zend_hash_move_forward(_ht)) {					\
+			if (key_type == HASH_KEY_IS_LONG) {						\
+				php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Skipping numeric key %ld", num_key);	\
+				continue;											\
+			}														\
+			key_length--;											\
+			if (suhosin_get_session_var(key, key_length, &struc TSRMLS_CC) == SUCCESS) {	\
+				code;		 										\
+			} 														\
+		}															\
+	} while(0)
+
+static int suhosin_get_session_var(char *name, size_t namelen, zval ***state_var TSRMLS_DC) /* {{{ */
+{
+	int ret = FAILURE;
+
+	if (SESSION_G(http_session_vars) && SESSION_G(http_session_vars)->type == IS_ARRAY) {
+		ret = zend_hash_find(Z_ARRVAL_P(SESSION_G(http_session_vars)), name, namelen + 1, (void **) state_var);
+
+		/* If register_globals is enabled, and
+		 * if there is an entry for the slot in $_SESSION, and
+		 * if that entry is still set to NULL, and
+		 * if the global var exists, then
+		 * we prefer the same key in the global sym table. */
+
+		if (PG(register_globals) && ret == SUCCESS && Z_TYPE_PP(*state_var) == IS_NULL) {
+			zval **tmp;
+
+			if (zend_hash_find(&EG(symbol_table), name, namelen + 1, (void **) &tmp) == SUCCESS) {
+				*state_var = tmp;
+			}
+		}
+	}
+	return ret;
+}
+
+#define PS_DELIMITER '|'
+#define PS_UNDEF_MARKER '!'
+
+int suhosin_session_encode(char **newstr, int *newlen TSRMLS_DC)
+{
+	smart_str buf = {0};
+	php_serialize_data_t var_hash;
+	PS_ENCODE_VARS;
+
+	PHP_VAR_SERIALIZE_INIT(var_hash);
+
+	PS_ENCODE_LOOP(
+			smart_str_appendl(&buf, key, key_length);
+			if (key[0] == PS_UNDEF_MARKER || memchr(key, PS_DELIMITER, key_length)) {
+				PHP_VAR_SERIALIZE_DESTROY(var_hash);
+				smart_str_free(&buf);
+				return FAILURE;
+			}
+			smart_str_appendc(&buf, PS_DELIMITER);
+
+			php_var_serialize(&buf, struc, &var_hash TSRMLS_CC);
+		} else {
+			smart_str_appendc(&buf, PS_UNDEF_MARKER);
+			smart_str_appendl(&buf, key, key_length);
+			smart_str_appendc(&buf, PS_DELIMITER);
+	);
+
+	if (newlen) {
+		*newlen = buf.len;
+	}
+	smart_str_0(&buf);
+	*newstr = buf.c;
+
+	PHP_VAR_SERIALIZE_DESTROY(var_hash);
+	return SUCCESS;
+}
+
 static void suhosin_send_cookie()
 {
         int  * session_send_cookie = &SESSION_G(send_cookie);
@@ -697,6 +784,7 @@ static int suhosin_hook_session_RINIT(INIT_FUNC_ARGS)
 
 void suhosin_hook_session(TSRMLS_D)
 {
+        ps_serializer *serializer;
 	zend_ini_entry *ini_entry;
 	zend_module_entry *module;
 #ifdef ZTS
@@ -762,6 +850,14 @@ void suhosin_hook_session(TSRMLS_D)
 	ini_entry->on_modify = suhosin_OnUpdateSaveHandler;
 	
 	suhosin_hook_session_module(TSRMLS_C);
+	
+        /* Protect the PHP serializer from ! attacks */
+# if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 2)
+        serializer = _php_find_ps_serialize("php" TSRMLS_CC);
+        if (serializer != NULL) {
+                serializer->encode = suhosin_session_encode;
+        }
+#endif
 }
 
 void suhosin_unhook_session(TSRMLS_D)

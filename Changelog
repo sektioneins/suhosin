@@ -2,6 +2,7 @@
 
     - Added line ending characters %0a and %0d to the list of dangerous characters handled
       by suhosin.server.encode and suhosin.server.strip
+    - Fixed crash bug with PHP 5.3.x and session module (due to changed session globals struct)
 
 2009-08-15 - 0.9.29
 

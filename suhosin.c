@@ -62,7 +62,7 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 	SUHOSIN_EXT_VERSION,
 	"SektionEins GmbH",
 	"http://www.suhosin.org",
-	"Copyright (c) 2007",
+	"Copyright (c) 2007-2010",
 	suhosin_module_startup,
 	suhosin_shutdown,
 	NULL,
@@ -1204,10 +1204,10 @@ PHP_MINFO_FUNCTION(suhosin)
 	PUTS(!sapi_module.phpinfo_as_text?"<br /><br />":"\n\n");
 	if (sapi_module.phpinfo_as_text) {
 		PUTS("Copyright (c) 2006-2007 Hardened-PHP Project\n");
-		PUTS("Copyright (c) 2007-2008 SektionEins GmbH\n");
+		PUTS("Copyright (c) 2007-2010 SektionEins GmbH\n");
 	} else {
 		PUTS("Copyright (c) 2006-2007 <a href=\"http://www.hardened-php.net/\">Hardened-PHP Project</a><br />\n");
-		PUTS("Copyright (c) 2007-2008 <a href=\"http://www.sektioneins.de/\">SektionEins GmbH</a>\n");
+		PUTS("Copyright (c) 2007-2010 <a href=\"http://www.sektioneins.de/\">SektionEins GmbH</a>\n");
 	}
 	php_info_print_box_end();
 

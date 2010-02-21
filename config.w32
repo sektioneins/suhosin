@@ -1,0 +1,11 @@
+// $Id: config.w32,v 1.1.1.1 2007-11-28 01:15:35 sesser Exp $
+// vim:ft=javascript
+
+ARG_ENABLE("suhosin", "whether to enable suhosin support", "yes");
+
+if (PHP_SUHOSIN == "yes") {
+	EXTENSION("suhosin", "suhosin.c crypt.c crypt_blowfish.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867.c log.c header.c execute.c ex_imp.c session.c aes.c");
+	if (PHP_SUHOSIN_SHARED) {
+		ADD_SOURCES(configure_module_dirname, "crypt_win32.c crypt_md5.c", "suhosin");
+	}
+}

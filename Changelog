@@ -1,3 +1,7 @@
+2010-xx-xx - 0.9.30-dev
+
+    - ...
+
 2009-08-15 - 0.9.29
 
     - Fixing crash bugs with PHP 5.3.0 caused by unexpected NULL in EG(active_symbol_table)

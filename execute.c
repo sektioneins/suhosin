@@ -1577,7 +1577,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 #ifdef ZEND_ENGINE_2  
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.u.var)).var.ptr;
 #else
-    return_value = execute_data_ptr->Ts[execute_data_ptr->opline->result.u.var].var.ptr;
+        return_value = execute_data_ptr->Ts[execute_data_ptr->opline->result.u.var].var.ptr;
 #endif
 	ht = execute_data_ptr->opline->extended_value;
 
@@ -1588,12 +1588,16 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 		if (SUHOSIN_G(eval_whitelist) != NULL) {
 			if (!zend_hash_exists(SUHOSIN_G(eval_whitelist), lcname, function_name_strlen+1)) {
 				suhosin_log(S_EXECUTOR, "function outside of eval whitelist called: %s()", lcname);
-				goto execute_internal_bailout;
+				if (!SUHOSIN_G(simulation)) {
+				        goto execute_internal_bailout;
+				}
 			}
 		} else if (SUHOSIN_G(eval_blacklist) != NULL) {
 			if (zend_hash_exists(SUHOSIN_G(eval_blacklist), lcname, function_name_strlen+1)) {
 				suhosin_log(S_EXECUTOR, "function within eval blacklist called: %s()", lcname);
-				goto execute_internal_bailout;
+				if (!SUHOSIN_G(simulation)) {
+				        goto execute_internal_bailout;
+				}
 			}
 		}
 	}
@@ -1601,12 +1605,16 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 	if (SUHOSIN_G(func_whitelist) != NULL) {
 		if (!zend_hash_exists(SUHOSIN_G(func_whitelist), lcname, function_name_strlen+1)) {
 			suhosin_log(S_EXECUTOR, "function outside of whitelist called: %s()", lcname);
-			goto execute_internal_bailout;
+			if (!SUHOSIN_G(simulation)) {
+			        goto execute_internal_bailout;
+			}
 		}
 	} else if (SUHOSIN_G(func_blacklist) != NULL) {
 		if (zend_hash_exists(SUHOSIN_G(func_blacklist), lcname, function_name_strlen+1)) {
 			suhosin_log(S_EXECUTOR, "function within blacklist called: %s()", lcname);
-			goto execute_internal_bailout;
+			if (!SUHOSIN_G(simulation)) {
+			        goto execute_internal_bailout;
+			}
 		}
 	}
 	

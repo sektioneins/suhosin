@@ -30,7 +30,13 @@
 #include "php_ini.h"
 #include "php_suhosin.h"
 #include "ext/standard/base64.h"
+#include "ext/standard/php_smart_str.h"
+#include "ext/standard/php_var.h"
 #include "sha256.h"
+
+#if defined(HAVE_HASH_EXT) && !defined(COMPILE_DL_HASH)
+# include "ext/hash/php_hash.h"
+#endif
 
 #define PS_OPEN_ARGS void **mod_data, const char *save_path, const char *session_name TSRMLS_DC
 #define PS_CLOSE_ARGS void **mod_data TSRMLS_DC
@@ -253,7 +259,7 @@ static php_ps_globals_43_44 *session_globals = NULL;
 #define SESSION_G(v) (session_globals->v)
 #endif
 
-ps_serializer *_php_find_ps_serializer(char *name TSRMLS_DC);
+ps_serializer *(*suhosin_find_ps_serializer)(char *name TSRMLS_DC) = NULL;
 
 #define PS_ENCODE_VARS 											\
 	char *key;													\
@@ -853,8 +859,8 @@ void suhosin_hook_session(TSRMLS_D)
 	
         /* Protect the PHP serializer from ! attacks */
 # if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 2)
-        serializer = _php_find_ps_serialize("php" TSRMLS_CC);
-        if (serializer != NULL) {
+        serializer = SESSION_G(serializer);
+        if (serializer != NULL && strcmp(serializer->name, "php")==0) {
                 serializer->encode = suhosin_session_encode;
         }
 #endif

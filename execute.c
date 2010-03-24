@@ -1394,7 +1394,9 @@ static int ih_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
+#ifndef PHP_ATLEAST_5_3
         RETVAL_FALSE;
+#endif
     	return (1);
     }
 
@@ -1403,7 +1405,9 @@ static int ih_srand(IH_HANDLER_PARAMS)
     } else {
         suhosin_srand(seed TSRMLS_CC);
     }
+#ifndef PHP_ATLEAST_5_3
 	RETVAL_TRUE;
+#endif
 	return (1);
 }
 
@@ -1413,7 +1417,9 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
+#ifndef PHP_ATLEAST_5_3
         RETVAL_FALSE;
+#endif
     	return (1);
     }
     
@@ -1422,7 +1428,9 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
     } else {
         suhosin_mt_srand(seed TSRMLS_CC);
     }
+#ifndef PHP_ATLEAST_5_3
 	RETVAL_TRUE;
+#endif
 	return (1);
 }
 
@@ -1446,7 +1454,8 @@ static int ih_mt_rand(IH_HANDLER_PARAMS)
 		RAND_RANGE(number, min, max, PHP_MT_RAND_MAX);
 	}
 
-	RETURN_LONG(number);
+	RETVAL_LONG(number);
+        return (1);
 }
 
 static int ih_rand(IH_HANDLER_PARAMS)
@@ -1469,17 +1478,23 @@ static int ih_rand(IH_HANDLER_PARAMS)
 		RAND_RANGE(number, min, max, PHP_MT_RAND_MAX);
 	}
 
-	RETURN_LONG(number);
+	RETVAL_LONG(number);
+        return (1);
 }
 
 static int ih_getrandmax(IH_HANDLER_PARAMS)
 {
-    int argc = ZEND_NUM_ARGS();
+#ifdef PHP_ATLEAST_5_3
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
+#else
+        int argc = ZEND_NUM_ARGS();
 
-    if (argc != 0) {
-		ZEND_WRONG_PARAM_COUNT();
-    }
-    
+        if (argc != 0) {
+		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
+        }
+#endif    
 	RETVAL_LONG(PHP_MT_RAND_MAX);
 	return (1);
 }
@@ -1543,6 +1558,7 @@ internal_function_handler ihandlers[] = {
 };
 
 #define FUNCTION_WARNING() zend_error(E_WARNING, "%s() has been disabled for security reasons", get_active_function_name(TSRMLS_C));
+#define FUNCTION_SIMULATE_WARNING() zend_error(E_WARNING, "SIMULATION - %s() has been disabled for security reasons", get_active_function_name(TSRMLS_C));
 
 /* {{{ void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int return_value_used TSRMLS_DC)
  *    This function provides a hook for internal execution */
@@ -1590,6 +1606,8 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 				suhosin_log(S_EXECUTOR, "function outside of eval whitelist called: %s()", lcname);
 				if (!SUHOSIN_G(simulation)) {
 				        goto execute_internal_bailout;
+        			} else {
+        			        FUNCTION_SIMULATE_WARNING()
 				}
 			}
 		} else if (SUHOSIN_G(eval_blacklist) != NULL) {
@@ -1597,6 +1615,8 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 				suhosin_log(S_EXECUTOR, "function within eval blacklist called: %s()", lcname);
 				if (!SUHOSIN_G(simulation)) {
 				        goto execute_internal_bailout;
+        			} else {
+        			        FUNCTION_SIMULATE_WARNING()
 				}
 			}
 		}
@@ -1607,6 +1627,8 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 			suhosin_log(S_EXECUTOR, "function outside of whitelist called: %s()", lcname);
 			if (!SUHOSIN_G(simulation)) {
 			        goto execute_internal_bailout;
+			} else {
+			        FUNCTION_SIMULATE_WARNING()
 			}
 		}
 	} else if (SUHOSIN_G(func_blacklist) != NULL) {
@@ -1614,6 +1636,8 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 			suhosin_log(S_EXECUTOR, "function within blacklist called: %s()", lcname);
 			if (!SUHOSIN_G(simulation)) {
 			        goto execute_internal_bailout;
+			} else {
+			        FUNCTION_SIMULATE_WARNING()
 			}
 		}
 	}

@@ -4,7 +4,9 @@
       by suhosin.server.encode and suhosin.server.strip
     - Fixed crash bug with PHP 5.3.x and session module (due to changed session globals struct)
     - Added ! protection to PHP session serializer
-    - *Changed* simulation mode now also affects (dis)allowed functions
+    - Fixed simulation mode now also affects (dis)allowed functions
+    - Fixed missing return (1); in random number generator replacements
+    - Fixed random number generator replacement error case behaviour in PHP 5.3.x
 
 2009-08-15 - 0.9.29
 

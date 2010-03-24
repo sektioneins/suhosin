@@ -1067,19 +1067,34 @@ static int ih_phpinfo(IH_HANDLER_PARAMS)
 
 static int ih_function_exists(IH_HANDLER_PARAMS)
 {
+#ifndef PHP_ATLEAST_5_3
 	zval **function_name;
+#endif
 	zend_function *func;
 	char *lcname;
 	zend_bool retval;
 	int func_name_len;
 	
+#ifndef PHP_ATLEAST_5_3
 	if (ZEND_NUM_ARGS()!=1 || zend_get_parameters_ex(1, &function_name)==FAILURE) {
-		ZEND_WRONG_PARAM_COUNT();
+		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
 	}
 	convert_to_string_ex(function_name);
 	func_name_len = Z_STRLEN_PP(function_name);
-	lcname = estrndup(Z_STRVAL_PP(function_name), func_name_len);
+	lcname = estrndup(Z_STRVAL_PP(function_name), func_name_len);	
 	zend_str_tolower(lcname, func_name_len);
+#else
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &lcname, &func_name_len) == FAILURE) {
+		return;
+	}
+
+	/* Ignore leading "\" */
+	if (lcname[0] == '\\') {
+		lcname = &lcname[1];
+		func_name_len--;
+	}
+	lcname = zend_str_tolower_dup(lcname, func_name_len);	
+#endif
 
 	retval = (zend_hash_find(EG(function_table), lcname, func_name_len+1, (void **)&func) == SUCCESS);
 	

@@ -489,7 +489,7 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
 		    zval_dtor(&new_key);
 		    return 0;
 		}
-	} else if (new_key[0] == '_') {
+	} else if (Z_STRVAL(new_key)[0] == '_') {
 		if ((strcmp(Z_STRVAL(new_key), "_COOKIE")==0)||
 		    (strcmp(Z_STRVAL(new_key), "_ENV")==0)||
 		    (strcmp(Z_STRVAL(new_key), "_FILES")==0)||

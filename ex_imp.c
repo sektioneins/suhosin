@@ -442,9 +442,9 @@ PHP_FUNCTION(suhosin_extract)
 /* }}} */
 
 
-static int copy_request_variable(void *pDest, int num_args, va_list args, zend_hash_key *hash_key)
-{
 #if PHP_VERSION_ID >= 50300
+static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list args, zend_hash_key *hash_key)
+{
 	zval *prefix, new_key;
 	int prefix_len;
 	zval **var = (zval **) pDest;
@@ -511,7 +511,10 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
 
 	zval_dtor(&new_key);
 	return 0;
+}
 #else
+static int copy_request_variable(void *pDest, int num_args, va_list args, zend_hash_key *hash_key)
+{
 	char *prefix, *new_key;
 	uint prefix_len, new_key_len;
 	zval **var = (zval **) pDest;
@@ -543,6 +546,11 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
 	} else {
 		new_key_len = spprintf(&new_key, 0, "%s%ld", prefix, hash_key->h);
                 new_key_len++;
+	}
+
+	if (php_varname_check(new_key, new_key_len-1, 0 TSRMLS_CC) == FAILURE) {
+		zval_dtor(&new_key);
+		return 0;
 	}
 
 	if (new_key[0] == 'H') {
@@ -583,8 +591,8 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
 
 	efree(new_key);
 	return 0;
-#endif
 }
+#endif
 
 /* {{{ proto bool import_request_variables(string types [, string prefix])
    Import GET/POST/Cookie variables into the global scope */
@@ -705,12 +713,22 @@ PHP_FUNCTION(suhosin_import_request_variables)
 }
 /* }}} */
 
+ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_extract, 0, 0, 1)
+	ZEND_ARG_INFO(ZEND_SEND_PREFER_REF, arg) /* ARRAY_INFO(0, arg, 0) */
+	ZEND_ARG_INFO(0, extract_type)
+	ZEND_ARG_INFO(0, prefix)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_import_request_variables, 0, 0, 1)
+	ZEND_ARG_INFO(0, types)
+	ZEND_ARG_INFO(0, prefix)
+ZEND_END_ARG_INFO()
 
 /* {{{ suhosin_ex_imp_functions[]
  */
 function_entry suhosin_ex_imp_functions[] = {
-	PHP_NAMED_FE(extract, PHP_FN(suhosin_extract), NULL)
-	PHP_NAMED_FE(import_request_variables, PHP_FN(suhosin_import_request_variables), NULL)
+	PHP_NAMED_FE(extract, PHP_FN(suhosin_extract), suhosin_arginfo_extract)
+	PHP_NAMED_FE(import_request_variables, PHP_FN(suhosin_import_request_variables), suhosin_arginfo_import_request_variables)
 	{NULL, NULL, NULL}
 };
 /* }}} */

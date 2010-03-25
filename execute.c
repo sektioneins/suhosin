@@ -1409,9 +1409,6 @@ static int ih_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
-#ifndef PHP_ATLEAST_5_3
-        RETVAL_FALSE;
-#endif
     	return (1);
     }
 
@@ -1420,9 +1417,6 @@ static int ih_srand(IH_HANDLER_PARAMS)
     } else {
         suhosin_srand(seed TSRMLS_CC);
     }
-#ifndef PHP_ATLEAST_5_3
-	RETVAL_TRUE;
-#endif
 	return (1);
 }
 
@@ -1432,9 +1426,6 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
-#ifndef PHP_ATLEAST_5_3
-        RETVAL_FALSE;
-#endif
     	return (1);
     }
     
@@ -1443,9 +1434,6 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
     } else {
         suhosin_mt_srand(seed TSRMLS_CC);
     }
-#ifndef PHP_ATLEAST_5_3
-	RETVAL_TRUE;
-#endif
 	return (1);
 }
 

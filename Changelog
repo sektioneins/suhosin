@@ -10,6 +10,7 @@
     - Fixed error case handling in function_exists() PHP 5.3.x
     - Merged changes/fixes in import_request_variables()/extract() from upstream PHP
     - Fixed suhosin_header_handler to be PHP 5.3.x compatible
+    - Merge fixes and new features of PHP's file upload code to suhosin
 
 2009-08-15 - 0.9.29
 

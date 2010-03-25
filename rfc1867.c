@@ -776,13 +776,15 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler)
 	int str_len = 0, num_vars = 0, num_vars_max = 2*10, *len_list = NULL;
 	char **val_list = NULL;
 #endif
-	zend_bool magic_quotes_gpc;
 	multipart_buffer *mbuff;
 	zval *array_ptr = (zval *) arg;
 	int fd=-1;
 	zend_llist header;
 	void *event_extra_data = NULL;
-
+#if PHP_VERSION_ID >= 50302 || (PHP_VERSION_ID >= 50212 && PHP_VERSION_ID < 50300)
+	int upload_cnt = INI_INT("max_file_uploads");
+#endif
+	
 	SDEBUG("suhosin_rfc1867_handler");
 
 	if (SG(request_info).content_length > SG(post_max_size)) {
@@ -792,6 +794,18 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler)
 
 	/* Get the boundary */
 	boundary = strstr(content_type_dup, "boundary");
+	if (!boundary) {
+		int content_type_len = strlen(content_type_dup);
+		char *content_type_lcase = estrndup(content_type_dup, content_type_len);
+
+		php_strtolower(content_type_lcase, content_type_len);
+		boundary = strstr(content_type_lcase, "boundary");
+		if (boundary) {
+			boundary = content_type_dup + (boundary - content_type_lcase);
+		}
+		efree(content_type_lcase);
+	}
+	
 	if (!boundary || !(boundary=strchr(boundary, '='))) {
 		sapi_module.sapi_error(E_WARNING, "Missing boundary in multipart/form-data POST data");
 		return;
@@ -973,7 +987,13 @@ SDEBUG("calling inputfilter");
 			/* If file_uploads=off, skip the file part */
 			if (!PG(file_uploads)) {
 				skip_upload = 1;
-			}
+			} 
+#if PHP_VERSION_ID >= 50302 || (PHP_VERSION_ID >= 50212 && PHP_VERSION_ID < 50300)
+			else if (upload_cnt <= 0) {
+        				skip_upload = 1;
+        				sapi_module.sapi_error(E_WARNING, "Maximum number of allowable file uploads has been exceeded");
+        		}
+#endif
 
 			/* Return with an error if the posted data is garbled */
 			if (!param && !filename) {
@@ -1019,6 +1039,9 @@ SDEBUG("calling inputfilter");
 				
 				/* Handle file */
 				fd = php_open_temporary_fd(PG(upload_tmp_dir), "php", &temp_filename TSRMLS_CC);
+#if PHP_VERSION_ID >= 50302 || (PHP_VERSION_ID >= 50212 && PHP_VERSION_ID < 50300)
+                                upload_cnt--;
+#endif
 				if (fd==-1) {
 					sapi_module.sapi_error(E_WARNING, "File upload error - unable to create a temporary file");
 					cancel_upload = UPLOAD_ERROR_E;
@@ -1075,12 +1098,12 @@ SDEBUG("calling inputfilter");
 				}
 				
 			
-				if (PG(upload_max_filesize) > 0 && total_bytes > PG(upload_max_filesize)) {
+				if (PG(upload_max_filesize) > 0 && total_bytes+blen > PG(upload_max_filesize)) {
 #if DEBUG_FILE_UPLOAD
 					sapi_module.sapi_error(E_NOTICE, "upload_max_filesize of %ld bytes exceeded - file [%s=%s] not saved", PG(upload_max_filesize), param, filename);
 #endif
 					cancel_upload = UPLOAD_ERROR_A;
-				} else if (max_file_size && (total_bytes > max_file_size)) {
+				} else if (max_file_size && (total_bytes+blen > max_file_size)) {
 #if DEBUG_FILE_UPLOAD
 					sapi_module.sapi_error(E_NOTICE, "MAX_FILE_SIZE of %ld bytes exceeded - file [%s=%s] not saved", max_file_size, param, filename);
 #endif
@@ -1270,26 +1293,30 @@ filedone:
 			}
 			s = "";
 
-			/* Initialize variables */
-			add_protected_variable(param TSRMLS_CC);
+			{
+				/* store temp_filename as-is (without magic_quotes_gpc-ing it, in case upload_tmp_dir
+				 * contains escapeable characters. escape only the variable name.) */
+				zval zfilename;
 
-			magic_quotes_gpc = PG(magic_quotes_gpc);
-			PG(magic_quotes_gpc) = 0;
-			/* if param is of form xxx[.*] this will cut it to xxx */
-			if (!is_anonymous) {
-				safe_php_register_variable(param, temp_filename, NULL, 1 TSRMLS_CC);
-			}
-	
-			/* Add $foo[tmp_name] */
-			if (is_arr_upload) {
-				sprintf(lbuf, "%s[tmp_name][%s]", abuf, array_index);
-			} else {
-				sprintf(lbuf, "%s[tmp_name]", param);
-			}
-			add_protected_variable(lbuf TSRMLS_CC);
-			register_http_post_files_variable(lbuf, temp_filename, http_post_files, 1 TSRMLS_CC);
+				/* Initialize variables */
+				add_protected_variable(param TSRMLS_CC);
 
-			PG(magic_quotes_gpc) = magic_quotes_gpc;
+				/* if param is of form xxx[.*] this will cut it to xxx */
+				if (!is_anonymous) {
+					ZVAL_STRING(&zfilename, temp_filename, 1);
+					safe_php_register_variable_ex(param, &zfilename, NULL, 1 TSRMLS_CC);
+				}
+
+				/* Add $foo[tmp_name] */
+				if (is_arr_upload) {
+					sprintf(lbuf, "%s[tmp_name][%s]", abuf, array_index);
+				} else {
+					sprintf(lbuf, "%s[tmp_name]", param);
+				}
+				add_protected_variable(lbuf TSRMLS_CC);
+				ZVAL_STRING(&zfilename, temp_filename, 1);
+				register_http_post_files_variable_ex(lbuf, &zfilename, http_post_files, 1 TSRMLS_CC);
+			}
 
 			{
 				zval file_size, error_type;

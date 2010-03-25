@@ -1,4 +1,4 @@
-2010-xx-xx - 0.9.30-dev
+2010-03-25 - 0.9.30
 
     - Added line ending characters %0a and %0d to the list of dangerous characters handled
       by suhosin.server.encode and suhosin.server.strip

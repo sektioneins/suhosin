@@ -33,6 +33,8 @@
 #include "php_variables.h"
 #include "php_suhosin.h"
 #include "suhosin_rfc1867.h"
+#include "php_ini.h"
+#include "ext/standard/php_string.h"
 
 #define DEBUG_FILE_UPLOAD ZEND_DEBUG
 

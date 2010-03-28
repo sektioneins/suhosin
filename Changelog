@@ -1,6 +1,7 @@
 2010-xx-xx - 0.9.31-dev
 
     - Fix ZTS build of session.c
+    - Increased session identifier entropy by using /dev/urandom if available
 
 2010-03-25 - 0.9.30
 

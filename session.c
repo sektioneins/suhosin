@@ -34,6 +34,8 @@
 #include "ext/standard/php_var.h"
 #include "sha256.h"
 
+#include <fcntl.h>
+
 #if defined(HAVE_HASH_EXT) && !defined(COMPILE_DL_HASH)
 # include "ext/hash/php_hash.h"
 #endif
@@ -864,6 +866,18 @@ void suhosin_hook_session(TSRMLS_D)
                 serializer->encode = suhosin_session_encode;
         }
 #endif
+
+        /* increase session identifier entropy */
+        if (SESSION_G(entropy_length) == 0 || SESSION_G(entropy_file) == NULL) {
+                
+                /* ensure that /dev/urandom exists */
+                int fd = VCWD_OPEN("/dev/urandom", O_RDONLY);
+                if (fd >= 0) {
+                        close(fd);
+                        SESSION_G(entropy_length) = 16;
+                        SESSION_G(entropy_file) = pestrdup("/dev/urandom", 1);
+                }
+        }
 }
 
 void suhosin_unhook_session(TSRMLS_D)

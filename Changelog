@@ -1,6 +1,6 @@
 2010-xx-xx - 0.9.31-dev
 
-    - ...
+    - Fix ZTS build of session.c
 
 2010-03-25 - 0.9.30
 

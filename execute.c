@@ -29,6 +29,7 @@
 #include "zend_extensions.h"
 #include "ext/standard/info.h"
 #include "ext/standard/php_rand.h"
+#include "ext/standard/php_lcg.h"
 #include "php_suhosin.h"
 #include "zend_compile.h"
 #include "zend_llist.h"

@@ -47,12 +47,20 @@ static PHP_INI_MH(suhosin_OnChangeMemoryLimit)
 		SUHOSIN_G(hard_memory_limit) = 0;
 	}
 	if (new_value) {
-		PG(memory_limit) = zend_atoi(new_value, new_value_length);
-		if (PG(memory_limit) > hard_memory_limit || PG(memory_limit) < 0) {
-			suhosin_log(S_MISC, "script tried to increase memory_limit to %u bytes which is above the allowed value", PG(memory_limit));
-			if (!SUHOSIN_G(simulation)) {
-				PG(memory_limit) = hard_memory_limit;
-				return FAILURE;
+		PG(memory_limit) = zend_atol(new_value, new_value_length);
+		if (hard_memory_limit > 0) {
+			if (PG(memory_limit) > hard_memory_limit) {
+				suhosin_log(S_MISC, "script tried to increase memory_limit to %u bytes which is above the allowed value", PG(memory_limit));
+				if (!SUHOSIN_G(simulation)) {
+					PG(memory_limit) = hard_memory_limit;
+					return FAILURE;
+				}
+			} else if (PG(memory_limit) < 0) {
+				suhosin_log(S_MISC, "script tried to disable memory_limit by setting it to a negative value %d bytes which is not allowed", PG(memory_limit));
+				if (!SUHOSIN_G(simulation)) {
+					PG(memory_limit) = hard_memory_limit;
+					return FAILURE;
+				}
 			}
 		}
 	} else {

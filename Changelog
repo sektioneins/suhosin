@@ -1,3 +1,13 @@
+2010-07-23 - 0.9.32.1
+
+    - Fixed missing header file resulting in compile errors
+
+2010-07-23 - 0.9.32
+
+    - Added support for memory_limit > 2GB
+    - Fixed missing header file resulting in wrong php_combined_lcg() prototype being used
+    - Improved random number seed generation more by adding /dev/urandom juice
+
 2010-03-28 - 0.9.31
 
     - Fix ZTS build of session.c

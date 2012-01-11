@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include <fcntl.h>
 #include "php.h"
 #include "php_ini.h"
 #include "zend_hash.h"

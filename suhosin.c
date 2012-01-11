@@ -1075,14 +1075,6 @@ PHP_MINIT_FUNCTION(suhosin)
 	/* register the logo for phpinfo */
 	php_register_info_logo(SUHOSIN_LOGO_GUID, "image/jpeg", suhosin_logo, sizeof(suhosin_logo));
 
-#if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 1)
-	/* perform LFS check */
-/*	time_t check = sapi_get_request_time(TSRMLS_C);
-	if (SG(global_request_time) != check) {
-	    zend_error(E_ERROR, "It seems that PHP and Suhosin were compiled with different binary layouts. "
-	    "This will cause problems like POST not working. Please tell your distributor to fix this.");
-	}*/
-#endif
 #if PHP_MAJOR_VERSION < 5
 	php_error_docref(NULL TSRMLS_CC, E_ERROR, "Suhosin Extension is not designed to run with PHP 4 and below. Erroring Out.");
 #endif

@@ -1,3 +1,7 @@
+2012-01-11 - 0.9.33-dev
+
+    - Removed crypt() support - because not used for PHP >= 5.3.0 anyway
+
 2010-07-23 - 0.9.32.1
 
     - Fixed missing header file resulting in compile errors

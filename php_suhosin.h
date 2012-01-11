@@ -22,7 +22,7 @@
 #ifndef PHP_SUHOSIN_H
 #define PHP_SUHOSIN_H
 
-#define SUHOSIN_EXT_VERSION  "0.9.32.1"
+#define SUHOSIN_EXT_VERSION  "0.9.33-dev"
 
 /*#define SUHOSIN_DEBUG*/
 #define SUHOSIN_LOG "/tmp/suhosin_log.txt"
@@ -312,7 +312,6 @@ void suhosin_hook_header_handler();
 void suhosin_unhook_header_handler();
 void suhosin_hook_session(TSRMLS_D);
 void suhosin_unhook_session(TSRMLS_D);
-void suhosin_hook_crypt();
 void suhosin_hook_sha256();
 void suhosin_hook_ex_imp();
 void suhosin_hook_treat_data();

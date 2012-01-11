@@ -1068,7 +1068,6 @@ PHP_MINIT_FUNCTION(suhosin)
 
 	/* now hook a bunch of stuff */
 	suhosin_hook_memory_limit();
-	suhosin_hook_crypt();
 	suhosin_hook_sha256();
 	suhosin_hook_ex_imp();
 

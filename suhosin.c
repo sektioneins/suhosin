@@ -1079,7 +1079,7 @@ PHP_MINIT_FUNCTION(suhosin)
 	php_error_docref(NULL TSRMLS_CC, E_ERROR, "Suhosin Extension is not designed to run with PHP 4 and below. Erroring Out.");
 #endif
 #if PHP_MAJOR_VERSION == 5 && PHP_MINUR_VERSION <= 2
-	php_error_docref(NULL TSRMLS_CC, E_WARNING, "Suhosin Extension does not officially support PHP 5.2 anymore, because it is discontinued. Use it at your own risk.");
+	php_error_docref(NULL TSRMLS_CC, E_WARNING, "Suhosin Extension does not officially support PHP 5.2 and below anymore, because it is discontinued. Use it at your own risk.");
 #endif
 
 	return SUCCESS;

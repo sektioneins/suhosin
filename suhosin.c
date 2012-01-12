@@ -62,7 +62,7 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 	SUHOSIN_EXT_VERSION,
 	"SektionEins GmbH",
 	"http://www.suhosin.org",
-	"Copyright (c) 2007-2010",
+	"Copyright (c) 2007-2012",
 	suhosin_module_startup,
 	suhosin_shutdown,
 	NULL,

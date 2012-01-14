@@ -53,23 +53,23 @@
 
 2008-08-23 - 0.9.27
 
-	- Fixed typo in replacement rand() / mt_rand() that was hidden by LAZY symbol loading
+    - Fixed typo in replacement rand() / mt_rand() that was hidden by LAZY symbol loading
 
 2008-08-22 - 0.9.26
 
-	- Fixed problem with suhosin.perdir
-	  Thanks to Hosteurope for tracking this down
-	- Fixed problems with ext/uploadprogress
-	  Reported by: Christian Stocker
-	- Added suhosin.srand.ignore and suhosin.mt_srand.ignore (default: on)
-	- Modified rand()/srand() to use the Mersenne Twister algorithm with separate state 
-	- Added better internal seeding of rand() and mt_rand()
-	
+    - Fixed problem with suhosin.perdir
+      Thanks to Hosteurope for tracking this down
+    - Fixed problems with ext/uploadprogress
+      Reported by: Christian Stocker
+    - Added suhosin.srand.ignore and suhosin.mt_srand.ignore (default: on)
+    - Modified rand()/srand() to use the Mersenne Twister algorithm with separate state 
+    - Added better internal seeding of rand() and mt_rand()
+    
 2008-08-06 - 0.9.25
 
-	- Fixed PHP 4 compilation problem introduced in 0.9.24
-	- Fixed PHP 5.3 compilation problem
-	- Changed PHP default POST handler to PHP's current handler
+    - Fixed PHP 4 compilation problem introduced in 0.9.24
+    - Fixed PHP 5.3 compilation problem
+    - Changed PHP default POST handler to PHP's current handler
 
 2008-05-10 - 0.9.24
 

@@ -79,6 +79,14 @@ last_value:
     }
 }
 
+static void suhosin_post_handler_modification(sapi_post_entry *spe)
+{
+	char *content_type = estrndup(spe->content_type, spe->content_type_len);
+	suhosin_log(S_VARS, "some extension replaces the POST handler for %s - Suhosin's protection will be incomplete", content_type);
+	efree(content_type);
+}
+
+
 /* {{{ php_post_entries[]
  */
 static sapi_post_entry suhosin_post_entries[] = {
@@ -90,6 +98,8 @@ static sapi_post_entry suhosin_post_entries[] = {
 
 void suhosin_hook_post_handlers(TSRMLS_D)
 {
+	HashTable tempht;
+	
 #if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
 	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
 	sapi_unregister_post_entry(&suhosin_post_entries[1] TSRMLS_CC);
@@ -99,8 +109,21 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 	sapi_unregister_post_entry(&suhosin_post_entries[1]);
 	sapi_register_post_entries(suhosin_post_entries);
 #endif
+	/* we want to get notified if another extension deregisters the suhosin post handlers */
+
+	/* we need to tell suhosin patch that there is a new valid destructor */
+	/* therefore we have create HashTable that has this destructor */
+	zend_hash_init(&tempht, 0, NULL, suhosin_post_handler_modification, 0);
+	zend_hash_destroy(&tempht);
+	/* And now we can overwrite the destructor for post entries */
+	SG(known_post_content_types).pDestructor = suhosin_post_handler_modification;
 }
 
+void suhosin_unhook_post_handlers()
+{
+	/* Restore to an empty destructor */
+	SG(known_post_content_types).pDestructor = NULL;
+}
 
 /*
  * Local variables:

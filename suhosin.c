@@ -191,6 +191,7 @@ static void suhosin_shutdown(zend_extension *extension)
 {
 	suhosin_unhook_execute();
 	suhosin_unhook_header_handler();
+	suhosin_unhook_post_handlers();
     
     if (ze != NULL) {
 	    ze->startup = orig_module_startup;

@@ -306,6 +306,7 @@ char *suhosin_encrypt_string(char *str, int len, char *var, int vlen, char *key 
 char *suhosin_decrypt_string(char *str, int padded_len, char *var, int vlen, char *key, int *orig_len, int check_ra TSRMLS_DC);
 char *suhosin_generate_key(char *key, zend_bool ua, zend_bool dr, long raddr, char *cryptkey TSRMLS_DC);
 char *suhosin_cookie_decryptor(TSRMLS_D);
+char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC);
 void suhosin_hook_post_handlers(TSRMLS_D);
 void suhosin_unhook_post_handlers();
 void suhosin_hook_register_server_variables();

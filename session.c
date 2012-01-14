@@ -371,7 +371,7 @@ static void suhosin_send_cookie(TSRMLS_D)
 
 void suhosin_get_ipv4(char *buf TSRMLS_DC)
 {
-    char *raddr = sapi_getenv("REMOTE_ADDR", sizeof("REMOTE_ADDR")-1 TSRMLS_CC);
+    char *raddr = suhosin_getenv("REMOTE_ADDR", sizeof("REMOTE_ADDR")-1 TSRMLS_CC);
     int i;
 
 
@@ -573,15 +573,15 @@ char *suhosin_generate_key(char *key, zend_bool ua, zend_bool dr, long raddr, ch
     suhosin_SHA256_CTX ctx;
     
     if (ua) {
-        _ua = sapi_getenv("HTTP_USER_AGENT", sizeof("HTTP_USER_AGENT")-1 TSRMLS_CC);
+        _ua = suhosin_getenv("HTTP_USER_AGENT", sizeof("HTTP_USER_AGENT")-1 TSRMLS_CC);
     }
     
     if (dr) {
-        _dr = sapi_getenv("DOCUMENT_ROOT", sizeof("DOCUMENT_ROOT")-1 TSRMLS_CC);
+        _dr = suhosin_getenv("DOCUMENT_ROOT", sizeof("DOCUMENT_ROOT")-1 TSRMLS_CC);
     }
     
     if (raddr > 0) {
-        _ra = sapi_getenv("REMOTE_ADDR", sizeof("REMOTE_ADDR")-1 TSRMLS_CC);
+        _ra = suhosin_getenv("REMOTE_ADDR", sizeof("REMOTE_ADDR")-1 TSRMLS_CC);
     }
     
     SDEBUG("(suhosin_generate_key) KEY: %s - UA: %s - DR: %s - RA: %s", key,_ua,_dr,_ra);

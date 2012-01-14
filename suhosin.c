@@ -961,6 +961,34 @@ PHP_INI_END()
 /* }}} */
 
 
+/* {{{ suhosin_getenv
+ */
+char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC)
+{
+	if (sapi_module.getenv) { 
+		char *value, *tmp = sapi_module.getenv(name, name_len TSRMLS_CC);
+		if (tmp) {
+			value = estrdup(tmp);
+		} else {
+			return NULL;
+		}
+		return value;
+	} else {
+		/* fallback to the system's getenv() function */
+		char *tmp;
+		
+		name = estrndup(name, name_len);
+		tmp = getenv(name);
+		efree(name);
+		if (tmp) {
+			return(estrdup(tmp));
+		}
+	}
+	return NULL;
+}
+/* }}} */
+
+
 /* {{{ suhosin_bailout
  */
 void suhosin_bailout(TSRMLS_D)

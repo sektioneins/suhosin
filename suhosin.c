@@ -961,7 +961,7 @@ PHP_INI_END()
 /* }}} */
 
 
-/* {{{ php_suhosin_init_globals
+/* {{{ suhosin_bailout
  */
 void suhosin_bailout(TSRMLS_D)
 {

@@ -1,4 +1,4 @@
-2012-01-14 - 0.9.33-dev
+2012-01-19 - 0.9.33
 
     - Make clear that suhosin is incompatible to mbstring.encoding_translation=On
     - Stop mbstring extension from replacing POST handlers

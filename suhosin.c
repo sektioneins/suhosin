@@ -192,6 +192,7 @@ static void suhosin_shutdown(zend_extension *extension)
 	suhosin_unhook_execute();
 	suhosin_unhook_header_handler();
 	suhosin_unhook_post_handlers();
+	/* suhosin_unhook_session(); - enabling this causes compability problems */
     
     if (ze != NULL) {
 	    ze->startup = orig_module_startup;

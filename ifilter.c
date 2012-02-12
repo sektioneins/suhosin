@@ -195,6 +195,7 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
 		}
 		*n = 0;
 		
+		/* XXX: we leak memory here, but only for the duration of the request */
 		Z_STRVAL_PP(tzval) = (char *)newv;
 		Z_STRLEN_PP(tzval) = n-newv;
 	}

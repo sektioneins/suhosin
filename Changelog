@@ -1,6 +1,7 @@
 2012-02-12 - 0.9.34
 
     - Fix build with clang compiler
+    - Added a request variable drop statistic log message
 
 2012-01-19 - 0.9.33
 

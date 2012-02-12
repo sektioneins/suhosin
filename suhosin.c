@@ -189,9 +189,11 @@ static int suhosin_module_startup(zend_extension *extension)
 
 static void suhosin_shutdown(zend_extension *extension)
 {
+	TSRMLS_FETCH();
+
 	suhosin_unhook_execute();
 	suhosin_unhook_header_handler();
-	suhosin_unhook_post_handlers();
+	suhosin_unhook_post_handlers(TSRMLS_C);
 	/* suhosin_unhook_session(); - enabling this causes compability problems */
     
     if (ze != NULL) {

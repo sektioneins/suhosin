@@ -162,7 +162,7 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 	ini_entry->on_modify = suhosin_OnUpdate_mbstring_encoding_translation;
 }
 
-void suhosin_unhook_post_handlers()
+void suhosin_unhook_post_handlers(TSRMLS_D)
 {
 	zend_ini_entry *ini_entry;
 

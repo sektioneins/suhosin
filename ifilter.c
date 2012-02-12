@@ -146,7 +146,7 @@ static void suhosin_server_strip(HashTable *arr, char *key, int klen)
 	if (zend_hash_find(arr, key, klen, (void **) &tzval) == SUCCESS &&
 			Z_TYPE_PP(tzval) == IS_STRING) {
 		
-		s = t = Z_STRVAL_PP(tzval);
+		s = t = (unsigned char *)Z_STRVAL_PP(tzval);
 		for (; *t; t++) {
 			if (suhosin_is_dangerous_char[*t]) {
 				*t = '?';
@@ -168,7 +168,7 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
 	if (zend_hash_find(arr, key, klen, (void **) &tzval) == SUCCESS &&
 			Z_TYPE_PP(tzval) == IS_STRING) {
 		
-		temp = Z_STRVAL_PP(tzval);
+		temp = (unsigned char *)Z_STRVAL_PP(tzval);
 		
 		t = temp;
 		for (t = temp; *t; t++) {
@@ -195,7 +195,7 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
 		}
 		*n = 0;
 		
-		Z_STRVAL_PP(tzval) = newv;
+		Z_STRVAL_PP(tzval) = (char *)newv;
 		Z_STRLEN_PP(tzval) = n-newv;
 	}
 }

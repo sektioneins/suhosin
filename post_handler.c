@@ -148,10 +148,10 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 
 	/* we need to tell suhosin patch that there is a new valid destructor */
 	/* therefore we have create HashTable that has this destructor */
-	zend_hash_init(&tempht, 0, NULL, suhosin_post_handler_modification, 0);
+	zend_hash_init(&tempht, 0, NULL, (dtor_func_t)suhosin_post_handler_modification, 0);
 	zend_hash_destroy(&tempht);
 	/* And now we can overwrite the destructor for post entries */
-	SG(known_post_content_types).pDestructor = suhosin_post_handler_modification;
+	SG(known_post_content_types).pDestructor = (dtor_func_t)suhosin_post_handler_modification;
 	
 	/* we have to stop mbstring from replacing our post handler */
 	if (zend_hash_find(EG(ini_directives), "mbstring.encoding_translation", sizeof("mbstring.encoding_translation"), (void **) &ini_entry) == FAILURE) {

@@ -426,7 +426,7 @@ char *suhosin_encrypt_string(char *str, int len, char *var, int vlen, char *key 
     }
     
     /* store ip value */
-    suhosin_get_ipv4(crypted+4 TSRMLS_CC);
+    suhosin_get_ipv4((char *)crypted+4 TSRMLS_CC);
     
     /* store check value */
     crypted[8] = check & 0xff;
@@ -544,7 +544,7 @@ error_out:
         if (check_ra > 4) {
             check_ra = 4;
         }
-        suhosin_get_ipv4(&buf TSRMLS_CC);
+        suhosin_get_ipv4(&buf[0] TSRMLS_CC);
         if (memcmp(buf, decrypted+4, check_ra) != 0) {
             goto error_out;
         }

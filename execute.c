@@ -1344,7 +1344,7 @@ static void suhosin_gen_entropy(php_uint32 *seedbuf TSRMLS_DC)
 
     suhosin_SHA256Init(&context);
 	suhosin_SHA256Update(&context, (void *) seedbuf, sizeof(php_uint32) * 8);
-	suhosin_SHA256Final(seedbuf, &context);
+	suhosin_SHA256Final((void *)seedbuf, &context);
 }
 /* }}} */
 

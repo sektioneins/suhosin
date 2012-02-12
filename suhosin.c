@@ -1156,6 +1156,10 @@ PHP_RSHUTDOWN_FUNCTION(suhosin)
 	SUHOSIN_G(cur_cookie_vars) = 0;
 	SUHOSIN_G(cur_get_vars) = 0;
 	SUHOSIN_G(cur_post_vars) = 0;
+	SUHOSIN_G(att_request_variables) = 0;
+	SUHOSIN_G(att_cookie_vars) = 0;
+	SUHOSIN_G(att_get_vars) = 0;
+	SUHOSIN_G(att_post_vars) = 0;
 	SUHOSIN_G(num_uploads) = 0;
 
         SUHOSIN_G(no_more_variables) = 0;

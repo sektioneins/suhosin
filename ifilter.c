@@ -326,16 +326,19 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	/* Drop this variable if the limit was reached */
         switch (arg) {
             case PARSE_GET:
+                        SUHOSIN_G(att_get_vars)++;
                         if (SUHOSIN_G(no_more_get_variables)) {
                                 return 0;
                         }
                         break;
             case PARSE_POST:
+                        SUHOSIN_G(att_post_vars)++;
                         if (SUHOSIN_G(no_more_post_variables)) {
                                 return 0;
                         }
                         break;
             case PARSE_COOKIE:
+                        SUHOSIN_G(att_cookie_vars)++;
                         if (SUHOSIN_G(no_more_cookie_variables)) {
                                 return 0;
                         }
@@ -346,6 +349,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	                }
                         return 1;
         }
+    SUHOSIN_G(att_request_variables)++;
         
         /* Drop this variable if the limit is now reached */
 	switch (arg) {

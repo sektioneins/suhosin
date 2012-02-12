@@ -102,6 +102,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 /*	request variables */
 	long  max_request_variables;
 	long  cur_request_variables;
+	long  att_request_variables;
 	long  max_varname_length;
 	long  max_totalname_length;
 	long  max_value_length;
@@ -112,6 +113,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 /*	cookie variables */
 	long  max_cookie_vars;
 	long  cur_cookie_vars;
+	long  att_cookie_vars;
 	long  max_cookie_name_length;
 	long  max_cookie_totalname_length;
 	long  max_cookie_value_length;
@@ -122,6 +124,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 /*	get variables */
 	long  max_get_vars;
 	long  cur_get_vars;
+	long  att_get_vars;
 	long  max_get_name_length;
 	long  max_get_totalname_length;
 	long  max_get_value_length;
@@ -132,6 +135,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 /*	post variables */
 	long  max_post_vars;
 	long  cur_post_vars;
+	long  att_post_vars;
 	long  max_post_name_length;
 	long  max_post_totalname_length;
 	long  max_post_value_length;

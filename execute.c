@@ -1109,8 +1109,6 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 
 	retval = (zend_hash_find(EG(function_table), lcname, func_name_len+1, (void **)&func) == SUCCESS);
 	
-	efree(lcname);
-
 	/*
 	 * A bit of a hack, but not a bad one: we see if the handler of the function
 	 * is actually one that displays "function is disabled" message.
@@ -1142,6 +1140,8 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 		    retval = 0;
 		}
 	}
+
+	efree(lcname);
 
 	RETVAL_BOOL(retval);
 	return (1);

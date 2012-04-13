@@ -36,6 +36,12 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#elif defined(PHP_WIN32)
+#include "win32/time.h"
+#endif
+
 #if defined(PHP_WIN32) || defined(__riscos__) || defined(NETWARE)
 #undef AF_UNIX
 #endif

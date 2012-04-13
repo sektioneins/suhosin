@@ -1052,7 +1052,7 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	zend_str_tolower(lcname, func_name_len);
 #else
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &lcname, &func_name_len) == FAILURE) {
-		return(0);
+		return (1);
 	}
 
 	/* Ignore leading "\" */

@@ -1056,7 +1056,7 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	}
 
 	/* Ignore leading "\" */
-	if (lcname[0] == '\\') {
+	if (func_name_len > 0 && lcname[0] == '\\') {
 		lcname = &lcname[1];
 		func_name_len--;
 	}

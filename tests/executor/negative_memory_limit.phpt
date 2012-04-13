@@ -13,6 +13,6 @@ suhosin.log.sapi=2
     ini_set("memory_limit", "-200000"); echo ini_get("memory_limit"), "\n";
 ?>
 --EXPECTF--
-ALERT - script tried to increase memory_limit to %d bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 2)
+ALERT - script tried to disable memory_limit by setting it to a negative value -%d bytes which is not allowed (attacker 'REMOTE_ADDR not set', file '%s', line 2)
 16M
 

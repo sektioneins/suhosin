@@ -1,5 +1,6 @@
 2012-02-12 - 0.9.34
 
+    - Added initial support for PHP 5.4.0
     - Fix read after efree() that lets function_exists() malfunction
     - Fix build with clang compiler
     - Added a request variable drop statistic log message

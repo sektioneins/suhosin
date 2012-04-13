@@ -649,12 +649,16 @@ static void suhosin_register_cookie_variable(char *var, zval *val, zval *track_v
 				array_init(gpc_element);
 				zend_hash_next_index_insert(symtable1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
 			} else {
+#if PHP_VERSION_ID < 50400
 				if (PG(magic_quotes_gpc) && (index != var)) {
 					/* no need to addslashes() the index if it's the main variable name */
 					escaped_index = php_addslashes(index, index_len, &index_len, 0 TSRMLS_CC);
 				} else {
+#endif
 					escaped_index = index;
+#if PHP_VERSION_ID < 50400
 				}
+#endif
 				if (zend_symtable_find(symtable1, escaped_index, index_len + 1, (void **) &gpc_element_p) == FAILURE
 					|| Z_TYPE_PP(gpc_element_p) != IS_ARRAY) {
 					MAKE_STD_ZVAL(gpc_element);
@@ -686,11 +690,15 @@ plain_var:
 		if (!index) {
 			zend_hash_next_index_insert(symtable1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
 		} else {
+#if PHP_VERSION_ID < 50400
 			if (PG(magic_quotes_gpc)) { 
 				escaped_index = php_addslashes(index, index_len, &index_len, 0 TSRMLS_CC);
 			} else {
+#endif
 				escaped_index = index;
+#if PHP_VERSION_ID < 50400
 			}
+#endif
 			/* 
 			 * According to rfc2965, more specific paths are listed above the less specific ones.
 			 * If we encounter a duplicate cookie name, we should skip it, since it is not possible
@@ -717,11 +725,15 @@ static void suhosin_register_cookie_variable_safe(char *var, char *strval, int s
 	
 	/* Prepare value */
 	Z_STRLEN(new_entry) = str_len;
+#if PHP_VERSION_ID < 50400
 	if (PG(magic_quotes_gpc)) {
 		Z_STRVAL(new_entry) = php_addslashes(strval, Z_STRLEN(new_entry), &Z_STRLEN(new_entry), 0 TSRMLS_CC);
 	} else {
+#endif
 		Z_STRVAL(new_entry) = estrndup(strval, Z_STRLEN(new_entry));
+#if PHP_VERSION_ID < 50400
 	}
+#endif
 	Z_TYPE(new_entry) = IS_STRING;
 
 	suhosin_register_cookie_variable(var, &new_entry, track_vars_array TSRMLS_CC);

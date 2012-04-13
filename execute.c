@@ -1031,50 +1031,6 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 	return (0);
 }
 
-static int suhosin_php_body_write(const char *str, uint str_length TSRMLS_DC)
-{
-#define P_META_ROBOTS "<meta name=\"ROBOTS\" content=\"NOINDEX,NOFOLLOW,NOARCHIVE\" />"
-#define S_META_ROBOTS "<meta name=\"ROBOTS\" content=\"NOINDEX,FOLLOW,NOARCHIVE\" />"
-
-    SDEBUG("bw: %s", str);
-
-	if ((str_length == sizeof("</head>\n")-1) && (strcmp(str, "</head>\n")==0)) {
-		SUHOSIN_G(old_php_body_write)(S_META_ROBOTS, sizeof(S_META_ROBOTS)-1 TSRMLS_CC);
-		OG(php_body_write) = SUHOSIN_G(old_php_body_write);
-		return SUHOSIN_G(old_php_body_write)(str, str_length TSRMLS_CC);
-	} else if ((str_length == sizeof(P_META_ROBOTS)-1) && (strcmp(str, P_META_ROBOTS)==0)) {
-		return str_length;
-	}
-	return SUHOSIN_G(old_php_body_write)(str, str_length TSRMLS_CC);	
-}
-
-static int ih_phpinfo(IH_HANDLER_PARAMS)
-{
-    int argc = ZEND_NUM_ARGS();
-	long flag;
-
-	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &flag) == FAILURE) {
-        RETVAL_FALSE;
-		return (1);
-	}
-
-	if(!argc) {
-		flag = PHP_INFO_ALL;
-	}
-
-	/* Andale!  Andale!  Yee-Hah! */
-	php_start_ob_buffer(NULL, 4096, 0 TSRMLS_CC);
-	if (!sapi_module.phpinfo_as_text) {
-		SUHOSIN_G(old_php_body_write) = OG(php_body_write);
-		OG(php_body_write) = suhosin_php_body_write;
-	}
-	php_print_info(flag TSRMLS_CC);
-	php_end_ob_buffer(1, 0 TSRMLS_CC);
-
-	RETVAL_TRUE;
-	return (1);
-}
-
 
 static int ih_function_exists(IH_HANDLER_PARAMS)
 {
@@ -1527,7 +1483,6 @@ internal_function_handler ihandlers[] = {
     { "preg_replace", ih_preg_replace, NULL, NULL, NULL },
     { "mail", ih_mail, NULL, NULL, NULL },
     { "symlink", ih_symlink, NULL, NULL, NULL },
-    { "phpinfo", ih_phpinfo, NULL, NULL, NULL },
 	
 	{ "srand", ih_srand, NULL, NULL, NULL },
 	{ "mt_srand", ih_mt_srand, NULL, NULL, NULL },
@@ -1615,7 +1570,11 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 	}
 	
 #ifdef ZEND_ENGINE_2  
+# if PHP_VERSION_ID < 50400
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.u.var)).var.ptr;
+# else
+	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
+# endif
 #else
         return_value = execute_data_ptr->Ts[execute_data_ptr->opline->result.u.var].var.ptr;
 #endif

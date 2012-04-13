@@ -365,7 +365,7 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 	unsigned long *suhosin_flags = NULL;
 	
 	/* log variable dropping statistics */
-	if (SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables) > 0) {
+	if (SUHOSIN_G(abort_request) && (SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables) > 0)) {
 		suhosin_log(S_VARS, "dropped %u request variables - (%u in GET, %u in POST, %u in COOKIE)",
 		SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables),
 		SUHOSIN_G(att_get_vars)-SUHOSIN_G(cur_get_vars),

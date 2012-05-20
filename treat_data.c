@@ -194,7 +194,11 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 
 void suhosin_hook_treat_data()
 {
+#if PHP_VERSION_ID < 50400
 	sapi_register_treat_data(suhosin_treat_data);
+#else
+	sapi_register_treat_data(suhosin_treat_data TSRMLS_CC);
+#endif
 #ifdef ZEND_ENGINE_2
 	if (old_input_filter == NULL) {
 		old_input_filter = sapi_module.input_filter;

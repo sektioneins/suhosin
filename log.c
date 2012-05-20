@@ -267,7 +267,11 @@ log_sapi:
 	/* SAPI Logging activated? */
 	SDEBUG("(suhosin_log) log_syslog: %u - log_sapi: %u - log_script: %u - log_phpscript: %u", SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script), SUHOSIN_G(log_phpscript));
 	if (((SUHOSIN_G(log_sapi)|S_INTERNAL) & loglevel)!=0) {
+#if PHP_VERSION_ID < 50400
 		sapi_module.log_message(buf);
+#else
+		sapi_module.log_message(buf TSRMLS_CC);
+#endif
 	}
 
 /*log_script:*/

@@ -152,7 +152,7 @@ SDEBUG("xxx %08x %08x",SUHOSIN_G(include_whitelist),SUHOSIN_G(include_blacklist)
 			t = h = (h == NULL) ? h2 : ( (h2 == NULL) ? h : ( (h < h2) ? h : h2 ) );
 			if (h == NULL) break;
 							
-			while (t > s && (isalnum(t[-1]) || t[-1]=='_') || t[-1]=='.')) {
+			while (t > s && (isalnum(t[-1]) || t[-1]=='_' || t[-1]=='.')) {
 				t--;
 			}
 			
@@ -195,7 +195,7 @@ SDEBUG("xxx %08x %08x",SUHOSIN_G(include_whitelist),SUHOSIN_G(include_blacklist)
 			t = h = (h == NULL) ? h2 : ( (h2 == NULL) ? h : ( (h < h2) ? h : h2 ) );
 			if (h == NULL) break;
 							
-			while (t > s && (isalnum(t[-1]) || t[-1]=='_') || t[-1]=='.')) {
+			while (t > s && (isalnum(t[-1]) || t[-1]=='_' || t[-1]=='.')) {
 				t--;
 			}
 

@@ -197,6 +197,8 @@ void suhosin_hook_treat_data()
 #if PHP_VERSION_ID < 50400
 	sapi_register_treat_data(suhosin_treat_data);
 #else
+	TSRMLS_FETCH();
+
 	sapi_register_treat_data(suhosin_treat_data TSRMLS_CC);
 #endif
 #ifdef ZEND_ENGINE_2

@@ -327,18 +327,21 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
         switch (arg) {
             case PARSE_GET:
                         SUHOSIN_G(att_get_vars)++;
+                        SUHOSIN_G(att_request_variables)++;
                         if (SUHOSIN_G(no_more_get_variables)) {
                                 return 0;
                         }
                         break;
             case PARSE_POST:
                         SUHOSIN_G(att_post_vars)++;
+                        SUHOSIN_G(att_request_variables)++;
                         if (SUHOSIN_G(no_more_post_variables)) {
                                 return 0;
                         }
                         break;
             case PARSE_COOKIE:
                         SUHOSIN_G(att_cookie_vars)++;
+                        SUHOSIN_G(att_request_variables)++;
                         if (SUHOSIN_G(no_more_cookie_variables)) {
                                 return 0;
                         }
@@ -349,13 +352,12 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	                }
                         return 1;
         }
-    SUHOSIN_G(att_request_variables)++;
         
         /* Drop this variable if the limit is now reached */
 	switch (arg) {
 	    case PARSE_GET:
 			if (SUHOSIN_G(max_get_vars) && SUHOSIN_G(max_get_vars) <= SUHOSIN_G(cur_get_vars)) {
-				suhosin_log(S_VARS, "configured GET variable limit exceeded - dropped variable '%s'", var);
+				suhosin_log(S_VARS, "configured GET variable limit exceeded - dropped variable '%s' - all further GET variables are dropped", var);
 				if (!SUHOSIN_G(simulation)) {
                             		SUHOSIN_G(no_more_get_variables) = 1;
 					return 0;
@@ -364,7 +366,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 			break;
 	    case PARSE_COOKIE:
 			if (SUHOSIN_G(max_cookie_vars) && SUHOSIN_G(max_cookie_vars) <= SUHOSIN_G(cur_cookie_vars)) {
-				suhosin_log(S_VARS, "configured COOKIE variable limit exceeded - dropped variable '%s'", var);
+				suhosin_log(S_VARS, "configured COOKIE variable limit exceeded - dropped variable '%s' - all further COOKIE variables are dropped", var);
 				if (!SUHOSIN_G(simulation)) {
                             		SUHOSIN_G(no_more_cookie_variables) = 1;
 					return 0;
@@ -373,7 +375,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 			break;
 	    case PARSE_POST:
 			if (SUHOSIN_G(max_post_vars) && SUHOSIN_G(max_post_vars) <= SUHOSIN_G(cur_post_vars)) {
-				suhosin_log(S_VARS, "configured POST variable limit exceeded - dropped variable '%s'", var);
+				suhosin_log(S_VARS, "configured POST variable limit exceeded - dropped variable '%s' - all further POST variables are dropped", var);
 				if (!SUHOSIN_G(simulation)) {
                             		SUHOSIN_G(no_more_post_variables) = 1;
                             		return 0;

@@ -728,7 +728,12 @@ static int suhosin_hook_s_read(void **mod_data, const char *key, char **val, int
     }*/
     
     /* protect dumb session handlers */
-    if (key == NULL || !key[0] || *mod_data == NULL) {
+    if (key == NULL || !key[0] ||
+		(*mod_data == NULL
+#if PHP_VERSION_ID >= 50400
+		 && !SESSION_G(mod_user_implemented)
+#endif
+		)) {
 regenerate:
         SDEBUG("regenerating key is %s", key);
         KEY = SESSION_G(id) = SESSION_G(mod)->s_create_sid(&SESSION_G(mod_data), NULL TSRMLS_CC);
@@ -777,7 +782,12 @@ static int suhosin_hook_s_write(void **mod_data, const char *key, const char *va
     char *v = (char *)val;
 
     /* protect dumb session handlers */
-    if (key == NULL || !key[0] || val == NULL || strlen(key) > SUHOSIN_G(session_max_id_length) || *mod_data == NULL) {
+    if (key == NULL || !key[0] || val == NULL || strlen(key) > SUHOSIN_G(session_max_id_length) ||
+		(*mod_data == NULL
+#if PHP_VERSION_ID >= 50400
+		 && !SESSION_G(mod_user_implemented)
+#endif
+		)) {
         r = FAILURE;
         goto return_write;
     }
@@ -820,7 +830,12 @@ static int suhosin_hook_s_destroy(void **mod_data, const char *key TSRMLS_DC)
     int r;
 
     /* protect dumb session handlers */
-    if (key == NULL || !key[0] || strlen(key) > SUHOSIN_G(session_max_id_length) || *mod_data == NULL) {
+    if (key == NULL || !key[0] || strlen(key) > SUHOSIN_G(session_max_id_length) ||
+		(*mod_data == NULL
+#if PHP_VERSION_ID >= 50400
+		 && !SESSION_G(mod_user_implemented)
+#endif
+		)) {
         return FAILURE;
     }
     

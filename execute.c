@@ -1078,10 +1078,18 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	if (SUHOSIN_G(in_code_type) == SUHOSIN_EVAL) {
 		if (SUHOSIN_G(eval_whitelist) != NULL) {
 			if (!zend_hash_exists(SUHOSIN_G(eval_whitelist), lcname, func_name_len+1)) {
+				suhosin_log(S_EXISTENCE, "evaluated existence of a function not within eval whitelist: eval('function_exists(\"%s\");')", lcname);
+				if (SUHOSIN_G(eval_exists_forbidden) && !SUHOSIN_G(simulation)) {
+					zend_error(E_ERROR, "SUHOSIN - Evaluating existence of functions not within eval whitelist is forbidden by configuration");
+				}
 			    retval = 0;
 			}
 		} else if (SUHOSIN_G(eval_blacklist) != NULL) {
 			if (zend_hash_exists(SUHOSIN_G(eval_blacklist), lcname, func_name_len+1)) {
+				suhosin_log(S_EXISTENCE, "evaluated existence of a function within eval blacklist: eval('function_exists(\"%s\");')", lcname);
+				if (SUHOSIN_G(eval_exists_forbidden) && !SUHOSIN_G(simulation)) {
+					zend_error(E_ERROR, "SUHOSIN - Evaluating existence of functions within eval blacklist is forbidden by configuration");
+				}
 			    retval = 0;
 			}
 		}
@@ -1089,10 +1097,18 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	
 	if (SUHOSIN_G(func_whitelist) != NULL) {
 		if (!zend_hash_exists(SUHOSIN_G(func_whitelist), lcname, func_name_len+1)) {
+			suhosin_log(S_EXISTENCE, "tested existence of a function not within whitelist: function_exists('%s')", lcname);
+			if (SUHOSIN_G(func_exists_forbidden) && !SUHOSIN_G(simulation)) {
+				zend_error(E_ERROR, "SUHOSIN - Testing existence of functions not within whitelist is forbidden by configuration");
+			}
 		    retval = 0;
 		}
 	} else if (SUHOSIN_G(func_blacklist) != NULL) {
 		if (zend_hash_exists(SUHOSIN_G(func_blacklist), lcname, func_name_len+1)) {
+			suhosin_log(S_EXISTENCE, "tested existence of a blacklisted function: function_exists('%s')", lcname);
+			if (SUHOSIN_G(func_exists_forbidden) && !SUHOSIN_G(simulation)) {
+				zend_error(E_ERROR, "SUHOSIN - Testing existence of blacklisted functions is forbidden by configuration");
+			}
 		    retval = 0;
 		}
 	}

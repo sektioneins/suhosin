@@ -78,6 +78,8 @@ static char *loglevel2string(int loglevel)
 		return "SQL";
 	    case S_EXECUTOR:
 		return "EXECUTOR";
+	    case S_EXISTENCE:
+		return "EXISTENCE";
 	    case S_VARS:
 		return "VARS";
 	    default:

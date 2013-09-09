@@ -14,4 +14,4 @@ suhosin.executor.func.exists_forbidden=1
 --EXPECTF--
 ALERT - tested existence of a blacklisted function: function_exists('intval') (attacker 'REMOTE_ADDR not set', file '%s', line 2)
 
-Fatal error: SUHOSIN - Testing existence of blacklisted functions is forbidden by configuration in %s(2)
+Fatal error: SUHOSIN - Testing existence of blacklisted functions is forbidden by configuration in %s on line 2

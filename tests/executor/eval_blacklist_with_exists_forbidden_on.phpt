@@ -13,10 +13,6 @@ suhosin.executor.eval.exists_forbidden=1
     eval('function_exists("intval");');
 ?>
 --EXPECTF--
-ALERT - evaluated existence of a function within eval blacklist: eval('function_exists("intval");') (attacker 'REMOTE_ADDR not set', file '%s', line 2)
+ALERT - evaluated existence of a function within eval blacklist: eval('function_exists("intval");') (attacker 'REMOTE_ADDR not set', file '%s(2) : eval()'d code', line 1)
 
-<<<<<<< HEAD
-Fatal error: SUHOSIN - Evaluating existence of functions within eval blacklist is forbidden by configuration in %s(2)
-=======
 Fatal error: SUHOSIN - Evaluating existence of functions within eval blacklist is forbidden by configuration in %s(2) : eval()'d code on line 1
->>>>>>> feature-fn-exists-log-and-terminate

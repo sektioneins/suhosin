@@ -12,6 +12,6 @@ suhosin.executor.func.exists_forbidden=1
     function_exists("intval");
 ?>
 --EXPECTF--
-ALERT - tested existence of a function not within whitelist: function_exists('intval') (attacker 'REMOTE_ADDR not set', file '%s', line 3)
+ALERT - tested existence of a function not within whitelist: function_exists('intval') (attacker 'REMOTE_ADDR not set', file '%s', line 2)
 
-Fatal error: SUHOSIN - Testing existence of functions not within whitelist is forbidden by configuration in %s(3)
+Fatal error: SUHOSIN - Testing existence of functions not within whitelist is forbidden by configuration in %s on line 2

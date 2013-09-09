@@ -873,8 +873,10 @@ PHP_INI_BEGIN()
 	STD_ZEND_INI_BOOLEAN("suhosin.executor.include.allow_writable_files",	"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, executor_include_allow_writable_files,	zend_suhosin_globals,	suhosin_globals)
         ZEND_INI_ENTRY("suhosin.executor.eval.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_eval_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.eval.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_eval_blacklist)
+	STD_ZEND_INI_BOOLEAN("suhosin.executor.eval.exists_forbidden",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, eval_exists_forbidden,	zend_suhosin_globals,	suhosin_globals)
 	ZEND_INI_ENTRY("suhosin.executor.func.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_func_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.func.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_func_blacklist)
+	STD_ZEND_INI_BOOLEAN("suhosin.executor.func.exists_forbidden",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, func_exists_forbidden,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.executor.disable_eval",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, executor_disable_eval,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.executor.disable_emodifier",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, executor_disable_emod,	zend_suhosin_globals,	suhosin_globals)
 
@@ -1043,6 +1045,12 @@ PHP_MINIT_FUNCTION(suhosin)
 		REGISTER_MAIN_LONG_CONSTANT("S_MISC", S_MISC, CONST_PERSISTENT | CONST_CS);
 		REGISTER_MAIN_LONG_CONSTANT("S_INTERNAL", S_INTERNAL, CONST_PERSISTENT | CONST_CS);
 		REGISTER_MAIN_LONG_CONSTANT("S_ALL", S_ALL, CONST_PERSISTENT | CONST_CS);
+	}
+
+	/* register constants which never have been part of any suhosin-patch,
+	 * hence they have not previously been registered by a possible patched PHP */
+	if (zend_hash_exists(EG(zend_constants), "S_EXISTENCE", sizeof("S_EXISTENCE"))==0) {
+		REGISTER_MAIN_LONG_CONSTANT("S_EXISTENCE", S_EXISTENCE, CONST_PERSISTENT | CONST_CS);
 	}
 	
 	/* check if shared ini directives are already known (maybe a patched PHP) */

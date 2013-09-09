@@ -95,6 +95,8 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	HashTable *eval_whitelist;
 	HashTable *eval_blacklist;
 
+	zend_bool func_exists_forbidden;
+	zend_bool eval_exists_forbidden;
 	zend_bool executor_disable_eval;
 	zend_bool executor_disable_emod;
 
@@ -284,8 +286,9 @@ ZEND_END_MODULE_GLOBALS(suhosin)
 #define S_EXECUTOR			(1<<6L)
 #define S_MAIL				(1<<7L)
 #define S_SESSION			(1<<8L)
+#define S_EXISTENCE			(1<<9L)
 #define S_INTERNAL			(1<<29L)
-#define S_ALL (S_MEMORY | S_VARS | S_INCLUDE | S_FILES | S_MAIL | S_SESSION | S_MISC | S_SQL | S_EXECUTOR)
+#define S_ALL (S_MEMORY | S_VARS | S_INCLUDE | S_FILES | S_MAIL | S_SESSION | S_MISC | S_SQL | S_EXECUTOR | S_EXISTENCE)
 #endif
 
 #define SUHOSIN_NORMAL	0

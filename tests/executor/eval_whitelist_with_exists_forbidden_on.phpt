@@ -3,7 +3,7 @@ Testing: suhosin.executor.eval.whitelist with suhosin.executor.eval.exists_forbi
 --SKIPIF--
 <?php include "../skipifnotcli.inc"; ?>
 --INI--
-suhosin.log.sapi=64
+suhosin.log.sapi=128
 suhosin.executor.disable_eval=0
 suhosin.executor.eval.whitelist=function_exists
 suhosin.executor.eval.blacklist=

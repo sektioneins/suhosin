@@ -3,7 +3,7 @@ Testing: suhosin.executor.func.blacklist with suhosin.executor.func.exists_forbi
 --SKIPIF--
 <?php include "../skipifnotcli.inc"; ?>
 --INI--
-suhosin.log.sapi=128
+suhosin.log.sapi=512
 suhosin.executor.func.whitelist=
 suhosin.executor.func.blacklist=intval
 suhosin.executor.func.exists_forbidden=1

@@ -15,6 +15,5 @@ suhosin.executor.eval.exists_forbidden=0
     var_dump($test);
 ?>
 --EXPECTF--
-ALERT - evaluated existence of a function within eval blacklist: eval('function_exists("intval");') (attacker 'REMOTE_ADDR not set', file '%s(3) : eval()'d code', line 2)
-
+ALERT - evaluated existence of a function within eval blacklist: eval('function_exists("intval");') (attacker 'REMOTE_ADDR not set', file '%s(3) : eval()'d code', line 1)
 bool(false)

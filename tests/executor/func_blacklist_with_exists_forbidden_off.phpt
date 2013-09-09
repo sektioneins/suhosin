@@ -14,5 +14,4 @@ suhosin.executor.func.exists_forbidden=0
 ?>
 --EXPECTF--
 ALERT - tested existence of a blacklisted function: function_exists('intval') (attacker 'REMOTE_ADDR not set', file '%s', line 2)
-
 bool(false)

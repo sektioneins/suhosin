@@ -274,6 +274,10 @@ ZEND_END_MODULE_GLOBALS(suhosin)
 #define zend_symtable_exists zend_hash_exists
 #endif
 
+/* Error Constants not part of the patch */
+#ifndef S_EXISTENCE
+#define S_EXISTENCE			(1<<9L)
+#endif
 
 /* Error Constants */
 #ifndef S_MEMORY

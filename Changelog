@@ -5,6 +5,8 @@
     - Fix read after efree() that lets function_exists() malfunction
     - Fix build with clang compiler
     - Added a request variable drop statistic log message
+    - Added optional logging and termination of function_exists()-calls on non-whitelisted
+      or blacklisted function-names, including new error class S_EXISTENCE
 
 2012-01-19 - 0.9.33
 

@@ -174,6 +174,10 @@ void suhosin_unhook_post_handlers(TSRMLS_D)
 {
 	zend_ini_entry *ini_entry;
 
+#if PHP_VERSION_ID >= 50400
+	/* unhook the php_rfc1867_callback */
+	php_rfc1867_callback = old_rfc1867_callback;
+#endif
 	/* Restore to an empty destructor */
 	SG(known_post_content_types).pDestructor = NULL;
 

@@ -83,7 +83,7 @@ last_value:
 static void suhosin_post_handler_modification(sapi_post_entry *spe)
 {
 	char *content_type = estrndup(spe->content_type, spe->content_type_len);
-	suhosin_log(S_VARS, "some extension replaces the POST handler for %s - Suhosin's protection will be incomplete", content_type);
+	suhosin_log(S_VARS, "some extension replaces the POST handler for %s - Suhosin's protection might be incomplete", content_type);
 	efree(content_type);
 }
 
@@ -135,7 +135,13 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 {
 	HashTable tempht;
 	zend_ini_entry *ini_entry;
-	
+
+	old_rfc1867_callback = php_rfc1867_callback;
+
+#if PHP_VERSION_ID >= 50400
+	/* the RFC1867 code is now good enough in PHP to handle our filter just as a registered callback */
+	php_rfc1867_callback = suhosin_rfc1867_filter;
+#else	
 #if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
 	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
 	sapi_unregister_post_entry(&suhosin_post_entries[1] TSRMLS_CC);
@@ -144,6 +150,7 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 	sapi_unregister_post_entry(&suhosin_post_entries[0]);
 	sapi_unregister_post_entry(&suhosin_post_entries[1]);
 	sapi_register_post_entries(suhosin_post_entries);
+#endif
 #endif
 	/* we want to get notified if another extension deregisters the suhosin post handlers */
 

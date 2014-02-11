@@ -31,6 +31,7 @@
 #include "php_variables.h"
 #include "suhosin_rfc1867.h"
 
+PHP_SUHOSIN_API int (*old_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #if !HAVE_RFC1867_CALLBACK
 PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #endif
@@ -345,8 +346,8 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 	}
 continue_with_next:	
 #if HAVE_RFC1867_CALLBACK
-	if (php_rfc1867_callback != NULL) {
-		return php_rfc1867_callback(event, event_data, extra TSRMLS_CC);
+	if (old_rfc1867_callback != NULL) {
+		return old_rfc1867_callback(event, event_data, extra TSRMLS_CC);
 	}
 #endif
 	return SUCCESS;

@@ -94,6 +94,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 {
 	int s, r, i=0, fd;
 	long written, towrite;
+	int getcaller=0;
 	char *wbuf;
 	struct timeval tv;
 	time_t now;
@@ -114,6 +115,12 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	int lineno;
 	va_list ap;
 	TSRMLS_FETCH();
+
+#if PHP_VERSION_ID >= 50500
+	getcaller = (loglevel & S_GETCALLER) == S_GETCALLER;
+#endif
+	/* remove the S_GETCALLER flag */
+	loglevel = loglevel & ~S_GETCALLER;
 
 	SDEBUG("(suhosin_log) loglevel: %d log_syslog: %u - log_sapi: %u - log_script: %u", loglevel, SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script));
 
@@ -151,9 +158,15 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	}
 	
 	if (zend_is_executing(TSRMLS_C)) {
-		if (EG(current_execute_data)) {
-			lineno = EG(current_execute_data)->opline->lineno;
-			fname = EG(current_execute_data)->op_array->filename;
+		zend_execute_data *exdata = EG(current_execute_data);
+		if (exdata) {
+			if (getcaller && exdata->prev_execute_data) {
+				lineno = exdata->prev_execute_data->opline->lineno;
+				fname = exdata->prev_execute_data->op_array->filename;									
+			} else {
+				lineno = exdata->opline->lineno;
+				fname = exdata->op_array->filename;				
+			}
 		} else {
 			lineno = zend_get_executed_lineno(TSRMLS_C);
 			fname = zend_get_executed_filename(TSRMLS_C);

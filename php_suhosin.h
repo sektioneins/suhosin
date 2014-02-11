@@ -285,6 +285,7 @@ ZEND_END_MODULE_GLOBALS(suhosin)
 #define S_MAIL				(1<<7L)
 #define S_SESSION			(1<<8L)
 #define S_INTERNAL			(1<<29L)
+#define S_GETCALLER         (1<<30L)
 #define S_ALL (S_MEMORY | S_VARS | S_INCLUDE | S_FILES | S_MAIL | S_SESSION | S_MISC | S_SQL | S_EXECUTOR)
 #endif
 

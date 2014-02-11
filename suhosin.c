@@ -3,7 +3,7 @@
   | Suhosin Version 1                                                    |
   +----------------------------------------------------------------------+
   | Copyright (c) 2006-2007 The Hardened-PHP Project                     |
-  | Copyright (c) 2007-2012 SektionEins GmbH                             |
+  | Copyright (c) 2007-2014 SektionEins GmbH                             |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -62,7 +62,7 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 	SUHOSIN_EXT_VERSION,
 	"SektionEins GmbH",
 	"http://www.suhosin.org",
-	"Copyright (c) 2007-2012",
+	"Copyright (c) 2007-2014",
 	suhosin_module_startup,
 	suhosin_shutdown,
 	NULL,
@@ -1250,10 +1250,10 @@ PHP_MINFO_FUNCTION(suhosin)
 	PUTS(!sapi_module.phpinfo_as_text?"<br /><br />":"\n\n");
 	if (sapi_module.phpinfo_as_text) {
 		PUTS("Copyright (c) 2006-2007 Hardened-PHP Project\n");
-		PUTS("Copyright (c) 2007-2012 SektionEins GmbH\n");
+		PUTS("Copyright (c) 2007-2014 SektionEins GmbH\n");
 	} else {
 		PUTS("Copyright (c) 2006-2007 <a href=\"http://www.hardened-php.net/\">Hardened-PHP Project</a><br />\n");
-		PUTS("Copyright (c) 2007-2012 <a href=\"http://www.sektioneins.de/\">SektionEins GmbH</a>\n");
+		PUTS("Copyright (c) 2007-2014 <a href=\"http://www.sektioneins.de/\">SektionEins GmbH</a>\n");
 	}
 	php_info_print_box_end();
 

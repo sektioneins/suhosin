@@ -35,9 +35,9 @@
 static PHP_INI_MH(suhosin_OnChangeMemoryLimit)
 {
 #if SIZEOF_LONG==8
-	long hard_memory_limit = 1<<63;
+	long hard_memory_limit = 0x7fffffffffffffff;
 #elif SIZEOF_LONG==4
-	long hard_memory_limit = 1<<31;
+	long hard_memory_limit = 0x7fffffff;
 #endif /* will produce a compile error or SIZEOF_LONG is not 4 or 8 */
 	if (stage == ZEND_INI_STAGE_RUNTIME) {
 		if (SUHOSIN_G(memory_limit) > 0) {

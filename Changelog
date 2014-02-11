@@ -1,3 +1,9 @@
+2014-02-xx - 0.9.35-DEV
+
+    - Fix problems with the hard memory_limit on 64 bit systems
+	- Fix problems with user space session handler due to change in PHP 5.4.0
+	- Added some test cases for various things
+
 2012-02-12 - 0.9.34
 
     - Added initial support for PHP 5.4.0

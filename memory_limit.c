@@ -3,7 +3,7 @@
   | Suhosin Version 1                                                    |
   +----------------------------------------------------------------------+
   | Copyright (c) 2006-2007 The Hardened-PHP Project                     |
-  | Copyright (c) 2007-2012 SektionEins GmbH                             |
+  | Copyright (c) 2007-2014 SektionEins GmbH                             |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -34,8 +34,11 @@
  */
 static PHP_INI_MH(suhosin_OnChangeMemoryLimit)
 {
-	long hard_memory_limit = 1<<30;
-	
+#if SIZEOF_LONG==8
+	long hard_memory_limit = 1<<63;
+#elif SIZEOF_LONG==4
+	long hard_memory_limit = 1<<31;
+#endif /* will produce a compile error or SIZEOF_LONG is not 4 or 8 */
 	if (stage == ZEND_INI_STAGE_RUNTIME) {
 		if (SUHOSIN_G(memory_limit) > 0) {
 			SUHOSIN_G(hard_memory_limit) = SUHOSIN_G(memory_limit);
@@ -50,13 +53,13 @@ static PHP_INI_MH(suhosin_OnChangeMemoryLimit)
 		PG(memory_limit) = zend_atol(new_value, new_value_length);
 		if (hard_memory_limit > 0) {
 			if (PG(memory_limit) > hard_memory_limit) {
-				suhosin_log(S_MISC, "script tried to increase memory_limit to %u bytes which is above the allowed value", PG(memory_limit));
+				suhosin_log(S_MISC, "script tried to increase memory_limit to %lu bytes which is above the allowed value", PG(memory_limit));
 				if (!SUHOSIN_G(simulation)) {
 					PG(memory_limit) = hard_memory_limit;
 					return FAILURE;
 				}
 			} else if (PG(memory_limit) < 0) {
-				suhosin_log(S_MISC, "script tried to disable memory_limit by setting it to a negative value %d bytes which is not allowed", PG(memory_limit));
+				suhosin_log(S_MISC, "script tried to disable memory_limit by setting it to a negative value %ld bytes which is not allowed", PG(memory_limit));
 				if (!SUHOSIN_G(simulation)) {
 					PG(memory_limit) = hard_memory_limit;
 					return FAILURE;

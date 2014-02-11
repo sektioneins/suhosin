@@ -38,45 +38,46 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler);
 
 SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
 {
-    char *var, *val, *e, *s, *p;
-    zval *array_ptr = (zval *) arg;
+	char *var, *val, *e, *s, *p;
+	zval *array_ptr = (zval *) arg;
+#if PHP_VERSION_ID >= 50311	
+	long count = 0;
+#endif
+	if (SG(request_info).post_data == NULL) {
+		return;
+	}	
 
-    if (SG(request_info).post_data==NULL) {
-        return;
-    }	
+	s = SG(request_info).post_data;
+	e = s + SG(request_info).post_data_length;
 
-    s = SG(request_info).post_data;
-    e = s + SG(request_info).post_data_length;
-
-    while (s < e && (p = memchr(s, '&', (e - s)))) {
+	while (s < e && (p = memchr(s, '&', (e - s)))) {
 last_value:
-        if ((val = memchr(s, '=', (p - s)))) { /* have a value */
-            unsigned int val_len, new_val_len;
-            var = s;
+		if ((val = memchr(s, '=', (p - s)))) { /* have a value */
+			unsigned int val_len, new_val_len;
 
-            php_url_decode(var, (val - s));
-            val++;
-            val_len = php_url_decode(val, (p - val));
-            val = estrndup(val, val_len);
-            if (suhosin_input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
-#ifdef ZEND_ENGINE_2
-                if (sapi_module.input_filter(PARSE_POST, var, &val, new_val_len, &new_val_len TSRMLS_CC)) {
+#if PHP_VERSION_ID >= 50311	
+			if (++count > PG(max_input_vars)) {
+				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
+				return;
+			}
 #endif
-                    php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
-#ifdef ZEND_ENGINE_2
-                }
-#endif
-            } else {
-                SUHOSIN_G(abort_request)=1;
-            }
-            efree(val);
-        }
-        s = p + 1;
-    }
-    if (s < e) {
-        p = e;
-        goto last_value;
-    }
+			var = s;
+
+			php_url_decode(var, (val - s));
+			val++;
+			val_len = php_url_decode(val, (p - val));
+			val = estrndup(val, val_len);
+			if (sapi_module.input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
+				php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
+			}
+			efree(val);
+		}
+		s = p + 1;
+	}
+	if (s < e) {
+		p = e;
+		goto last_value;
+	}
 }
 
 static void suhosin_post_handler_modification(sapi_post_entry *spe)

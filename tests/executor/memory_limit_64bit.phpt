@@ -36,8 +36,8 @@ ALERT - script tried to increase memory_limit to 2147483648 bytes which is above
 16M
 ALERT - script tried to increase memory_limit to 3221225472 bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 9)
 16M
-ALERT - script tried to increase memory_limit to 0 bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 10)
+ALERT - script tried to increase memory_limit to 4294967296 bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 10)
 16M
-ALERT - script tried to increase memory_limit to 1073741824 bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 11)
+ALERT - script tried to increase memory_limit to 5368709120 bytes which is above the allowed value (attacker 'REMOTE_ADDR not set', file '%s', line 11)
 16M
 

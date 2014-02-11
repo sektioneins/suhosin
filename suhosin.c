@@ -32,7 +32,9 @@
 #include "zend_llist.h"
 #include "zend_operators.h"
 #include "SAPI.h"
+#if PHP_VERSION_ID < 50500
 #include "php_logos.h"
+#endif
 #include "suhosin_logo.h"
 #include "ext/standard/php_string.h"
 #include "ext/standard/url.h"
@@ -1115,8 +1117,10 @@ PHP_MINIT_FUNCTION(suhosin)
 	suhosin_hook_sha256();
 	suhosin_hook_ex_imp();
 
+#if PHP_VERSION_ID < 50500
 	/* register the logo for phpinfo */
 	php_register_info_logo(SUHOSIN_LOGO_GUID, "image/jpeg", suhosin_logo, sizeof(suhosin_logo));
+#endif
 
 #if PHP_MAJOR_VERSION < 5
 	php_error_docref(NULL TSRMLS_CC, E_ERROR, "Suhosin Extension is not designed to run with PHP 4 and below. Erroring Out.");
@@ -1211,32 +1215,10 @@ PHP_MINFO_FUNCTION(suhosin)
 {
 	php_info_print_box_start(0);
 	if (!sapi_module.phpinfo_as_text) {
-		if (PG(expose_php)) {
-			PUTS("<a href=\"http://www.suhosin.org/\"><img border=\"0\" src=\"");
-			if (SG(request_info).request_uri) {
-				char *elem_esc = php_info_html_esc(SG(request_info).request_uri TSRMLS_CC);
-				PUTS(elem_esc);
-				efree(elem_esc);
-			}
-			PUTS("?="SUHOSIN_LOGO_GUID"\" alt=\"Suhosin logo\" /></a>\n");
-		} else do {
+		do {
 			char *enc_logo;
 			int ret;
-			zval **agent_name;
-			
-#ifdef ZEND_ENGINE_2
-			zend_is_auto_global("_SERVER", sizeof("_SERVER")-1 TSRMLS_CC);
-#endif
-			if (!PG(http_globals)[TRACK_VARS_SERVER] || 
-			    zend_hash_find(PG(http_globals)[TRACK_VARS_SERVER]->value.ht, "HTTP_USER_AGENT", sizeof("HTTP_USER_AGENT"), (void **) &agent_name)==FAILURE) {
-			    break;
-			}
-			if (Z_TYPE_PP(agent_name) != IS_STRING) {
-			    break;
-			}
-			if (strstr(Z_STRVAL_PP(agent_name), "Gecko") == NULL && strstr(Z_STRVAL_PP(agent_name), "Opera") == NULL) {
-			    break;
-			}
+
 			PUTS("<a href=\"http://www.suhosin.org/\"><img border=\"0\" src=\"data:image/jpeg;base64,");
 			enc_logo=(char *)php_base64_encode(suhosin_logo, sizeof(suhosin_logo), &ret);
 			if (enc_logo) {

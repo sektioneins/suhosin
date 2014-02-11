@@ -379,7 +379,7 @@ typedef struct _php_ps_globals_55 {
 	double rfc1867_min_freq;   /* session.upload_progress.min_freq */
 
 	zend_bool use_strict_mode; /* whether or not PHP accepts unknown session ids */
-} php_ps_globals;
+} php_ps_globals_55;
 #endif
 
 #ifdef ZTS

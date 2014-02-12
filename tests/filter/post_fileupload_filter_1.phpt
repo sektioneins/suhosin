@@ -112,3 +112,4 @@ ALERT - tried to register forbidden variable '_FILES' through POST variables (at
 ALERT - tried to register forbidden variable '_POST' through POST variables (attacker 'REMOTE_ADDR not set', file '%s')
 ALERT - tried to register forbidden variable '_ENV' through POST variables (attacker 'REMOTE_ADDR not set', file '%s')
 ALERT - tried to register forbidden variable '_GET' through POST variables (attacker 'REMOTE_ADDR not set', file '%s')
+ALERT - dropped 17 request variables - (0 in GET, 17 in POST, 0 in COOKIE) (attacker 'REMOTE_ADDR not set', file '%s')

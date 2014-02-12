@@ -5,7 +5,7 @@
     - Add changes in PHP 5.5 session handlers structures for PHP 5.5 compability
     - Fix std post handler for PHP >= 5.3.11
     - Fix suhosin logo in phpinfo() for PHP 5.5
-	- Change fileupload handling for PHP >= 5.4.0 to just register the callback
+	- Change fileupload handling for PHP >= 5.4.0 to use an up to date RFC1867 replacement code
     - Adapted suhosin to PHP 5.5 executor
     - Added some test cases for various things
 	- Added suhosin.log.stdout to log to stdout (for debugging purposes only)

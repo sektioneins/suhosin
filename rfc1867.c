@@ -36,6 +36,8 @@
 #include "php_ini.h"
 #include "ext/standard/php_string.h"
 
+#if PHP_VERSION_ID < 50400
+
 #define DEBUG_FILE_UPLOAD ZEND_DEBUG
 
 #if HAVE_MBSTRING && !defined(COMPILE_DL_MBSTRING)
@@ -1381,6 +1383,8 @@ fileupload_done:
 	
 	SAFE_RETURN;
 }
+
+#endif
 
 /*
  * Local variables:

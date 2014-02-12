@@ -67,8 +67,12 @@ last_value:
 			val++;
 			val_len = php_url_decode(val, (p - val));
 			val = estrndup(val, val_len);
-			if (sapi_module.input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
-				php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
+			if (suhosin_input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
+				if (sapi_module.input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
+					php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
+				}
+			} else {
+				SUHOSIN_G(abort_request)=1;
 			}
 			efree(val);
 		}
@@ -126,7 +130,9 @@ static PHP_INI_MH(suhosin_OnUpdate_mbstring_encoding_translation)
  */
 static sapi_post_entry suhosin_post_entries[] = {
 	{ DEFAULT_POST_CONTENT_TYPE, sizeof(DEFAULT_POST_CONTENT_TYPE)-1, sapi_read_standard_form_data,	suhosin_std_post_handler },
+#if PHP_VERSION_ID < 50400
 	{ MULTIPART_CONTENT_TYPE,    sizeof(MULTIPART_CONTENT_TYPE)-1,    NULL,                         suhosin_rfc1867_post_handler },
+#endif
 	{ NULL, 0, NULL, NULL }
 };
 /* }}} */
@@ -141,6 +147,8 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 #if PHP_VERSION_ID >= 50400
 	/* the RFC1867 code is now good enough in PHP to handle our filter just as a registered callback */
 	php_rfc1867_callback = suhosin_rfc1867_filter;
+	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
+	sapi_register_post_entries(suhosin_post_entries TSRMLS_CC);
 #else	
 #if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
 	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);

@@ -99,6 +99,7 @@ conts:
 #define SUHOSIN_CODE_TYPE_LONGNAME	13
 #define SUHOSIN_CODE_TYPE_MANYDOTS	14
 #define SUHOSIN_CODE_TYPE_WRITABLE      15
+#define SUHOSIN_CODE_TYPE_MBREGEXP	16
 
 static int suhosin_check_filename(char *s, int len TSRMLS_DC)
 {
@@ -332,6 +333,10 @@ static int suhosin_detect_codetype(zend_op_array *op_array TSRMLS_DC)
 			return SUHOSIN_CODE_TYPE_REGEXP;
 		}
 
+		if (strstr(s, "mbregex replace") != NULL) {
+			return SUHOSIN_CODE_TYPE_MBREGEXP;
+		}
+
 		if (strstr(s, "assert code") != NULL) {
 			return SUHOSIN_CODE_TYPE_ASSERT;
 		}
@@ -341,6 +346,18 @@ static int suhosin_detect_codetype(zend_op_array *op_array TSRMLS_DC)
 		}
 		
 		if (strstr(s, "Command line code") != NULL) {
+			return SUHOSIN_CODE_TYPE_COMMANDLINE;
+		}
+
+		if (strstr(s, "Command line begin code") != NULL) {
+			return SUHOSIN_CODE_TYPE_COMMANDLINE;
+		}
+
+		if (strstr(s, "Command line run code") != NULL) {
+			return SUHOSIN_CODE_TYPE_COMMANDLINE;
+		}
+
+		if (strstr(s, "Command line end code") != NULL) {
 			return SUHOSIN_CODE_TYPE_COMMANDLINE;
 		}
 		
@@ -540,6 +557,10 @@ not_evaled_code:
 		    }
 		    break;
 		    
+		case SUHOSIN_CODE_TYPE_MBREGEXP:
+			/* XXX TODO: Do we want to disallow this, too? */
+			break;
+		
 	    case SUHOSIN_CODE_TYPE_ASSERT:
 		    break;
 		    

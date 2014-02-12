@@ -139,9 +139,13 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 	var = php_strtok_r(res, separator, &strtok_buf);
 	
 	while (var) {
-		/* Overjump plain whitespace */
-		while (*var && *var == ' ') var++;
-
+		
+		if (arg == PARSE_COOKIE) {
+			/* Remove leading spaces from cookie names, needed for multi-cookie header where ; can be followed by a space */
+			while (isspace(*var)) {
+				var++;
+			}
+		}
 		val = strchr(var, '=');
 		
 #if PHP_VERSION_ID >= 50311

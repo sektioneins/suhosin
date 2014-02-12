@@ -419,6 +419,16 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_sapi)
 	}
 	return SUCCESS;
 }
+static ZEND_INI_MH(OnUpdateSuhosin_log_stdout)
+{
+    LOG_PERDIR_CHECK()
+	if (!new_value) {
+		SUHOSIN_G(log_stdout) = (S_ALL & ~S_SQL);
+	} else {
+		SUHOSIN_G(log_stdout) = atoi(new_value);
+	}
+	return SUCCESS;
+}
 static ZEND_INI_MH(OnUpdateSuhosin_log_script)
 {
     LOG_PERDIR_CHECK()
@@ -857,6 +867,7 @@ static zend_ini_entry shared_ini_entries[] = {
 	ZEND_INI_ENTRY("suhosin.log.syslog.facility",		NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_facility)
 	ZEND_INI_ENTRY("suhosin.log.syslog.priority",		NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_priority)
 	ZEND_INI_ENTRY("suhosin.log.sapi",				"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_sapi)
+	ZEND_INI_ENTRY("suhosin.log.stdout",				"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_stdout)
 	ZEND_INI_ENTRY("suhosin.log.script",			"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_script)
 	ZEND_INI_ENTRY("suhosin.log.script.name",			NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_scriptname)
 	STD_ZEND_INI_BOOLEAN("suhosin.log.use-x-forwarded-for",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateLogBool, log_use_x_forwarded_for,	zend_suhosin_globals,	suhosin_globals)

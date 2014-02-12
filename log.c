@@ -286,6 +286,9 @@ log_sapi:
 		sapi_module.log_message(buf TSRMLS_CC);
 #endif
 	}
+	if ((SUHOSIN_G(log_stdout) & loglevel)!=0) {
+		printf("%s\n", buf);
+	}
 
 /*log_script:*/
 	/* script logging activaed? */

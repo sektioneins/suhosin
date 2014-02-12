@@ -167,6 +167,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	long	log_syslog_priority;
 	long	log_script;
 	long	log_sapi;
+	long	log_stdout;
 	char	*log_scriptname;
 	long	log_phpscript;
 	char	*log_phpscriptname;

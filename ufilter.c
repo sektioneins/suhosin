@@ -346,8 +346,8 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 	}
 continue_with_next:	
 #if HAVE_RFC1867_CALLBACK
-	if (old_rfc1867_callback != NULL) {
-		return old_rfc1867_callback(event, event_data, extra TSRMLS_CC);
+	if (php_rfc1867_callback != NULL) {
+		return php_rfc1867_callback(event, event_data, extra TSRMLS_CC);
 	}
 #endif
 	return SUCCESS;

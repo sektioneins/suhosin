@@ -130,9 +130,7 @@ static PHP_INI_MH(suhosin_OnUpdate_mbstring_encoding_translation)
  */
 static sapi_post_entry suhosin_post_entries[] = {
 	{ DEFAULT_POST_CONTENT_TYPE, sizeof(DEFAULT_POST_CONTENT_TYPE)-1, sapi_read_standard_form_data,	suhosin_std_post_handler },
-#if PHP_VERSION_ID < 50400
 	{ MULTIPART_CONTENT_TYPE,    sizeof(MULTIPART_CONTENT_TYPE)-1,    NULL,                         suhosin_rfc1867_post_handler },
-#endif
 	{ NULL, 0, NULL, NULL }
 };
 /* }}} */
@@ -141,15 +139,7 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 {
 	HashTable tempht;
 	zend_ini_entry *ini_entry;
-
-	old_rfc1867_callback = php_rfc1867_callback;
-
-#if PHP_VERSION_ID >= 50400
-	/* the RFC1867 code is now good enough in PHP to handle our filter just as a registered callback */
-	php_rfc1867_callback = suhosin_rfc1867_filter;
-	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
-	sapi_register_post_entries(suhosin_post_entries TSRMLS_CC);
-#else	
+	
 #if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
 	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
 	sapi_unregister_post_entry(&suhosin_post_entries[1] TSRMLS_CC);
@@ -159,7 +149,7 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 	sapi_unregister_post_entry(&suhosin_post_entries[1]);
 	sapi_register_post_entries(suhosin_post_entries);
 #endif
-#endif
+
 	/* we want to get notified if another extension deregisters the suhosin post handlers */
 
 	/* we need to tell suhosin patch that there is a new valid destructor */
@@ -182,10 +172,6 @@ void suhosin_unhook_post_handlers(TSRMLS_D)
 {
 	zend_ini_entry *ini_entry;
 
-#if PHP_VERSION_ID >= 50400
-	/* unhook the php_rfc1867_callback */
-	php_rfc1867_callback = old_rfc1867_callback;
-#endif
 	/* Restore to an empty destructor */
 	SG(known_post_content_types).pDestructor = NULL;
 

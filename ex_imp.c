@@ -463,7 +463,7 @@ static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list ar
 	}
 
 	if (hash_key->nKeyLength) {
-		php_prefix_varname(&new_key, prefix, hash_key->arKey, hash_key->nKeyLength - 1, 0 TSRMLS_CC);
+		php_prefix_varname(&new_key, prefix, (char *)hash_key->arKey, hash_key->nKeyLength - 1, 0 TSRMLS_CC);
 	} else {
 		zval num;
 

@@ -211,7 +211,7 @@ int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_headers_struct 
 
 		for (i=0; i<sapi_header->header_len; i++, tmp++) {
 			if (tmp[0] == 0) {
-				char *fname = get_active_function_name(TSRMLS_C);
+				char *fname = (char *)get_active_function_name(TSRMLS_C);
 
 				if (!fname) {
 					fname = "unknown";
@@ -226,7 +226,7 @@ int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_headers_struct 
 				continue;
 			} else if ((tmp[0] == '\r' && (tmp[1] != '\n' || i == 0)) || 
 			   (tmp[0] == '\n' && (i == sapi_header->header_len-1 || i == 0 || (tmp[1] != ' ' && tmp[1] != '\t')))) {
-				char *fname = get_active_function_name(TSRMLS_C);
+				char *fname = (char *)get_active_function_name(TSRMLS_C);
 
 				if (!fname) {
 					fname = "unknown";

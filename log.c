@@ -162,14 +162,14 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		if (exdata) {
 			if (getcaller && exdata->prev_execute_data) {
 				lineno = exdata->prev_execute_data->opline->lineno;
-				fname = exdata->prev_execute_data->op_array->filename;									
+				fname = (char *)exdata->prev_execute_data->op_array->filename;									
 			} else {
 				lineno = exdata->opline->lineno;
-				fname = exdata->op_array->filename;				
+				fname = (char *)exdata->op_array->filename;				
 			}
 		} else {
 			lineno = zend_get_executed_lineno(TSRMLS_C);
-			fname = zend_get_executed_filename(TSRMLS_C);
+			fname = (char *)zend_get_executed_filename(TSRMLS_C);
 		}
 		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', file '%s', line %u)", alertstring, error, ip_address, fname, lineno);
 	} else {

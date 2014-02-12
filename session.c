@@ -1035,7 +1035,7 @@ void suhosin_hook_session(TSRMLS_D)
     
     /* Protect the PHP serializer from ! attacks */
 # if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 2)
-    serializer = SESSION_G(serializer);
+    serializer = (ps_serializer *) SESSION_G(serializer);
     if (serializer != NULL && strcmp(serializer->name, "php")==0) {
         serializer->encode = suhosin_session_encode;
     }

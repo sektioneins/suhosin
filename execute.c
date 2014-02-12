@@ -316,7 +316,7 @@ static int suhosin_detect_codetype(zend_op_array *op_array TSRMLS_DC)
 	char *s;
 	int r;
 
-	s = op_array->filename;
+	s = (char *)op_array->filename;
 	
 	/* eval, assert, create_function, preg_replace  */
 	if (op_array->type == ZEND_EVAL_CODE) {
@@ -498,7 +498,7 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 		suhosin_bailout(TSRMLS_C);
 	}
 	
-	fn = op_array->filename;
+	fn = (char *)op_array->filename;
 	len = strlen(fn);
 	
 	orig_code_type = SUHOSIN_G(in_code_type);
@@ -683,11 +683,11 @@ int ih_preg_replace(IH_HANDLER_PARAMS)
 	zval **regex,
 	     **replace,
 	     **subject,
-	     **limit;
+	     **limit, **zcount;
 
-	if (ZEND_NUM_ARGS() < 3 || zend_get_parameters_ex(3, &regex, &replace, &subject, &limit) == FAILURE) {
-		return (0);
-	}
+	 if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ZZZ|ZZ", &regex, &replace, &subject, &limit, &zcount) == FAILURE) {
+	 	return(0);
+	 }
 		
 	if (Z_TYPE_PP(regex) == IS_ARRAY) {
 		zval	**regex_entry;
@@ -1625,7 +1625,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 #ifdef ZEND_ENGINE_2
 	ce = ((zend_internal_function *) execute_data_ptr->function_state.function)->scope;
 #endif
-	lcname = ((zend_internal_function *) execute_data_ptr->function_state.function)->function_name;
+	lcname = (char *)((zend_internal_function *) execute_data_ptr->function_state.function)->function_name;
 	function_name_strlen = strlen(lcname);
 	
 	/* handle methodcalls correctly */

@@ -1,0 +1,24 @@
+--TEST--
+Testing: suhosin.protectkey=On
+--SKIPIF--
+<?php include "../skipifnotcli.inc"; ?>
+--INI--
+suhosin.log.sapi=0
+suhosin.log.stdout=255
+suhosin.log.script=0
+suhosin.log.syslog=0
+suhosin.protectkey=1
+suhosin.session.cryptkey=SUHOSIN_TEST_SESSION_CRYPTKEY
+suhosin.cookie.cryptkey=SUHOSIN_TEST_COOKIE_CRYPTKEY
+--FILE--
+<?php
+ob_start();
+phpinfo();
+$data = ob_get_contents();
+ob_clean();
+var_dump(strpos($data, "SUHOSIN_TEST_SESSION_CRYPTKEY")===FALSE);
+var_dump(strpos($data, "SUHOSIN_TEST_COOKIE_CRYPTKEY")===FALSE);
+?>
+--EXPECTF--
+bool(true)
+bool(true)

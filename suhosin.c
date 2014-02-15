@@ -581,6 +581,43 @@ static ZEND_INI_MH(OnUpdate_cookie_plainlist)
 	return SUCCESS;
 }
 
+static ZEND_INI_MH(OnUpdate_disable_display_errors) /* {{{ */
+{
+	zend_bool *p;
+#ifndef ZTS
+	char *base = (char *) mh_arg2;
+#else
+	char *base;
+
+	base = (char *) ts_resource(*((int *) mh_arg2));
+#endif
+
+	p = (zend_bool *) (base+(size_t) mh_arg1);
+
+	if (new_value_length == 2 && strcasecmp("on", new_value) == 0) {
+		*p = (zend_bool) 1;
+	}
+	else if (new_value_length == 3 && strcasecmp("yes", new_value) == 0) {
+		*p = (zend_bool) 1;
+	}
+	else if (new_value_length == 4 && strcasecmp("true", new_value) == 0) {
+		*p = (zend_bool) 1;
+	}
+	else if (new_value_length == 4 && strcasecmp("fail", new_value) == 0) {
+		*p = (zend_bool) 2;
+	}
+	else {
+		*p = (zend_bool) atoi(new_value);
+	}
+	return SUCCESS;
+}
+/* }}} */
+
+static ZEND_INI_MH(OnUpdate_fail)
+{
+	return FAILURE;
+}
+
 /* {{{ proto void suhosin_register_cookie_variable(char *var, zval *val, zval *track_vars_array TSRMLS_DC)
    Registers a cookie in the RAW cookie array */
 static void suhosin_register_cookie_variable(char *var, zval *val, zval *track_vars_array TSRMLS_DC)
@@ -905,7 +942,7 @@ PHP_INI_BEGIN()
 	STD_ZEND_INI_BOOLEAN("suhosin.coredump",		"0",		ZEND_INI_SYSTEM,	OnUpdateBool, coredump,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.stealth",		"1",		ZEND_INI_SYSTEM,	OnUpdateBool, stealth,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.apc_bug_workaround",		"0",		ZEND_INI_SYSTEM,	OnUpdateBool, apc_bug_workaround,	zend_suhosin_globals,	suhosin_globals)
-	STD_ZEND_INI_BOOLEAN("suhosin.disable.display_errors",		"0",		ZEND_INI_SYSTEM,	OnUpdateBool, disable_display_errors,	zend_suhosin_globals,	suhosin_globals)
+	STD_ZEND_INI_BOOLEAN("suhosin.disable.display_errors",		"0",		ZEND_INI_SYSTEM,	OnUpdate_disable_display_errors, disable_display_errors,	zend_suhosin_globals,	suhosin_globals)
 	
 	
 
@@ -1104,8 +1141,13 @@ PHP_MINIT_FUNCTION(suhosin)
 		zend_ini_entry *i;
 		if (zend_hash_find(EG(ini_directives), "display_errors", sizeof("display_errors"), (void **) &i) == SUCCESS) {
 			if (i->on_modify) {
-				i->on_modify(i, "0", sizeof("0"), i->mh_arg1, i->mh_arg2, i->mh_arg3, ZEND_INI_STAGE_STARTUP TSRMLS_CC);
-				i->on_modify = NULL;
+				if (SUHOSIN_G(disable_display_errors) > 1) {
+					zend_alter_ini_entry_ex("display_errors", sizeof("display_errors"), "0", sizeof("0"), ZEND_INI_SYSTEM, ZEND_INI_STAGE_STARTUP, 0 TSRMLS_CC);
+					i->on_modify = OnUpdate_fail;
+				} else {
+					i->on_modify(i, "Off", sizeof("off"), i->mh_arg1, i->mh_arg2, i->mh_arg3, ZEND_INI_STAGE_STARTUP TSRMLS_CC);
+					i->on_modify = NULL;
+				}
 			}
 		}
 	}

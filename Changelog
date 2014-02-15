@@ -5,10 +5,11 @@
     - Add changes in PHP 5.5 session handlers structures for PHP 5.5 compability
     - Fix std post handler for PHP >= 5.3.11
     - Fix suhosin logo in phpinfo() for PHP 5.5
-	- Change fileupload handling for PHP >= 5.4.0 to use an up to date RFC1867 replacement code
+    - Change fileupload handling for PHP >= 5.4.0 to use an up to date RFC1867 replacement code
     - Adapted suhosin to PHP 5.5 executor
     - Added some test cases for various things
-	- Added suhosin.log.stdout to log to stdout (for debugging purposes only)
+    - Added suhosin.log.stdout to log to stdout (for debugging purposes only)
+    - Add ini_set() fail mode to suhosin.disable.display_errors
     - TODO: WARN THAT FUNCTION WHITELISTS/BLACKLISTS NEVER WORKED CORRECTLY WITH PHP < 5.5
 
 2012-02-12 - 0.9.34

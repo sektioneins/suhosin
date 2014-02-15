@@ -1,4 +1,4 @@
-2014-02-15 - 0.9.35-RC1
+2014-02-xx - 0.9.35-DEV
 
     - Fix problems with the hard memory_limit on 64 bit systems
     - Fix problems with user space session handler due to change in PHP 5.4.0

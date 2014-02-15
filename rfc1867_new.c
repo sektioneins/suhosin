@@ -850,7 +850,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 					}
 				}
 				
-				if (suhosin_input_filter(PARSE_POST, param, &value, strlen(value), &new_val_len TSRMLS_CC) == 0) {
+				if (suhosin_input_filter(PARSE_POST, param, &value, value_len, &new_val_len TSRMLS_CC) == 0) {
 					SUHOSIN_G(abort_request)=1;
 					efree(param);
 					efree(value);

@@ -746,8 +746,8 @@ char *suhosin_generate_key(char *key, zend_bool ua, zend_bool dr, long raddr, ch
     SDEBUG("(suhosin_generate_key) KEY: %s - UA: %s - DR: %s - RA: %s", key,_ua,_dr,_ra);
     
     suhosin_SHA256Init(&ctx);
-    if (key == NULL) {
-        suhosin_SHA256Update(&ctx, (unsigned char*)"D3F4UL7", sizeof("D3F4UL7"));
+    if (key == NULL || *key == 0) {
+        suhosin_SHA256Update(&ctx, (unsigned char*)"D3F4UL7", strlen("D3F4UL7"));
     } else {
         suhosin_SHA256Update(&ctx, (unsigned char*)key, strlen(key));
     }

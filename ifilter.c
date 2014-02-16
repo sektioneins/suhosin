@@ -463,7 +463,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 					return 0;
 				}
 			}
-			if (SUHOSIN_G(max_get_totalname_length) && SUHOSIN_G(max_get_totalname_length) < var_len) {
+			if (SUHOSIN_G(max_get_totalname_length) && SUHOSIN_G(max_get_totalname_length) < total_len) {
 				suhosin_log(S_VARS, "configured GET variable total name length limit exceeded - dropped variable '%s'", var);
 				if (!SUHOSIN_G(simulation)) {
 					return 0;
@@ -477,7 +477,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 					return 0;
 				}
 			}
-			if (SUHOSIN_G(max_cookie_totalname_length) && SUHOSIN_G(max_cookie_totalname_length) < var_len) {
+			if (SUHOSIN_G(max_cookie_totalname_length) && SUHOSIN_G(max_cookie_totalname_length) < total_len) {
 				suhosin_log(S_VARS, "configured COOKIE variable total name length limit exceeded - dropped variable '%s'", var);
 				if (!SUHOSIN_G(simulation)) {
 					return 0;
@@ -491,7 +491,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 					return 0;
 				}
 			}
-			if (SUHOSIN_G(max_post_totalname_length) && SUHOSIN_G(max_post_totalname_length) < var_len) {
+			if (SUHOSIN_G(max_post_totalname_length) && SUHOSIN_G(max_post_totalname_length) < total_len) {
 				suhosin_log(S_VARS, "configured POST variable total name length limit exceeded - dropped variable '%s'", var);
 				if (!SUHOSIN_G(simulation)) {
 					return 0;

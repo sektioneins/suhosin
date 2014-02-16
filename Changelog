@@ -11,6 +11,7 @@
     - Added suhosin.log.stdout to log to stdout (for debugging purposes only)
     - Add ini_set() fail mode to suhosin.disable.display_errors
     - Fix suhosin.get/post/cookie.max_totalname_length filter
+    - Refactor array index handling in filter to make it work always
     - TODO: WARN THAT FUNCTION WHITELISTS/BLACKLISTS NEVER WORKED CORRECTLY WITH PHP < 5.5
 
 2012-02-12 - 0.9.34

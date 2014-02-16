@@ -131,29 +131,36 @@ static int check_fileupload_varname(char *varname)
 	
 	/* Find out array depth */
 	while (index) {
+		char *index_end;
 		unsigned int index_length;
 		
-		depth++;
-		index = strchr(index+1, '[');
+		/* overjump '[' */
+		index++;
 		
-		if (prev_index) {
-			index_length = index ? index - 1 - prev_index - 1: strlen(prev_index);
-			
-			if (SUHOSIN_G(max_array_index_length) && SUHOSIN_G(max_array_index_length) < index_length) {
-				suhosin_log(S_FILES, "configured request variable array index length limit exceeded - dropped variable '%s'", var);
-				if (!SUHOSIN_G(simulation)) {
-					goto return_failure;
-				}
-			} 
-			if (SUHOSIN_G(max_post_array_index_length) && SUHOSIN_G(max_post_array_index_length) < index_length) {
-				suhosin_log(S_FILES, "configured POST variable array index length limit exceeded - dropped variable '%s'", var);
-				if (!SUHOSIN_G(simulation)) {
-					goto return_failure;
-				}
-			} 
-			prev_index = index;
+		/* increase array depth */
+		depth++;
+				
+		index_end = strchr(index, ']');
+		if (index_end == NULL) {
+			index_end = index+strlen(index);
 		}
 		
+		index_length = index_end - index;
+			
+		if (SUHOSIN_G(max_array_index_length) && SUHOSIN_G(max_array_index_length) < index_length) {
+			suhosin_log(S_FILES, "configured request variable array index length limit exceeded - dropped variable '%s'", var);
+			if (!SUHOSIN_G(simulation)) {
+				goto return_failure;
+			}
+		} 
+		if (SUHOSIN_G(max_post_array_index_length) && SUHOSIN_G(max_post_array_index_length) < index_length) {
+			suhosin_log(S_FILES, "configured POST variable array index length limit exceeded - dropped variable '%s'", var);
+			if (!SUHOSIN_G(simulation)) {
+				goto return_failure;
+			}
+		} 
+		
+		index = strchr(index, '[');		
 	}
 	
 	/* Drop this variable if it exceeds the array depth limit */

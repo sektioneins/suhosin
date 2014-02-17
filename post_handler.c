@@ -32,10 +32,13 @@
 #include "php_content_types.h"
 #include "suhosin_rfc1867.h"
 #include "ext/standard/url.h"
+#include "ext/standard/php_smart_str.h"
+
 
 SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler);
 
 
+#if PHP_VERSION_ID < 50600
 SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
 {
 	char *var, *val, *e, *s, *p;
@@ -68,7 +71,7 @@ last_value:
 			val_len = php_url_decode(val, (p - val));
 			val = estrndup(val, val_len);
 			if (suhosin_input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
-				if (sapi_module.input_filter(PARSE_POST, var, &val, val_len, &new_val_len TSRMLS_CC)) {
+				if (sapi_module.input_filter(PARSE_POST, var, &val, new_val_len, &new_val_len TSRMLS_CC)) {
 					php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
 				}
 			} else {
@@ -83,6 +86,123 @@ last_value:
 		goto last_value;
 	}
 }
+#else
+typedef struct post_var_data {
+	smart_str str;
+	char *ptr;
+	char *end;
+	uint64_t cnt;
+} post_var_data_t;
+
+static zend_bool add_post_var(zval *arr, post_var_data_t *var, zend_bool eof TSRMLS_DC)
+{
+	char *ksep, *vsep;
+	size_t klen, vlen;
+	/* FIXME: string-size_t */
+	unsigned int new_vlen;
+
+	if (var->ptr >= var->end) {
+		return 0;
+	}
+
+	vsep = memchr(var->ptr, '&', var->end - var->ptr);
+	if (!vsep) {
+		if (!eof) {
+			return 0;
+		} else {
+			vsep = var->end;
+		}
+	}
+
+	ksep = memchr(var->ptr, '=', vsep - var->ptr);
+	if (ksep) {
+		*ksep = '\0';
+		/* "foo=bar&" or "foo=&" */
+		klen = ksep - var->ptr;
+		vlen = vsep - ++ksep;
+	} else {
+		ksep = "";
+		/* "foo&" */
+		klen = vsep - var->ptr;
+		vlen = 0;
+	}
+
+
+	php_url_decode(var->ptr, klen);
+	if (vlen) {
+		vlen = php_url_decode(ksep, vlen);
+	}
+
+	if (suhosin_input_filter(PARSE_POST, var->ptr, &ksep, vlen, &new_vlen TSRMLS_CC)) {
+		if (sapi_module.input_filter(PARSE_POST, var->ptr, &ksep, new_vlen, &new_vlen TSRMLS_CC)) {
+			php_register_variable_safe(var->ptr, ksep, new_vlen, arr TSRMLS_CC);
+		}
+	} else {
+		SUHOSIN_G(abort_request)=1;
+	}
+
+	var->ptr = vsep + (vsep != var->end);
+	return 1;
+}
+
+static inline int add_post_vars(zval *arr, post_var_data_t *vars, zend_bool eof TSRMLS_DC)
+{
+	uint64_t max_vars = PG(max_input_vars);
+
+	vars->ptr = vars->str.c;
+	vars->end = vars->str.c + vars->str.len;
+	while (add_post_var(arr, vars, eof TSRMLS_CC)) {
+		if (++vars->cnt > max_vars) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING,
+					"Input variables exceeded %" PRIu64 ". "
+					"To increase the limit change max_input_vars in php.ini.",
+					max_vars);
+			return FAILURE;
+		}
+	}
+
+	if (!eof) {
+		memmove(vars->str.c, vars->ptr, vars->str.len = vars->end - vars->ptr);
+	}
+	return SUCCESS;
+}
+
+SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
+{
+	zval *arr = (zval *) arg;
+	php_stream *s = SG(request_info).request_body;
+	post_var_data_t post_data;
+
+	if (s && SUCCESS == php_stream_rewind(s)) {
+		memset(&post_data, 0, sizeof(post_data));
+
+		while (!php_stream_eof(s)) {
+			char buf[BUFSIZ] = {0};
+			size_t len = php_stream_read(s, buf, BUFSIZ);
+
+			if (len && len != (size_t) -1) {
+				smart_str_appendl(&post_data.str, buf, len);
+
+				if (SUCCESS != add_post_vars(arr, &post_data, 0 TSRMLS_CC)) {
+					if (post_data.str.c) {
+						efree(post_data.str.c);
+					}
+					return;
+				}
+			}
+
+			if (len != BUFSIZ){
+				break;
+			}
+		}
+
+		add_post_vars(arr, &post_data, 1 TSRMLS_CC);
+		if (post_data.str.c) {
+			efree(post_data.str.c);
+		}
+	}
+}
+#endif
 
 static void suhosin_post_handler_modification(sapi_post_entry *spe)
 {

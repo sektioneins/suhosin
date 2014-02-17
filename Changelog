@@ -12,6 +12,7 @@
     - Add ini_set() fail mode to suhosin.disable.display_errors
     - Fix suhosin.get/post/cookie.max_totalname_length filter
     - Refactor array index handling in filter to make it work always
+    - Added support for PHP 5.6.0alpha2
     - TODO: WARN THAT FUNCTION WHITELISTS/BLACKLISTS NEVER WORKED CORRECTLY WITH PHP < 5.5
 
 2012-02-12 - 0.9.34

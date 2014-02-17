@@ -234,7 +234,7 @@ typedef struct _php_ps_globals_53 {
 } php_ps_globals_53;
 
 #if PHP_VERSION_ID >= 50400
-typedef struct _php_session_rfc1867_progress_54_55 {
+typedef struct _php_session_rfc1867_progress_54_55_56 {
 
 	size_t    sname_len;
 	zval      sid;
@@ -252,7 +252,7 @@ typedef struct _php_session_rfc1867_progress_54_55 {
 	zval      *files;                /* data["files"] array */
 	zval      *current_file;         /* array of currently uploading file */
 	zval      *current_file_bytes_processed;
-} php_session_rfc1867_progress_54_55;
+} php_session_rfc1867_progress_54_55_56;
 
 typedef struct _php_ps_globals_54 {
     char *save_path;
@@ -306,7 +306,7 @@ typedef struct _php_ps_globals_54 {
     int define_sid;
     zend_bool invalid_session_id;   /* allows the driver to report about an invalid session id and request id regeneration */
 
-    php_session_rfc1867_progress_54_55 *rfc1867_progress;
+    php_session_rfc1867_progress_54_55_56 *rfc1867_progress;
     zend_bool rfc1867_enabled; /* session.upload_progress.enabled */
     zend_bool rfc1867_cleanup; /* session.upload_progress.cleanup */
     smart_str rfc1867_prefix;  /* session.upload_progress.prefix */
@@ -370,7 +370,7 @@ typedef struct _php_ps_globals_55 {
 	int define_sid;
 	zend_bool invalid_session_id;	/* allows the driver to report about an invalid session id and request id regeneration */
 
-	php_session_rfc1867_progress_54_55 *rfc1867_progress;
+	php_session_rfc1867_progress_54_55_56 *rfc1867_progress;
 	zend_bool rfc1867_enabled; /* session.upload_progress.enabled */
 	zend_bool rfc1867_cleanup; /* session.upload_progress.cleanup */
 	smart_str rfc1867_prefix;  /* session.upload_progress.prefix */
@@ -380,11 +380,78 @@ typedef struct _php_ps_globals_55 {
 
 	zend_bool use_strict_mode; /* whether or not PHP accepts unknown session ids */
 } php_ps_globals_55;
+
+typedef struct _php_ps_globals_56 {
+	char *save_path;
+	char *session_name;
+	char *id;
+	char *extern_referer_chk;
+	char *entropy_file;
+	char *cache_limiter;
+	long entropy_length;
+	long cookie_lifetime;
+	char *cookie_path;
+	char *cookie_domain;
+	zend_bool  cookie_secure;
+	zend_bool  cookie_httponly;
+	ps_module *mod;
+	ps_module *default_mod;
+	void *mod_data;
+	php_session_status session_status;
+	long gc_probability;
+	long gc_divisor;
+	long gc_maxlifetime;
+	int module_number;
+	long cache_expire;
+	union {
+		zval *names[7];
+		struct {
+			zval *ps_open;
+			zval *ps_close;
+			zval *ps_read;
+			zval *ps_write;
+			zval *ps_destroy;
+			zval *ps_gc;
+			zval *ps_create_sid;
+		} name;
+	} mod_user_names;
+	int mod_user_implemented;
+	int mod_user_is_open;
+	const struct ps_serializer_struct *serializer;
+	zval *http_session_vars;
+	zend_bool auto_start;
+	zend_bool use_cookies;
+	zend_bool use_only_cookies;
+	zend_bool use_trans_sid;	/* contains the INI value of whether to use trans-sid */
+	zend_bool apply_trans_sid;	/* whether or not to enable trans-sid for the current request */
+
+	long hash_func;
+#if defined(HAVE_HASH_EXT) && !defined(COMPILE_DL_HASH)
+	php_hash_ops *hash_ops;
+#endif
+	long hash_bits_per_character;
+	int send_cookie;
+	int define_sid;
+	zend_bool invalid_session_id;	/* allows the driver to report about an invalid session id and request id regeneration */
+
+	php_session_rfc1867_progress_54_55_56 *rfc1867_progress;
+	zend_bool rfc1867_enabled; /* session.upload_progress.enabled */
+	zend_bool rfc1867_cleanup; /* session.upload_progress.cleanup */
+	smart_str rfc1867_prefix;  /* session.upload_progress.prefix */
+	smart_str rfc1867_name;    /* session.upload_progress.name */
+	long rfc1867_freq;         /* session.upload_progress.freq */
+	double rfc1867_min_freq;   /* session.upload_progress.min_freq */
+
+	zend_bool use_strict_mode; /* whether or not PHP accepts unknown session ids */
+	unsigned char session_data_hash[16]; /* binary MD5 hash length */
+} php_ps_globals_56;
 #endif
 
 #ifdef ZTS
 static ts_rsrc_id session_globals_id = 0;
-# if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
+# if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6)
+#  define SESSION_G(v) TSRMG(session_globals_id, php_ps_globals_56 *, v)
+# elif (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
 #  define SESSION_G(v) TSRMG(session_globals_id, php_ps_globals_55 *, v)
 # elif (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 4)
 #  define SESSION_G(v) TSRMG(session_globals_id, php_ps_globals_54 *, v)
@@ -400,7 +467,9 @@ static ts_rsrc_id session_globals_id = 0;
     UNSUPPORTED PHP VERSION
 # endif
 #else
-# if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
+# if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 6)
+static php_ps_globals_56 *session_globals = NULL;
+# elif (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 5)
 static php_ps_globals_55 *session_globals = NULL;
 # elif (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 4)
 static php_ps_globals_54 *session_globals = NULL;

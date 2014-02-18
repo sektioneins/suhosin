@@ -107,8 +107,8 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	unsigned short etype;
 	DWORD evid;
 #endif
-	char buf[4096+64];
-	char error[4096+100];
+	char buf[5000];
+	char error[5000];
 	char *ip_address;
 	char *fname;
 	char *alertstring;

@@ -4,6 +4,7 @@ session id not too long
 <?php include "../skipifcli.inc"; ?>
 --INI--
 suhosin.session.max_id_length=32
+session.hash_bits_per_character=4
 --FILE--
 <?php
 session_id('12345678901234567890123456789012');

@@ -1,4 +1,10 @@
 <?php
+
+if (PHP_VERSION_ID < 50400) {
+	interface SessionHandlerInterface
+	{}
+}
+
 class GenericSessionHandler implements SessionHandlerInterface
 {
 	function open($savePath, $sessionName) { return true; }
@@ -33,7 +39,11 @@ function session_test_start($handler=null) {
 	if (!$handler) {
 		$handler = new WriteSessionHandler();
 	}
-	session_set_save_handler($handler, true);
+	if (PHP_VERSION_ID < 50400) {
+		session_set_save_handler(array($handler, "open"), array($handler, "close"), array($handler, "read"), array($handler, "write"), array($handler, "destroy"), array($handler, "gc"));
+	} else {
+		session_set_save_handler($handler, true);
+	}
 	session_start();
 	return $handler;
 }

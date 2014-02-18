@@ -940,6 +940,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler)
 				}
 SDEBUG("calling inputfilter");				
 				if (suhosin_input_filter(PARSE_POST, param, &value, value_len, &new_val_len TSRMLS_CC) == 0) {
+					SUHOSIN_G(abort_request)=1;
 					efree(param);
 					efree(value);
 					continue;

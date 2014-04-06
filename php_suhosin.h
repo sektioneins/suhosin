@@ -235,6 +235,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	int          r_left;
     zend_bool    srand_ignore;
     zend_bool    mt_srand_ignore;
+	char*	rands_seedkey;
 	php_uint32   mt_state[625];
 	php_uint32   *mt_next;
 	int          mt_left;

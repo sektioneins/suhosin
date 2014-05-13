@@ -1,3 +1,7 @@
+2014-05-xx - 0.9.36-dev
+
+    - Added LICENSE file to make distributions happy
+
 2014-02-24 - 0.9.35
 
     - From now only PHP >= 5.4 is officially supported

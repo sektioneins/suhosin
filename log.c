@@ -296,13 +296,24 @@ log_sapi:
 		char cmd[8192], *cmdpos, *bufpos;
 		FILE *in;
 		int space;
+		struct stat st;
 		
 		char *sname = SUHOSIN_G(log_scriptname);
 		while (isspace(*sname)) ++sname;
 		if (*sname == 0) goto log_phpscript;
 		
-		ap_php_snprintf(cmd, sizeof(cmd), "%s %s \'", sname, loglevel2string(loglevel));
-		space = sizeof(cmd) - strlen(cmd);
+		if (VCWD_STAT(sname, &st) < 0) {
+			suhosin_log(S_INTERNAL, "unable to find logging shell script %s - file dropped", sname);
+			goto log_phpscript;
+		}
+		if (access(sname, X_OK|R_OK) < 0) {
+			suhosin_log(S_INTERNAL, "logging shell script %s is not executable - file dropped", sname);
+			goto log_phpscript;					
+		}
+		
+		/* TODO: clean up this code to calculate size of output dynamically */
+		ap_php_snprintf(cmd, sizeof(cmd) - 20, "%s %s \'", sname, loglevel2string(loglevel));
+		space = sizeof(cmd) - strlen(cmd) - 20;
 		cmdpos = cmd + strlen(cmd);
 		bufpos = buf;
 		if (space <= 1) return;
@@ -321,17 +332,28 @@ log_sapi:
 			}
 		}
 		*cmdpos++ = '\'';
+		*cmdpos++ = ' ';
+		*cmdpos++ = '2';
+		*cmdpos++ = '>';
+		*cmdpos++ = '&';
+		*cmdpos++ = '1';
 		*cmdpos = 0;
 		
 		if ((in=VCWD_POPEN(cmd, "r"))==NULL) {
 			suhosin_log(S_INTERNAL, "Unable to execute logging shell script: %s", sname);
-			return;
+			goto log_phpscript;
 		}
 		/* read and forget the result */
 		while (1) {
 			int readbytes = fread(cmd, 1, sizeof(cmd), in);
 			if (readbytes<=0) {
 				break;
+			}
+			if (strncmp(cmd, "sh: ", 4) == 0) {
+				/* assume this is an error */
+				suhosin_log(S_INTERNAL, "Error while executing logging shell script: %s", sname);
+				pclose(in);
+				goto log_phpscript;
 			}
 		}
 		pclose(in);

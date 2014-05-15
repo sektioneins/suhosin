@@ -1,5 +1,6 @@
 2014-05-xx - 0.9.36-dev
 
+    - Added better handling of non existing/non executable shell scripts
     - Added LICENSE file to make distributions happy
 
 2014-02-24 - 0.9.35

@@ -292,6 +292,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 			    char cmd[8192];
 			    FILE *in;
 			    int first=1;
+				struct stat st;
 			    char *sname = SUHOSIN_G(upload_verification_script);
 			    
 			    /* ignore files that will get deleted anyway */
@@ -305,8 +306,25 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 				    SUHOSIN_G(num_uploads)++;
 				    break;
 			    }
-		
-			    ap_php_snprintf(cmd, sizeof(cmd), "%s %s", sname, mefe->temp_filename);
+				
+				if (VCWD_STAT(sname, &st) < 0) {
+					suhosin_log(S_FILES, "unable to find fileupload verification script %s - file dropped", sname);
+					if (!SUHOSIN_G(simulation)) {
+						goto continue_with_failure;
+					} else {
+						goto continue_with_next;
+					}
+				}
+				if (access(sname, X_OK|R_OK) < 0) {
+					suhosin_log(S_FILES, "fileupload verification script %s is not executable - file dropped", sname);
+					if (!SUHOSIN_G(simulation)) {
+						goto continue_with_failure;
+					} else {
+						goto continue_with_next;
+					}					
+				}
+				
+			    ap_php_snprintf(cmd, sizeof(cmd), "%s %s 2>&1", sname, mefe->temp_filename);
 
 			    if ((in=VCWD_POPEN(cmd, "r"))==NULL) {
 				    suhosin_log(S_FILES, "unable to execute fileupload verification script %s - file dropped", sname);
@@ -326,8 +344,18 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 					    break;
 				    }
 				    if (first) {
-					    retval = atoi(cmd) == 1 ? SUCCESS : FAILURE;
-					    first = 0;
+						if (strncmp(cmd, "sh: ", 4) == 0) {
+							/* assume this is an error */
+							suhosin_log(S_FILES, "error while executing fileupload verification script %s - file dropped", sname);
+							if (!SUHOSIN_G(simulation)) {
+								goto continue_with_failure;
+							} else {
+								goto continue_with_next;
+							}
+						} else {
+							retval = atoi(cmd) == 1 ? SUCCESS : FAILURE;
+							first = 0;
+						}
 				    }
 			    }
 			    pclose(in);

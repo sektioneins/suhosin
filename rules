@@ -11,11 +11,15 @@ build:
 	phpize5
 	./configure
 	make
+	install -D -m 644 modules/suhosin.so debian/php5-suhosin$(PHP_EX5)/suhosin.so
+	install -D -m 644 suhosin.ini debian/php5-suhosin$(PHP_CONFIG)/suhosin.ini
 
 clean:
 	dh_testdir
 	dh_auto_clean
 	dh_clean
+
+
 
 binary-arch: binary
 
@@ -37,7 +41,3 @@ binary:
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
-
-install :
-	install -D -m 644 modules/suhosin.so debian/php5-suhosin$(PHP_EX5)/suhosin.so
-	install -D -m 644 debian/suhosin.ini debian/php5-suhosin$(PHP_CONFIG)/suhosin.ini

@@ -13,7 +13,7 @@ cd php5-suhosin-0.9.36
 
 rm -rf .git .gitignore
 
-dh_make --createorig -e your@email
+dh_make --createorig -s -e your@email
 
 rm -f debian/rules
 

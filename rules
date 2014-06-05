@@ -16,6 +16,8 @@ clean:
 	dh_auto_clean
 	dh_clean
 
+binary-arch: binary
+
 binary:
 	dh_testdir
 	dh_testroot

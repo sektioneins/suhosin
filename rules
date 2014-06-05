@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 BUILD5=$(CURDIR)/debian/php5-suhosin
 PHP_EX5=$(shell /usr/bin/php-config5 --extension-dir)
+PHP_CONFIG=$(shell find /etc/php5/ -name conf.d)
 
 #export DH_VERBOSE=1
 
@@ -39,4 +40,4 @@ binary:
 
 install :
 	install -D -m 644 modules/suhosin.so debian/php5-suhosin$(PHP_EX5)/suhosin.so
-	install -D -m 644 debian/suhosin.ini debian/php5-suhosin/etc/php5/conf.d/suhosin.ini
+	install -D -m 644 debian/suhosin.ini debian/php5-suhosin$(PHP_CONFIG)/suhosin.ini

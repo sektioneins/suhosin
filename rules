@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+BUILD5=$(CURDIR)/debian/php5-suhosin
+PHP_EX5=$(shell /usr/bin/php-config5 --extension-dir)
+
+#export DH_VERBOSE=1
+
+#include /usr/share/dpatch/dpatch.make
+
+build: 
+	phpize5
+	./configure
+	make
+
+clean:
+	dh_testdir
+	dh_auto_clean
+	dh_clean
+
+binary:
+	dh_testdir
+	dh_testroot
+	dh_installdirs
+	dh_installchangelogs Changelog
+	dh_installdocs CREDITS
+	dh_installexamples
+	dh_install
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	echo "php:Depends=phpapi-`php-config5 --phpapi`" >> debian/php5-suhosin.substvars
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+install :
+	install -D -m 644 modules/suhosin.so debian/php5-suhosin$(PHP_EX5)/suhosin.so
+	install -D -m 644 debian/suhosin.ini debian/php5-suhosin/etc/php5/conf.d/suhosin.ini

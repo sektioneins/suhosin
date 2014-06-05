@@ -14,6 +14,7 @@ rm -f debian/rules
 mv rules debian/
 # for publich on launchpad
 debuild -S -sa
+
 dput ppa:username/ppa php5-suhosin_0.9.36-1_source.changes
 # for create deb file
 debuild

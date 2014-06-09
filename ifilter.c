@@ -249,6 +249,7 @@ void suhosin_register_server_variables(zval *track_vars_array TSRMLS_DC)
 		suhosin_server_strip(svars, "PHP_SELF", sizeof("PHP_SELF"));
 		suhosin_server_strip(svars, "PATH_INFO", sizeof("PATH_INFO"));
 		suhosin_server_strip(svars, "PATH_TRANSLATED", sizeof("PATH_TRANSLATED"));
+		suhosin_server_strip(svars, "HTTP_USER_AGENT", sizeof("HTTP_USER_AGENT"));
 	}
 }
 /* }}} */

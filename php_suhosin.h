@@ -239,6 +239,9 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	php_uint32   *mt_next;
 	int          mt_left;
 
+	char         *seedingkey;
+	zend_bool    reseed_every_request;
+
 	zend_bool r_is_seeded; 
 	zend_bool mt_is_seeded;
 

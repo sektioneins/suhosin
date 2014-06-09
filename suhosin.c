@@ -1015,10 +1015,11 @@ PHP_INI_BEGIN()
 	ZEND_INI_ENTRY("suhosin.cookie.cryptlist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_cookie_cryptlist)
 	ZEND_INI_ENTRY("suhosin.cookie.plainlist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_cookie_plainlist)
 
-
 	STD_ZEND_INI_BOOLEAN("suhosin.server.encode", "1", ZEND_INI_SYSTEM, OnUpdateBool, server_encode,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.server.strip", "1", ZEND_INI_SYSTEM, OnUpdateBool, server_strip,zend_suhosin_globals,	suhosin_globals)
 
+	STD_PHP_INI_ENTRY("suhosin.rand.seedingkey", "", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateString, seedingkey, zend_suhosin_globals, suhosin_globals)
+	STD_ZEND_INI_BOOLEAN("suhosin.rand.reseed_every_request", "0", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, reseed_every_request, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, srand_ignore,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.mt_srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, mt_srand_ignore,zend_suhosin_globals,	suhosin_globals)
 
@@ -1239,6 +1240,11 @@ PHP_RSHUTDOWN_FUNCTION(suhosin)
 	
 	SUHOSIN_G(abort_request) = 0;
 	
+	if (SUHOSIN_G(reseed_every_request)) {
+		SUHOSIN_G(r_is_seeded) = 0;
+		SUHOSIN_G(mt_is_seeded) = 0;
+	}
+	
 	if (SUHOSIN_G(decrypted_cookie)) {
 		efree(SUHOSIN_G(decrypted_cookie));
 		SUHOSIN_G(decrypted_cookie)=NULL;
@@ -1301,6 +1307,9 @@ PHP_MINFO_FUNCTION(suhosin)
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
             i->displayer = suhosin_ini_displayer;
         }
+		if (zend_hash_find(EG(ini_directives), "suhosin.rand.seedingkey", sizeof("suhosin.rand.seedingkey"), (void **) &i)==SUCCESS) {
+            i->displayer = suhosin_ini_displayer;
+        }
     }
     
 	DISPLAY_INI_ENTRIES();
@@ -1312,6 +1321,9 @@ PHP_MINFO_FUNCTION(suhosin)
             i->displayer = NULL;
         }
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
+            i->displayer = NULL;
+        }
+		if (zend_hash_find(EG(ini_directives), "suhosin.rand.seedingkey", sizeof("suhosin.rand.seedingkey"), (void **) &i)==SUCCESS) {
             i->displayer = NULL;
         }
     }

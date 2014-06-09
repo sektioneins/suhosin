@@ -38,6 +38,13 @@
 
 #include "sha256.h"
 
+#ifdef PHP_WIN32
+# include "win32/winutil.h"
+# include "win32/time.h"
+#else
+# include <sys/time.h>
+#endif
+
 #if PHP_VERSION_ID >= 50500
 static void (*old_execute_ex)(zend_execute_data *execute_data TSRMLS_DC);
 static void suhosin_execute_ex(zend_execute_data *execute_data TSRMLS_DC);
@@ -1325,8 +1332,9 @@ static php_uint32 suhosin_mt_rand(TSRMLS_D)
 
 /* {{{ suhosin_gen_entropy
  */
-static void suhosin_gen_entropy(php_uint32 *seedbuf TSRMLS_DC)
+static void suhosin_gen_entropy(php_uint32 *entropybuf TSRMLS_DC)
 {
+    php_uint32 seedbuf[20];
     /* On a modern OS code, stack and heap base are randomized */
     unsigned long code_value  = (unsigned long)suhosin_gen_entropy;
     unsigned long stack_value = (unsigned long)&code_value;
@@ -1353,14 +1361,21 @@ static void suhosin_gen_entropy(php_uint32 *seedbuf TSRMLS_DC)
     fd = VCWD_OPEN("/dev/urandom", O_RDONLY);
     if (fd >= 0) {
         /* ignore error case - if urandom doesn't give us any/enough random bytes */
-        read(fd, &seedbuf[6], 2 * sizeof(php_uint32));
+        read(fd, &seedbuf[6], 8 * sizeof(php_uint32));
         close(fd);
     }
+#else
+    /* we have to live with the possibility that this call fails */
+    php_win32_get_random_bytes(rbuf, 8 * sizeof(php_uint32));
 #endif
 
     suhosin_SHA256Init(&context);
-	suhosin_SHA256Update(&context, (void *) seedbuf, sizeof(php_uint32) * 8);
-	suhosin_SHA256Final((void *)seedbuf, &context);
+    /* to our friends from Debian: yes this will add unitialized stack values to the entropy DO NOT REMOVE */
+    suhosin_SHA256Update(&context, (void *) seedbuf, sizeof(seedbuf));
+    if (SUHOSIN_G(seedingkey) != NULL && *SUHOSIN_G(seedingkey) != 0) {
+        suhosin_SHA256Update(&context, (unsigned char*)SUHOSIN_G(seedingkey), strlen(SUHOSIN_G(seedingkey)));
+    }
+    suhosin_SHA256Final((void *)entropybuf, &context);
 }
 /* }}} */
 

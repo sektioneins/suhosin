@@ -3,6 +3,11 @@
     - Added better handling of non existing/non executable shell scripts
     - Added protection against XSS/SQL/Other Injections through User-Agent HTTP header
     - Fix variable logging statistics outputting on every include - ticket: #37
+    - Added more entropy from /dev/urandom to internal random seeding (64 bit => 256 bit)
+    - Added non initialized stack variables to random seeding
+    - Added php_win32_get_random_bytes for windows compatibility in random seeding
+    - Added suhosin.rand.seedingkey for INI supplied additional entropy string (idea DavisNT)
+    - Added suhosin.rand.reseed_every_request to allow reseeding on every request (idea DavisNT)
     - Added LICENSE file to make distributions happy
 
 2014-02-24 - 0.9.35

@@ -8,6 +8,7 @@
     - Added php_win32_get_random_bytes for windows compatibility in random seeding
     - Added suhosin.rand.seedingkey for INI supplied additional entropy string (idea DavisNT)
     - Added suhosin.rand.reseed_every_request to allow reseeding on every request (idea DavisNT)
+    - Changed that calls to srand() / mt_srand() will trigger auto reseeding (idea DavisNT)
     - Added LICENSE file to make distributions happy
 
 2014-02-24 - 0.9.35

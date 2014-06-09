@@ -1452,6 +1452,9 @@ static int ih_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
+    	if (SUHOSIN_G(srand_ignore)) {
+    		SUHOSIN_G(r_is_seeded) = 0;
+    	}
     	return (1);
     }
 
@@ -1469,6 +1472,9 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
 	long seed;
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
+    	if (SUHOSIN_G(mt_srand_ignore)) {
+    		SUHOSIN_G(mt_is_seeded) = 0;
+    	}
     	return (1);
     }
     

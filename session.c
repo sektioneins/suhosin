@@ -986,16 +986,20 @@ static int suhosin_hook_s_destroy(void **mod_data, const char *key TSRMLS_DC)
 static void suhosin_hook_session_module(TSRMLS_D)
 {
     ps_module *old_mod = SESSION_G(mod), *mod;
-
+    
     if (old_mod == NULL || SUHOSIN_G(s_module) == old_mod) {
         return;
     }
+
     if (SUHOSIN_G(s_module) == NULL) {
         SUHOSIN_G(s_module) = mod = malloc(sizeof(ps_module));
         if (mod == NULL) {
             return;
         }
     }
+    
+    SUHOSIN_G(s_original_mod) = old_mod;
+    
     mod = SUHOSIN_G(s_module);
     memcpy(mod, old_mod, sizeof(ps_module));
     
@@ -1012,11 +1016,14 @@ static void suhosin_hook_session_module(TSRMLS_D)
 static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
 {
     int r;
+    char *tmp;
 
+    SESSION_G(mod) = SUHOSIN_G(s_original_mod);
+    
     r = old_OnUpdateSaveHandler(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
     
     suhosin_hook_session_module(TSRMLS_C);
-    
+
     return r;
 }
 

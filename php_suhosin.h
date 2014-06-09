@@ -192,6 +192,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 
 /*	session */
 	void	*s_module;
+	void	*s_original_mod;
 	int 	(*old_s_read)(void **mod_data, const char *key, char **val, int *vallen TSRMLS_DC);
 	int	(*old_s_write)(void **mod_data, const char *key, const char *val, const int vallen TSRMLS_DC);
 	int	(*old_s_destroy)(void **mod_data, const char *key TSRMLS_DC);

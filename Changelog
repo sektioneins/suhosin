@@ -9,6 +9,7 @@
     - Added suhosin.rand.seedingkey for INI supplied additional entropy string (idea DavisNT)
     - Added suhosin.rand.reseed_every_request to allow reseeding on every request (idea DavisNT)
     - Changed that calls to srand() / mt_srand() will trigger auto reseeding (idea DavisNT)
+    - Fixed problems with SessionHandler() class and endless recursions
     - Added LICENSE file to make distributions happy
 
 2014-02-24 - 0.9.35

@@ -487,6 +487,8 @@ static php_ps_globals_43_44 *session_globals = NULL;
 #define SESSION_G(v) (session_globals->v)
 #endif
 
+static ps_module *ps_mod_user = NULL;
+
 ps_serializer *(*suhosin_find_ps_serializer)(char *name TSRMLS_DC) = NULL;
 
 #define PS_ENCODE_VARS                                          \
@@ -1018,6 +1020,10 @@ static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
     int r;
     char *tmp;
 
+    if ((ps_mod_user) && (SUHOSIN_G(s_original_mod) == ps_mod_user) && (strcmp(new_value, "user") == NULL)) {
+        return SUCCESS;
+    }
+
     SESSION_G(mod) = SUHOSIN_G(s_original_mod);
     
     r = old_OnUpdateSaveHandler(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
@@ -1089,6 +1095,13 @@ void suhosin_hook_session(TSRMLS_D)
     }
 #endif
 #endif
+    if (ps_mod_user == NULL) {
+        ps_mod_user = DL_FETCH_SYMBOL(module->handle, "ps_mod_user");
+        if (ps_mod_user == NULL) {
+            ps_mod_user = DL_FETCH_SYMBOL(module->handle, "_ps_mod_user");
+        }
+    }
+    
     if (old_OnUpdateSaveHandler != NULL) {
         return;
     }

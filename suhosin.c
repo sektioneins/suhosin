@@ -1021,6 +1021,7 @@ PHP_INI_BEGIN()
 
 	STD_ZEND_INI_BOOLEAN("suhosin.srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, srand_ignore,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.mt_srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, mt_srand_ignore,zend_suhosin_globals,	suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.rands.seedkey", "", PHP_INI_ALL, OnUpdateString, rands_seedkey, zend_suhosin_globals, suhosin_globals)
 
 PHP_INI_END()
 /* }}} */
@@ -1239,6 +1240,9 @@ PHP_RSHUTDOWN_FUNCTION(suhosin)
 	
 	SUHOSIN_G(abort_request) = 0;
 	
+	SUHOSIN_G(r_is_seeded) = 0;
+	SUHOSIN_G(mt_is_seeded) = 0;
+
 	if (SUHOSIN_G(decrypted_cookie)) {
 		efree(SUHOSIN_G(decrypted_cookie));
 		SUHOSIN_G(decrypted_cookie)=NULL;
@@ -1301,6 +1305,9 @@ PHP_MINFO_FUNCTION(suhosin)
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
             i->displayer = suhosin_ini_displayer;
         }
+		if (zend_hash_find(EG(ini_directives), "suhosin.rands.seedkey", sizeof("suhosin.rands.seedkey"), (void **) &i)==SUCCESS) {
+            i->displayer = suhosin_ini_displayer;
+        }
     }
     
 	DISPLAY_INI_ENTRIES();
@@ -1312,6 +1319,9 @@ PHP_MINFO_FUNCTION(suhosin)
             i->displayer = NULL;
         }
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
+            i->displayer = NULL;
+        }
+		if (zend_hash_find(EG(ini_directives), "suhosin.rands.seedkey", sizeof("suhosin.rands.seedkey"), (void **) &i)==SUCCESS) {
             i->displayer = NULL;
         }
     }

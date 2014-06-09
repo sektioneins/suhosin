@@ -1359,6 +1359,11 @@ static void suhosin_gen_entropy(php_uint32 *seedbuf TSRMLS_DC)
 #endif
 
     suhosin_SHA256Init(&context);
+
+    if (SUHOSIN_G(rands_seedkey) != NULL && *SUHOSIN_G(rands_seedkey) != 0) {
+        suhosin_SHA256Update(&context, (unsigned char*)SUHOSIN_G(rands_seedkey), strlen(SUHOSIN_G(rands_seedkey)));
+    }
+
 	suhosin_SHA256Update(&context, (void *) seedbuf, sizeof(php_uint32) * 8);
 	suhosin_SHA256Final((void *)seedbuf, &context);
 }
@@ -1436,11 +1441,7 @@ static int ih_srand(IH_HANDLER_PARAMS)
     int argc = ZEND_NUM_ARGS();
 	long seed;
 
-	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
-    	return (1);
-    }
-
-    if (argc == 0) {
+    if (argc == 0 || zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
         suhosin_srand_auto(TSRMLS_C);
     } else {
         suhosin_srand(seed TSRMLS_CC);
@@ -1453,11 +1454,7 @@ static int ih_mt_srand(IH_HANDLER_PARAMS)
     int argc = ZEND_NUM_ARGS();
 	long seed;
 
-	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
-    	return (1);
-    }
-    
-    if (argc == 0) {
+    if (argc == 0 || zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
         suhosin_mt_srand_auto(TSRMLS_C);
     } else {
         suhosin_mt_srand(seed TSRMLS_CC);

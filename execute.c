@@ -397,96 +397,100 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 	unsigned long *suhosin_flags = NULL;
 	
 	/* log variable dropping statistics */
-	if (SUHOSIN_G(abort_request) && (SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables) > 0)) {
-		suhosin_log(S_VARS, "dropped %u request variables - (%u in GET, %u in POST, %u in COOKIE)",
-		SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables),
-		SUHOSIN_G(att_get_vars)-SUHOSIN_G(cur_get_vars),
-		SUHOSIN_G(att_post_vars)-SUHOSIN_G(cur_post_vars),
-		SUHOSIN_G(att_cookie_vars)-SUHOSIN_G(cur_cookie_vars));
-	}
-	
-	if (SUHOSIN_G(abort_request) && !SUHOSIN_G(simulation) && SUHOSIN_G(filter_action)) {
-	
-		char *action = SUHOSIN_G(filter_action);
-		long code = -1;
+	if (SUHOSIN_G(abort_request)) {
 		
-		SUHOSIN_G(abort_request) = 0; /* we do not want to endlessloop */
+		SUHOSIN_G(abort_request) = 0; /* we only want this to happen the first time */
 		
-		while (*action == ' ' || *action == '\t') action++;
+		if (SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables) > 0) {
+			suhosin_log(S_VARS, "dropped %u request variables - (%u in GET, %u in POST, %u in COOKIE)",
+			SUHOSIN_G(att_request_variables)-SUHOSIN_G(cur_request_variables),
+			SUHOSIN_G(att_get_vars)-SUHOSIN_G(cur_get_vars),
+			SUHOSIN_G(att_post_vars)-SUHOSIN_G(cur_post_vars),
+			SUHOSIN_G(att_cookie_vars)-SUHOSIN_G(cur_cookie_vars));
 		
-		if (*action >= '0' && *action <= '9') {
-			char *end = action;
-			while (*end && *end != ',' && *end != ';') end++;
-			code = zend_atoi(action, end-action);
-			action = end;
 		}
+	
+		if (!SUHOSIN_G(simulation) && SUHOSIN_G(filter_action)) {
+	
+			char *action = SUHOSIN_G(filter_action);
+			long code = -1;
+				
+			while (*action == ' ' || *action == '\t') action++;
 		
-		while (*action == ' ' || *action == '\t' || *action == ',' || *action == ';') action++;
+			if (*action >= '0' && *action <= '9') {
+				char *end = action;
+				while (*end && *end != ',' && *end != ';') end++;
+				code = zend_atoi(action, end-action);
+				action = end;
+			}
 		
-		if (*action) {
+			while (*action == ' ' || *action == '\t' || *action == ',' || *action == ';') action++;
+		
+			if (*action) {
 			
-			if (strncmp("http://", action, sizeof("http://")-1)==0) {
-				sapi_header_line ctr = {0};
+				if (strncmp("http://", action, sizeof("http://")-1)==0) {
+					sapi_header_line ctr = {0};
 				
-				if (code == -1) {
-					code = 302;
-				}
-				
-				ctr.line_len = spprintf(&ctr.line, 0, "Location: %s", action);
-				ctr.response_code = code;
-				sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
-				efree(ctr.line);
-			} else {
-				zend_file_handle file_handle;
-				zend_op_array *new_op_array;
-				zval *result = NULL;
-				
-				if (code == -1) {
-					code = 200;
-				}
-				
-#ifdef ZEND_ENGINE_2
-				if (zend_stream_open(action, &file_handle TSRMLS_CC) == SUCCESS) {
-#else
-				if (zend_open(action, &file_handle) == SUCCESS && ZEND_IS_VALID_FILE_HANDLE(&file_handle)) {
-					file_handle.filename = action;
-					file_handle.free_filename = 0;
-#endif		
-					if (!file_handle.opened_path) {
-						file_handle.opened_path = estrndup(action, strlen(action));
+					if (code == -1) {
+						code = 302;
 					}
-					new_op_array = zend_compile_file(&file_handle, ZEND_REQUIRE TSRMLS_CC);
-					zend_destroy_file_handle(&file_handle TSRMLS_CC);
-					if (new_op_array) {
-						EG(return_value_ptr_ptr) = &result;
-						EG(active_op_array) = new_op_array;
-						zend_execute(new_op_array TSRMLS_CC);
+				
+					ctr.line_len = spprintf(&ctr.line, 0, "Location: %s", action);
+					ctr.response_code = code;
+					sapi_header_op(SAPI_HEADER_REPLACE, &ctr TSRMLS_CC);
+					efree(ctr.line);
+				} else {
+					zend_file_handle file_handle;
+					zend_op_array *new_op_array;
+					zval *result = NULL;
+				
+					if (code == -1) {
+						code = 200;
+					}
+				
 #ifdef ZEND_ENGINE_2
-						destroy_op_array(new_op_array TSRMLS_CC);
+					if (zend_stream_open(action, &file_handle TSRMLS_CC) == SUCCESS) {
 #else
-						destroy_op_array(new_op_array);
-#endif
-						efree(new_op_array);
+					if (zend_open(action, &file_handle) == SUCCESS && ZEND_IS_VALID_FILE_HANDLE(&file_handle)) {
+						file_handle.filename = action;
+						file_handle.free_filename = 0;
+#endif		
+						if (!file_handle.opened_path) {
+							file_handle.opened_path = estrndup(action, strlen(action));
+						}
+						new_op_array = zend_compile_file(&file_handle, ZEND_REQUIRE TSRMLS_CC);
+						zend_destroy_file_handle(&file_handle TSRMLS_CC);
+						if (new_op_array) {
+							EG(return_value_ptr_ptr) = &result;
+							EG(active_op_array) = new_op_array;
+							zend_execute(new_op_array TSRMLS_CC);
 #ifdef ZEND_ENGINE_2
-						if (!EG(exception))
+							destroy_op_array(new_op_array TSRMLS_CC);
+#else
+							destroy_op_array(new_op_array);
 #endif
-						{
-							if (EG(return_value_ptr_ptr)) {
-								zval_ptr_dtor(EG(return_value_ptr_ptr));
-								EG(return_value_ptr_ptr) = NULL;
+							efree(new_op_array);
+#ifdef ZEND_ENGINE_2
+							if (!EG(exception))
+#endif
+							{
+								if (EG(return_value_ptr_ptr)) {
+									zval_ptr_dtor(EG(return_value_ptr_ptr));
+									EG(return_value_ptr_ptr) = NULL;
+								}
 							}
+						} else {
+							code = 500;
 						}
 					} else {
 						code = 500;
 					}
-				} else {
-					code = 500;
 				}
 			}
-		}
 		
-		sapi_header_op(SAPI_HEADER_SET_STATUS, (void *)code TSRMLS_CC);
-		zend_bailout();
+			sapi_header_op(SAPI_HEADER_SET_STATUS, (void *)code TSRMLS_CC);
+			zend_bailout();
+		}
 	}
 	
 	SDEBUG("%s %s", op_array->filename, op_array->function_name);

@@ -1,4 +1,4 @@
-2014-05-xx - 0.9.36-dev
+2014-06-10 - 0.9.36
 
     - Added better handling of non existing/non executable shell scripts
     - Added protection against XSS/SQL/Other Injections through User-Agent HTTP header

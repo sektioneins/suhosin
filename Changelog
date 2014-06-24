@@ -1,3 +1,7 @@
+2014-06-24 - 0.9.37-dev
+
+	- Added SQL injection protection for Mysqli and several test cases
+
 2014-06-10 - 0.9.36
 
     - Added better handling of non existing/non executable shell scripts

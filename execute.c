@@ -880,7 +880,7 @@ int ih_querycheck(IH_HANDLER_PARAMS)
 		return (0);
 	}
     
-	if ((long) ih->arg1) {
+	if ((long) ih->arg2) {
     	    mysql_extension = 1;
 	}
 	
@@ -892,6 +892,7 @@ int ih_querycheck(IH_HANDLER_PARAMS)
 	}
 	len = Z_STRLEN_P(backup);
 	query = Z_STRVAL_P(backup);
+	SDEBUG("SQL |%s|", query);
 	
 	s = query;
 	e = s+len;
@@ -1552,9 +1553,9 @@ static int ih_getrandmax(IH_HANDLER_PARAMS)
 }
 
 internal_function_handler ihandlers[] = {
-    { "preg_replace", ih_preg_replace, NULL, NULL, NULL },
-    { "mail", ih_mail, NULL, NULL, NULL },
-    { "symlink", ih_symlink, NULL, NULL, NULL },
+	{ "preg_replace", ih_preg_replace, NULL, NULL, NULL },
+	{ "mail", ih_mail, NULL, NULL, NULL },
+	{ "symlink", ih_symlink, NULL, NULL, NULL },
 	
 	{ "srand", ih_srand, NULL, NULL, NULL },
 	{ "mt_srand", ih_mt_srand, NULL, NULL, NULL },
@@ -1563,49 +1564,86 @@ internal_function_handler ihandlers[] = {
 	{ "getrandmax", ih_getrandmax, NULL, NULL, NULL },
 	{ "mt_getrandmax", ih_getrandmax, NULL, NULL, NULL },
 	
-    { "ocilogon", ih_fixusername, (void *)1, NULL, NULL },
-    { "ociplogon", ih_fixusername, (void *)1, NULL, NULL },
-    { "ocinlogon", ih_fixusername, (void *)1, NULL, NULL },
-    { "oci_connect", ih_fixusername, (void *)1, NULL, NULL },
-    { "oci_pconnect", ih_fixusername, (void *)1, NULL, NULL },
-    { "oci_new_connect", ih_fixusername, (void *)1, NULL, NULL },
+	{ "function_exists", ih_function_exists, NULL, NULL, NULL },
 	
-    { "fbsql_change_user", ih_fixusername, (void *)1, NULL, NULL },
-    { "fbsql_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "fbsql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
-    
-    { "function_exists", ih_function_exists, NULL, NULL, NULL },
+	/* Mysqli */
+	{ "mysqli::mysqli", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysqli_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysqli::real_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysqli_real_connect", ih_fixusername, (void *)3, NULL, NULL },
+	{ "mysqli_change_user", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysqli::change_user", ih_fixusername, (void *)1, NULL, NULL },
 	
-    { "ifx_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "ifx_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysqli::query", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysqli_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysqli::multi_query", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysqli_multi_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysqli::prepare", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysqli_prepare", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysqli::real_query", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysqli_real_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysqli::send_query", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysqli_send_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	// removed in PHP 5.3
+	{ "mysqli_master_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysqli_slave_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	// ----
+	
+	/* Mysql API - deprecated in PHP 5.5 */
+	{ "mysql_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mysql_query", ih_querycheck, (void *)1, (void *)1, NULL },
+	{ "mysql_db_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	{ "mysql_unbuffered_query", ih_querycheck, (void *)1, (void *)1, NULL },
+	
+	/* MaxDB */
+	{ "maxdb::maxdb", ih_fixusername, (void *)2, NULL, NULL },
+	{ "maxdb_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "maxdb::real_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "maxdb_real_connect", ih_fixusername, (void *)3, NULL, NULL },
+	{ "maxdb::change_user", ih_fixusername, (void *)1, NULL, NULL },
+	{ "maxdb_change_user", ih_fixusername, (void *)2, NULL, NULL },
+	
+	{ "maxdb_master_query", ih_querycheck, (void *)2, NULL, NULL },
+	{ "maxdb::multi_query", ih_querycheck, (void *)1, NULL, NULL },
+	{ "maxdb_multi_query", ih_querycheck, (void *)2, NULL, NULL },
+	{ "maxdb::query", ih_querycheck, (void *)1, NULL, NULL },
+	{ "maxdb_query", ih_querycheck, (void *)2, NULL, NULL },
+	{ "maxdb::real_query", ih_querycheck, (void *)1, NULL, NULL },
+	{ "maxdb_real_query", ih_querycheck, (void *)2, NULL, NULL },
+	{ "maxdb::send_query", ih_querycheck, (void *)1, NULL, NULL },
+	{ "maxdb_send_query", ih_querycheck, (void *)2, NULL, NULL },
+	{ "maxdb::prepare", ih_querycheck, (void *)1, NULL, NULL },
+	{ "maxdb_prepare", ih_querycheck, (void *)2, NULL, NULL },
 
-    { "ibase_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "ibase_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	/* Oracle OCI8 */
+	{ "ocilogon", ih_fixusername, (void *)1, NULL, NULL },
+	{ "ociplogon", ih_fixusername, (void *)1, NULL, NULL },
+	{ "ocinlogon", ih_fixusername, (void *)1, NULL, NULL },
+	{ "oci_connect", ih_fixusername, (void *)1, NULL, NULL },
+	{ "oci_pconnect", ih_fixusername, (void *)1, NULL, NULL },
+	{ "oci_new_connect", ih_fixusername, (void *)1, NULL, NULL },
 
-    { "maxdb", ih_fixusername, (void *)2, NULL, NULL },
-    { "maxdb_change_user", ih_fixusername, (void *)2, NULL, NULL },
-    { "maxdb_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "maxdb_pconnect", ih_fixusername, (void *)2, NULL, NULL },
-    { "maxdb_real_connect", ih_fixusername, (void *)3, NULL, NULL },
+	/* FrontBase */
+	{ "fbsql_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "fbsql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "fbsql_change_user", ih_fixusername, (void *)1, NULL, NULL },
+	{ "fbsql_username", ih_fixusername, (void *)2, NULL, NULL },
 
-    { "mssql_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "mssql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	/* Informix */
+	{ "ifx_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "ifx_pconnect", ih_fixusername, (void *)2, NULL, NULL },
 
-    { "mysql_query", ih_querycheck, (void *)1, (void *)1, NULL },
-    { "mysql_db_query", ih_querycheck, (void *)2, (void *)1, NULL },
-    { "mysql_unbuffered_query", ih_querycheck, (void *)1, (void *)1, NULL },
-    { "mysqli_query", ih_querycheck, (void *)2, (void *)1, NULL },
-    { "mysqli_real_query", ih_querycheck, (void *)2, (void *)1, NULL },
-    { "mysqli_send_query", ih_querycheck, (void *)2, (void *)1, NULL },
-    { "mysqli_master_query", ih_querycheck, (void *)2, (void *)1, NULL },
-    { "mysqli_slave_query", ih_querycheck, (void *)2, (void *)1, NULL },
+	/* Firebird/InterBase */
+	{ "ibase_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "ibase_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "ibase_service_attach", ih_fixusername, (void *)2, NULL, NULL },
 
-    { "mysqli", ih_fixusername, (void *)2, NULL, NULL },
-    { "mysql_connect", ih_fixusername, (void *)2, NULL, NULL },
-    { "mysql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
-    { "mysqli_change_user", ih_fixusername, (void *)2, NULL, NULL },
-    { "mysql_real_connect", ih_fixusername, (void *)3, NULL, NULL },
-    { NULL, NULL, NULL, NULL, NULL }
+	/* Microsoft SQL Server */
+	{ "mssql_connect", ih_fixusername, (void *)2, NULL, NULL },
+	{ "mssql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
+	
+	{ NULL, NULL, NULL, NULL, NULL }
 };
 
 #define FUNCTION_WARNING() zend_error(E_WARNING, "%s() has been disabled for security reasons", get_active_function_name(TSRMLS_C));

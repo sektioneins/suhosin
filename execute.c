@@ -1618,6 +1618,7 @@ internal_function_handler ihandlers[] = {
 	{ "mysql_db_query", ih_querycheck, (void *)2, (void *)1, NULL },
 	{ "mysql_unbuffered_query", ih_querycheck, (void *)1, (void *)1, NULL },
 	
+#ifdef SUHOSIN_EXPERIMENTAL
 	/* MaxDB */
 	{ "maxdb::maxdb", ih_fixusername, (void *)2, NULL, NULL },
 	{ "maxdb_connect", ih_fixusername, (void *)2, NULL, NULL },
@@ -1671,7 +1672,8 @@ internal_function_handler ihandlers[] = {
 	/* Microsoft SQL Server */
 	{ "mssql_connect", ih_fixusername, (void *)2, NULL, NULL },
 	{ "mssql_pconnect", ih_fixusername, (void *)2, NULL, NULL },
-	
+#endif
+
 	{ NULL, NULL, NULL, NULL, NULL }
 };
 

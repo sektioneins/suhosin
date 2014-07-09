@@ -1060,6 +1060,8 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 			if (!SUHOSIN_G(simulation)) {
 				RETVAL_FALSE;
 				return (1);
+			} else {
+				break;
 			}
 		}
 		cp++;

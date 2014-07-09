@@ -1638,6 +1638,13 @@ internal_function_handler ihandlers[] = {
 	{ "maxdb::prepare", ih_querycheck, (void *)1, NULL, NULL },
 	{ "maxdb_prepare", ih_querycheck, (void *)2, NULL, NULL },
 
+	/* PDO */
+		/* note: mysql conditional comments not supported here */
+	{ "pdo::__construct", ih_fixusername, (void *)2, NULL, NULL }, /* note: username may come from dsn (param 1) */
+	{ "pdo::query", ih_querycheck, (void *)1, NULL, NULL },
+	{ "pdo::prepare", ih_querycheck, (void *)1, NULL, NULL },
+	{ "pdo::exec", ih_querycheck, (void *)1, NULL, NULL },
+	
 	/* Oracle OCI8 */
 	{ "ocilogon", ih_fixusername, (void *)1, NULL, NULL },
 	{ "ociplogon", ih_fixusername, (void *)1, NULL, NULL },

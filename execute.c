@@ -1036,22 +1036,6 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 	postfix = SUHOSIN_G(sql_user_postfix);
 	user_match = SUHOSIN_G(sql_user_match);
 	
-	if ((prefix == NULL || prefix[0] == 0) && 
-		(postfix == NULL || postfix[0] == 0) &&
-		(user_match == NULL || user_match[0] == 0)) {
-		return (0);
-	}
-	
-	if (prefix == NULL) {
-		prefix = "";
-	}
-	if (postfix == NULL) {
-		postfix = "";
-	}
-	
-	prefix_len = strlen(prefix);
-	postfix_len = strlen(postfix);
-	
 	arg_count = (unsigned long) *p;
 
 	if (ht < (long) ih->arg1) {
@@ -1074,38 +1058,53 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 		if (*cp < 32) {
 			suhosin_log(S_SQL, "SQL username contains invalid characters");
 			if (!SUHOSIN_G(simulation)) {
-				suhosin_bailout(TSRMLS_C);
+				RETVAL_FALSE;
+				return (1);
 			}
 		}
 		cp++;
 	}
 
-	MAKE_STD_ZVAL(my_user);
-	my_user->type = IS_STRING;
-	my_user->value.str.len = spprintf(&my_user->value.str.val, 0, "%s%s%s", prefix, user, postfix);
+	if ((prefix != NULL && prefix[0]) || (postfix != NULL && postfix[0])) {
+		if (prefix == NULL) {
+			prefix = "";
+		}
+		if (postfix == NULL) {
+			postfix = "";
+		}
+		prefix_len = strlen(prefix);
+		postfix_len = strlen(postfix);
+		
+		MAKE_STD_ZVAL(my_user);
+		my_user->type = IS_STRING;
+		my_user->value.str.len = spprintf(&my_user->value.str.val, 0, "%s%s%s", prefix, user, postfix);
 	
-	if (user_match && user_match[0]) {
+		/* XXX: memory_leak? */
+		*arg = my_user;	
+		
 		len = Z_STRLEN_P(my_user);
 		user = Z_STRVAL_P(my_user);
+	}
+	
+	if (user_match && user_match[0]) {
 #ifdef HAVE_FNMATCH
 		if (fnmatch(user_match, user, 0) != 0) {
 			suhosin_log(S_SQL, "SQL username ('%s') does not match suhosin.sql.user_match ('%s')", user, user_match);
 			if (!SUHOSIN_G(simulation)) {
-				suhosin_bailout(TSRMLS_C);
+				RETVAL_FALSE;
+				return (1);
 			}
 		}
 #else
 #warning no support for fnmatch() - setting suhosin.sql.user_match will always fail.
 		suhosin_log(S_SQL, "suhosin.sql.user_match specified, but system does not support fnmatch()");
 		if (!SUHOSIN_G(simulation)) {
-			suhosin_bailout(TSRMLS_C);
+			RETVAL_FALSE;
+			return (1);
 		}
 #endif
 	}
 	
-	/* XXX: memory_leak? */
-	*arg = my_user;	
-	 
 	SDEBUG("function: %s - user: %s", ih->name, user);
 
 	return (0);

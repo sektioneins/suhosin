@@ -1,5 +1,5 @@
 --TEST--
-Mysqli connect with user_match not matching username
+Mysqli connect with user_match matching username
 --INI--
 extension=mysqli.so
 suhosin.sql.user_match=invalid_*

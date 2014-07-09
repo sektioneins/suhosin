@@ -24,6 +24,7 @@
 #endif
 
 #include <fcntl.h>
+#include <fnmatch.h>
 #include "php.h"
 #include "php_ini.h"
 #include "zend_hash.h"
@@ -1024,17 +1025,20 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 	void **p = EG(argument_stack).top_element-2;
 #endif
 	unsigned long arg_count;
-	zval **arg;char *prefix, *postfix, *user;
+	zval **arg;
+	char *prefix, *postfix, *user, *user_match, *cp;
 	zval *backup, *my_user;
 	int prefix_len, postfix_len, len;
 	
-	SDEBUG("function: %s", ih->name);
+	SDEBUG("function (fixusername): %s", ih->name);
 	
 	prefix = SUHOSIN_G(sql_user_prefix);
 	postfix = SUHOSIN_G(sql_user_postfix);
+	user_match = SUHOSIN_G(sql_user_match);
 	
-	if ((prefix == NULL || prefix[0] == 0)&& 
-		(postfix == NULL || postfix[0] == 0)) {
+	if ((prefix == NULL || prefix[0] == 0) && 
+		(postfix == NULL || postfix[0] == 0) &&
+		(user_match == NULL || user_match[0] == 0)) {
 		return (0);
 	}
 	
@@ -1065,22 +1069,39 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 		user = Z_STRVAL_P(backup);
 	}
 
-	if (prefix_len && prefix_len <= len) {
-		if (strncmp(prefix, user, prefix_len)==0) {
-			prefix = "";
-			len -= prefix_len;
+	cp = user;
+	while (cp < user+len) {
+		if (*cp < 32) {
+			suhosin_log(S_SQL, "SQL username contains invalid characters");
+			if (!SUHOSIN_G(simulation)) {
+				suhosin_bailout(TSRMLS_C);
+			}
 		}
+		cp++;
 	}
-	
-	if (postfix_len && postfix_len <= len) {
-		if (strncmp(postfix, user+len-postfix_len, postfix_len)==0) {
-			postfix = "";
-		}
-	}
-	
+
 	MAKE_STD_ZVAL(my_user);
 	my_user->type = IS_STRING;
 	my_user->value.str.len = spprintf(&my_user->value.str.val, 0, "%s%s%s", prefix, user, postfix);
+	
+	if (user_match && user_match[0]) {
+		len = Z_STRLEN_P(my_user);
+		user = Z_STRVAL_P(my_user);
+#ifdef HAVE_FNMATCH
+		if (fnmatch(user_match, user, 0) != 0) {
+			suhosin_log(S_SQL, "SQL username ('%s') does not match suhosin.sql.user_match ('%s')", user, user_match);
+			if (!SUHOSIN_G(simulation)) {
+				suhosin_bailout(TSRMLS_C);
+			}
+		}
+#else
+#warning no support for fnmatch() - setting suhosin.sql.user_match will always fail.
+		suhosin_log(S_SQL, "suhosin.sql.user_match specified, but system does not support fnmatch()");
+		if (!SUHOSIN_G(simulation)) {
+			suhosin_bailout(TSRMLS_C);
+		}
+#endif
+	}
 	
 	/* XXX: memory_leak? */
 	*arg = my_user;	

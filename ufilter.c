@@ -197,6 +197,29 @@ return_failure:
 }
 /* }}} */
 
+static inline int suhosin_validate_utf8_multibyte(const char* cp)
+{
+	if ((*cp & 0xe0) == 0xc0 &&					// 1st byte is 110xxxxx
+		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
+		(*cp & 0x1e)) {							// overlong check 110[xxxx]x 10xxxxxx
+			 return 2;
+	}
+	if ((*cp & 0xf0) == 0xe0 &&					// 1st byte is 1110xxxx
+		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
+		(*(cp+2) & 0xc0) == 0x80 &&				// 3rd byte is 10xxxxxx
+		((*cp & 0x0f) | (*(cp+1) & 0x20))) {	// 1110[xxxx] 10[x]xxxxx 10xxxxxx
+			return 3;
+	}
+	if ((*cp & 0xf8) == 0xf0 &&				// 1st byte is 11110xxx
+		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
+		(*(cp+2) & 0xc0) == 0x80 &&				// 3rd byte is 10xxxxxx
+		(*(cp+3) & 0xc0) == 0x80 &&				// 4th byte is 10xxxxxx
+		((*cp & 0x07) | (*(cp+1) & 0x30))) {	// 11110[xxx] 10[xx]xxxx 10xxxxxx 10xxxxxx
+			return 4;
+	}
+	return 0;
+}
+
 int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TSRMLS_DC)
 {
 	int retval = SUCCESS;
@@ -250,38 +273,65 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 			    }
 		    }
 		    
-		    if (SUHOSIN_G(upload_disallow_binary)) {
-		    
-			    multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
-			    size_t i;
-			    
-			    for (i=0; i<mefd->length; i++) {
-				    if (mefd->data[i] < 32 && !isspace(mefd->data[i])) {
-					    suhosin_log(S_FILES, "uploaded file contains binary data - file dropped");
-					    if (!SUHOSIN_G(simulation)) {
-						    goto continue_with_failure;
-					    }
-				    }
-			    }
-		    }
+			if (SUHOSIN_G(upload_disallow_binary)) {
+			
+				multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
 
-		    if (SUHOSIN_G(upload_remove_binary)) {
-		    
-			    multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
-			    size_t i, j;
-			    
-			    for (i=0, j=0; i<mefd->length; i++) {
-				    if (mefd->data[i] >= 32 || isspace(mefd->data[i])) {
-					    mefd->data[j++] = mefd->data[i];
-				    }
-			    }
-			    SDEBUG("removing binary %u %u",i,j);
-			    /* IMPORTANT FOR DAISY CHAINING */
-			    mefd->length = j;
-			    if (mefd->newlength) {
-				    *mefd->newlength = j;
-			    }
-		    }
+				char *cp, *cpend;
+				int n;
+				cpend = mefd->data + mefd->length;
+				for (char *cp = mefd->data; cp < cpend; cp++) {
+					if (*cp >= 32) {
+						continue;
+					}
+					if (*cp & 0x80) {
+						SDEBUG("checking char %x", *cp);
+						if ((n = suhosin_validate_utf8_multibyte(cp))) { // valid UTF8 multibyte character
+							cp += n - 1;
+							continue;
+						}
+					}
+					
+					if (!isspace(*cp)) {
+						suhosin_log(S_FILES, "uploaded file contains binary data - file dropped");
+						if (!SUHOSIN_G(simulation)) {
+							goto continue_with_failure;
+						}
+						break;
+					}
+
+				}
+				
+			}
+
+			if (SUHOSIN_G(upload_remove_binary)) {
+			
+				multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
+				size_t i, j;
+				int n;
+				
+				for (i=0, j=0; i<mefd->length; i++) {
+					if (mefd->data[i] >= 32 || isspace(mefd->data[i])) {
+						mefd->data[j++] = mefd->data[i];
+					} else if (mefd->data[i] & 0x80) {
+						n = suhosin_validate_utf8_multibyte(mefd->data + i);
+						if (!n) { continue; }
+						while (n) {
+							mefd->data[j++] = mefd->data[i++];
+							n--;
+						}
+						i--;
+					}
+				}
+				mefd->data[j] = '\0';
+				
+				SDEBUG("removing binary %zu %zu",i,j);
+				/* IMPORTANT FOR DAISY CHAINING */
+				mefd->length = j;
+				if (mefd->newlength) {
+					*mefd->newlength = j;
+				}
+			}
 		    
 		    break;
 

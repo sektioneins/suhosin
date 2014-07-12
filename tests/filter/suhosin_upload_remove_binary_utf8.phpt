@@ -8,6 +8,7 @@ suhosin.log.script=0
 file_uploads=1
 suhosin.upload.disallow_binary=Off
 suhosin.upload.remove_binary=On
+suhosin.upload.allow_utf8=On
 max_file_uploads=40
 suhosin.upload.max_uploads=40
 --SKIPIF--

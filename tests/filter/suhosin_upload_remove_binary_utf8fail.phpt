@@ -1,13 +1,14 @@
 --TEST--
-Testing: suhosin.upload.disallow_binary=On with UTF-8
+Testing: suhosin.upload.remove_binary=On with UTF-8 and allow_utf8=Off
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
 suhosin.log.stdout=255
 suhosin.log.script=0
 file_uploads=1
-suhosin.upload.disallow_binary=On
-suhosin.upload.allow_utf8=On
+suhosin.upload.disallow_binary=Off
+suhosin.upload.remove_binary=On
+suhosin.upload.allow_utf8=Off
 max_file_uploads=40
 suhosin.upload.max_uploads=40
 --SKIPIF--
@@ -24,21 +25,8 @@ Spaß am Gerät!
 --bound--
 --FILE--
 <?php
-var_dump($_FILES);
+var_dump(file_get_contents($_FILES['test']['tmp_name']));
 ?>
 --EXPECTF--
-array(1) {
-  ["test"]=>
-  array(5) {
-    ["name"]=>
-    string(4) "test"
-    ["type"]=>
-    string(0) ""
-    ["tmp_name"]=>
-    string(%d) "%s"
-    ["error"]=>
-    int(0)
-    ["size"]=>
-    int(17)
-  }
-}
+string(13) "Spa am Gert!
+"

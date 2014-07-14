@@ -7,6 +7,8 @@
     - Added experimental PDO support
     - SQL checks other than mysql (Mysqli + old-style) must be enabled with
       configure --enable-suhosin-experimental, e.g. MSSQL.
+    - disallow_ws now matches all single-byte whitespace characters
+    - remove_binary and disallow_binary now optionally allow UTF-8.
 
 2014-06-10 - 0.9.36
 

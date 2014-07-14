@@ -76,15 +76,16 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	char *filter_action;
 	char *sql_user_prefix;
 	char *sql_user_postfix;
-	long	sql_comment;
-	long	sql_opencomment;
-	long	sql_union;
-	long	sql_mselect;
+	char *sql_user_match;
+	long sql_comment;
+	long sql_opencomment;
+	long sql_union;
+	long sql_mselect;
 	
 	long max_execution_depth;
 	zend_bool	abort_request;
 	long executor_include_max_traversal;
-        zend_bool executor_include_allow_writable_files;
+	zend_bool executor_include_allow_writable_files;
 
 
 	HashTable *include_whitelist;
@@ -152,11 +153,11 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool  upload_remove_binary;
 	char *upload_verification_script;
         
-        zend_bool  no_more_variables;
-        zend_bool  no_more_get_variables;
-        zend_bool  no_more_post_variables;
-        zend_bool  no_more_cookie_variables;
-        zend_bool  no_more_uploads;
+	zend_bool  no_more_variables;
+	zend_bool  no_more_get_variables;
+	zend_bool  no_more_post_variables;
+	zend_bool  no_more_cookie_variables;
+	zend_bool  no_more_uploads;
 
 
 
@@ -198,8 +199,8 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	int	(*old_s_destroy)(void **mod_data, const char *key TSRMLS_DC);
 
 	BYTE fi[24],ri[24];
-        WORD fkey[120];
-        WORD rkey[120];
+	WORD fkey[120];
+	WORD rkey[120];
 	
 	zend_bool	session_encrypt;
 	char*	session_cryptkey;
@@ -247,16 +248,16 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool mt_is_seeded;
 
 	/* PERDIR Handling */
-        char *perdir;
-        zend_bool log_perdir;
-        zend_bool exec_perdir;
-        zend_bool get_perdir;
-        zend_bool post_perdir;
-        zend_bool cookie_perdir;
-        zend_bool request_perdir;
-        zend_bool upload_perdir;
-        zend_bool sql_perdir;
-        zend_bool misc_perdir;
+	char *perdir;
+	zend_bool log_perdir;
+	zend_bool exec_perdir;
+	zend_bool get_perdir;
+	zend_bool post_perdir;
+	zend_bool cookie_perdir;
+	zend_bool request_perdir;
+	zend_bool upload_perdir;
+	zend_bool sql_perdir;
+	zend_bool misc_perdir;
 
 ZEND_END_MODULE_GLOBALS(suhosin)
 

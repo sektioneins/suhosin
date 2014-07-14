@@ -1,3 +1,13 @@
+2014-06-24 - 0.9.37-dev
+
+    - Added SQL injection protection for Mysqli and several test cases
+    - Added wildcard matching for SQL username
+    - Added check for SQL username to only contain valid characters (>= ASCII 32)
+    - Test cases for user_prefix and user_postfix
+    - Added experimental PDO support
+    - SQL checks other than mysql (Mysqli + old-style) must be enabled with
+      configure --enable-suhosin-experimental, e.g. MSSQL.
+
 2014-06-10 - 0.9.36
 
     - Added better handling of non existing/non executable shell scripts

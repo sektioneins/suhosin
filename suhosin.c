@@ -28,6 +28,7 @@
 #include "zend_extensions.h"
 #include "ext/standard/info.h"
 #include "php_syslog.h"
+#include "php_variables.h"
 #include "php_suhosin.h"
 #include "zend_llist.h"
 #include "zend_operators.h"
@@ -618,175 +619,6 @@ static ZEND_INI_MH(OnUpdate_fail)
 	return FAILURE;
 }
 
-/* {{{ proto void suhosin_register_cookie_variable(char *var, zval *val, zval *track_vars_array TSRMLS_DC)
-   Registers a cookie in the RAW cookie array */
-static void suhosin_register_cookie_variable(char *var, zval *val, zval *track_vars_array TSRMLS_DC)
-{
-	char *p = NULL;
-	char *ip;		/* index pointer */
-	char *index, *escaped_index = NULL;
-	int var_len, index_len;
-	zval *gpc_element, **gpc_element_p;
-	zend_bool is_array = 0;
-	HashTable *symtable1 = NULL;
-
-	assert(var != NULL);
-	
-	symtable1 = Z_ARRVAL_P(track_vars_array);
-
-	/*
-	 * Prepare variable name
-	 */
-
-	/* ignore leading spaces in the variable name */
-	while (*var && *var==' ') {
-		var++;
-	}
-
-	/* ensure that we don't have spaces or dots in the variable name (not binary safe) */
-	for (p = var; *p; p++) {
-		if (*p == ' ' || *p == '.') {
-			*p='_';
-		} else if (*p == '[') {
-			is_array = 1;
-			ip = p;
-			*p = 0;
-			break;
-		}
-	}
-	var_len = p - var;
-
-	if (var_len==0) { /* empty variable name, or variable name with a space in it */
-		zval_dtor(val);
-		return;
-	}
-
-	index = var;
-	index_len = var_len;
-
-	if (is_array) {
-		while (1) {
-			char *index_s;
-			int new_idx_len = 0;
-
-			ip++;
-			index_s = ip;
-			if (isspace(*ip)) {
-				ip++;
-			}
-			if (*ip==']') {
-				index_s = NULL;
-			} else {
-				ip = strchr(ip, ']');
-				if (!ip) {
-					/* PHP variables cannot contain '[' in their names, so we replace the character with a '_' */
-					*(index_s - 1) = '_';
-
-					index_len = var_len = 0;
-					if (index) {
-						index_len = var_len = strlen(index);
-					}
-					goto plain_var;
-					return;
-				}
-				*ip = 0;
-				new_idx_len = strlen(index_s);	
-			}
-
-			if (!index) {
-				MAKE_STD_ZVAL(gpc_element);
-				array_init(gpc_element);
-				zend_hash_next_index_insert(symtable1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
-			} else {
-#if PHP_VERSION_ID < 50400
-				if (PG(magic_quotes_gpc) && (index != var)) {
-					/* no need to addslashes() the index if it's the main variable name */
-					escaped_index = php_addslashes(index, index_len, &index_len, 0 TSRMLS_CC);
-				} else {
-#endif
-					escaped_index = index;
-#if PHP_VERSION_ID < 50400
-				}
-#endif
-				if (zend_symtable_find(symtable1, escaped_index, index_len + 1, (void **) &gpc_element_p) == FAILURE
-					|| Z_TYPE_PP(gpc_element_p) != IS_ARRAY) {
-					MAKE_STD_ZVAL(gpc_element);
-					array_init(gpc_element);
-					zend_symtable_update(symtable1, escaped_index, index_len + 1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
-				}
-				if (index != escaped_index) {
-					efree(escaped_index);
-				}
-			}
-			symtable1 = Z_ARRVAL_PP(gpc_element_p);
-			/* ip pointed to the '[' character, now obtain the key */
-			index = index_s;
-			index_len = new_idx_len;
-
-			ip++;
-			if (*ip == '[') {
-				is_array = 1;
-				*ip = 0;
-			} else {
-				goto plain_var;
-			}
-		}
-	} else {
-plain_var:
-		MAKE_STD_ZVAL(gpc_element);
-		gpc_element->value = val->value;
-		Z_TYPE_P(gpc_element) = Z_TYPE_P(val);
-		if (!index) {
-			zend_hash_next_index_insert(symtable1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
-		} else {
-#if PHP_VERSION_ID < 50400
-			if (PG(magic_quotes_gpc)) { 
-				escaped_index = php_addslashes(index, index_len, &index_len, 0 TSRMLS_CC);
-			} else {
-#endif
-				escaped_index = index;
-#if PHP_VERSION_ID < 50400
-			}
-#endif
-			/* 
-			 * According to rfc2965, more specific paths are listed above the less specific ones.
-			 * If we encounter a duplicate cookie name, we should skip it, since it is not possible
-			 * to have the same (plain text) cookie name for the same path and we should not overwrite
-			 * more specific cookies with the less specific ones.
-			 */
-            if (zend_symtable_exists(symtable1, escaped_index, index_len + 1)) {
-				zval_ptr_dtor(&gpc_element);
-			} else {
-				zend_symtable_update(symtable1, escaped_index, index_len + 1, &gpc_element, sizeof(zval *), (void **) &gpc_element_p);
-			}
-			if (escaped_index != index) {
-				efree(escaped_index);
-			}
-		}
-	}
-}
-/* }}} */
-
-static void suhosin_register_cookie_variable_safe(char *var, char *strval, int str_len, zval *track_vars_array TSRMLS_DC)
-{
-	zval new_entry;
-	assert(strval != NULL);
-	
-	/* Prepare value */
-	Z_STRLEN(new_entry) = str_len;
-#if PHP_VERSION_ID < 50400
-	if (PG(magic_quotes_gpc)) {
-		Z_STRVAL(new_entry) = php_addslashes(strval, Z_STRLEN(new_entry), &Z_STRLEN(new_entry), 0 TSRMLS_CC);
-	} else {
-#endif
-		Z_STRVAL(new_entry) = estrndup(strval, Z_STRLEN(new_entry));
-#if PHP_VERSION_ID < 50400
-	}
-#endif
-	Z_TYPE(new_entry) = IS_STRING;
-
-	suhosin_register_cookie_variable(var, &new_entry, track_vars_array TSRMLS_CC);
-}
 
 
 /* {{{ proto string suhosin_encrypt_cookie(string name, string value)
@@ -833,7 +665,7 @@ static PHP_FUNCTION(suhosin_get_raw_cookies)
     int val_len;
     
 	array_init(array_ptr);
-
+	SDEBUG("get_raw_cookies %s", SUHOSIN_G(raw_cookie));
     if (SUHOSIN_G(raw_cookie)) {
         res = estrdup(SUHOSIN_G(raw_cookie));
     } else {
@@ -843,17 +675,18 @@ static PHP_FUNCTION(suhosin_get_raw_cookies)
 	var = php_strtok_r(res, ";", &strtok_buf);
 	
 	while (var) {
+		SDEBUG("raw cookie: %s", var);
 		val = strchr(var, '=');
 		if (val) { /* have a value */
 			*val++ = '\0';
 			php_url_decode(var, strlen(var));
 			val_len = php_url_decode(val, strlen(val));
-			suhosin_register_cookie_variable_safe(var, val, val_len, array_ptr TSRMLS_CC);
+			php_register_variable_safe(var, val, val_len, array_ptr TSRMLS_CC);
 		} else {
 			php_url_decode(var, strlen(var));
 			val_len = 0;
 			val = "";
-			suhosin_register_cookie_variable_safe(var, "", 0, array_ptr TSRMLS_CC);
+			php_register_variable_safe(var, "", 0, array_ptr TSRMLS_CC);
 		}
 		var = php_strtok_r(NULL, ";", &strtok_buf);
 	}
@@ -1049,7 +882,7 @@ char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC)
 		tmp = getenv(name);
 		efree(name);
 		if (tmp) {
-			return(estrdup(tmp));
+			return estrdup(tmp);
 		}
 	}
 	return NULL;

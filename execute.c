@@ -632,7 +632,6 @@ not_evaled_code:
 	    case SUHOSIN_CODE_TYPE_UNKNOWN:
 	    case SUHOSIN_CODE_TYPE_GOODFILE:
 			goto continue_execution;
-		    break;
 	}
 
 continue_execution:
@@ -1060,9 +1059,8 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 			if (!SUHOSIN_G(simulation)) {
 				RETVAL_FALSE;
 				return (1);
-			} else {
-				break;
 			}
+			break;
 		}
 		cp++;
 	}

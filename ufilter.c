@@ -280,7 +280,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 				char *cp, *cpend;
 				int n;
 				cpend = mefd->data + mefd->length;
-				for (char *cp = mefd->data; cp < cpend; cp++) {
+				for (cp = mefd->data; cp < cpend; cp++) {
 					if (*cp >= 32 || isspace(*cp)) {
 						continue;
 					}

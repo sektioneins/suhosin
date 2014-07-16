@@ -150,7 +150,6 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
 		
 		temp = (unsigned char *)Z_STRVAL_PP(tzval);
 		
-		t = temp;
 		for (t = temp; *t; t++) {
 			if (suhosin_is_dangerous_char[*t]) {
 				extra += 2;
@@ -186,54 +185,45 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
  */
 void suhosin_register_server_variables(zval *track_vars_array TSRMLS_DC)
 {
-        HashTable *svars;
-        int retval, failure=0;
-        
-		orig_register_server_variables(track_vars_array TSRMLS_CC);
+	HashTable *svars;
+	int retval, failure=0, i;
 
-        svars = Z_ARRVAL_P(track_vars_array);
-        
+	char *varnames[] = {
+		"HTTP_GET_VARS", "HTTP_POST_VARS", "HTTP_COOKIE_VARS",
+		"HTTP_ENV_VARS", "HTTP_SERVER_VARS", "HTTP_SESSION_VARS",
+		"HTTP_POST_FILES", "HTTP_RAW_POST_DATA",
+		NULL
+	};
+
+	orig_register_server_variables(track_vars_array TSRMLS_CC);
+
+	svars = Z_ARRVAL_P(track_vars_array);
 	if (!SUHOSIN_G(simulation)) {
-    		retval = zend_hash_del(svars, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES"));
-    		if (retval == SUCCESS) failure = 1;
-    		retval = zend_hash_del(svars, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA"));
-    		if (retval == SUCCESS) failure = 1;
+		for (i = 0; varnames[i]; i++) {
+			retval = zend_hash_del(svars, varnames[i], strlen(varnames[i])+1);
+			if (retval == SUCCESS) failure = 1;
+		}
 	} else {
-		retval = zend_hash_exists(svars, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS"));
-		retval+= zend_hash_exists(svars, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES"));
-		retval+= zend_hash_exists(svars, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA"));
-		if (retval > 0) failure = 1;
+		for (i = 0; varnames[i]; i++) {
+			if (zend_hash_exists(svars, varnames[i], strlen(varnames[i])+1)) {
+				failure = 1;
+				break;
+			}
+		}
 	}
-        
-        if (failure) {
-                suhosin_log(S_VARS, "Attacker tried to overwrite a superglobal through a HTTP header");
-        }
+
+	if (failure) {
+		suhosin_log(S_VARS, "Attacker tried to overwrite a superglobal through a HTTP header");
+	}
 	
 	if (SUHOSIN_G(raw_cookie)) {
-        zval *z;
-        MAKE_STD_ZVAL(z);
+		zval *z;
+		MAKE_STD_ZVAL(z);
 		ZVAL_STRING(z, SUHOSIN_G(raw_cookie), 1);
 		zend_hash_add(svars, "RAW_HTTP_COOKIE", sizeof("RAW_HTTP_COOKIE"), (void **)&z, sizeof(zval *), NULL);
-    }
-    if (SUHOSIN_G(decrypted_cookie)) {
-        zval *z;
+	}
+	if (SUHOSIN_G(decrypted_cookie)) {
+		zval *z;
 		MAKE_STD_ZVAL(z);
 		ZVAL_STRING(z, SUHOSIN_G(decrypted_cookie), 0);
 		zend_hash_update(svars, "HTTP_COOKIE", sizeof("HTTP_COOKIE"), (void **)&z, sizeof(zval *), NULL);

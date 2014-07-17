@@ -74,7 +74,7 @@ static int php_valid_var_name(char *var_name, int len) /* {{{ */
 		}
 	}
 
-	if (php_varname_check(var_name, len, 0 TSRMLS_CC) == FAILURE) {
+	if (php_varname_check(var_name, len, 1 TSRMLS_CC) == FAILURE) {
 		return 0;
 	}
 	

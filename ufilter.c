@@ -133,7 +133,7 @@ static int check_fileupload_varname(char *varname)
 	
 	/* Drop this variable if it is one of GLOBALS, _GET, _POST, ... */
 	/* This is to protect several silly scripts that do globalizing themself */
-	if (php_varname_check(var, var_len, 0 TSRMLS_CC) == FAILURE) {
+	if (php_varname_check(var, var_len, 1 TSRMLS_CC) == FAILURE) {
 		suhosin_log(S_FILES, "tried to register forbidden variable '%s' through FILE variables", var);
 		if (!SUHOSIN_G(simulation)) {
 			goto return_failure;

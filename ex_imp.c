@@ -443,6 +443,7 @@ PHP_FUNCTION(suhosin_extract)
 /* }}} */
 
 
+
 #if PHP_VERSION_ID >= 50300
 static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list args, zend_hash_key *hash_key)
 {
@@ -474,35 +475,6 @@ static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list ar
 	}
 
 	if (php_varname_check(Z_STRVAL(new_key), Z_STRLEN(new_key), 0 TSRMLS_CC) == FAILURE) {
-		zval_dtor(&new_key);
-		return 0;
-	}
-
-	if (Z_STRVAL(new_key)[0] == 'H') {
-		if ((strcmp(Z_STRVAL(new_key), "HTTP_GET_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_POST_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_POST_FILES")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_ENV_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_SERVER_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_SESSION_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_RAW_POST_DATA")==0)) {
-		    zval_dtor(&new_key);
-		    return 0;
-		}
-	} else if (Z_STRVAL(new_key)[0] == '_') {
-		if ((strcmp(Z_STRVAL(new_key), "_COOKIE")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_ENV")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_FILES")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_GET")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_POST")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_REQUEST")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_SESSION")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_SERVER")==0)) {
-		    zval_dtor(&new_key);
-		    return 0;
-		}
-	} else if (strcmp(Z_STRVAL(new_key), "GLOBALS")==0) {
 		zval_dtor(&new_key);
 		return 0;
 	}
@@ -551,35 +523,6 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
 
 	if (php_varname_check(new_key, new_key_len-1, 0 TSRMLS_CC) == FAILURE) {
 		zval_dtor(&new_key);
-		return 0;
-	}
-
-	if (new_key[0] == 'H') {
-		if ((strcmp(new_key, "HTTP_GET_VARS")==0)||
-		    (strcmp(new_key, "HTTP_POST_VARS")==0)||
-		    (strcmp(new_key, "HTTP_POST_FILES")==0)||
-		    (strcmp(new_key, "HTTP_ENV_VARS")==0)||
-		    (strcmp(new_key, "HTTP_SERVER_VARS")==0)||
-		    (strcmp(new_key, "HTTP_SESSION_VARS")==0)||
-		    (strcmp(new_key, "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(new_key, "HTTP_RAW_POST_DATA")==0)) {
-		    efree(new_key);
-		    return 0;
-		}
-	} else if (new_key[0] == '_') {
-		if ((strcmp(new_key, "_COOKIE")==0)||
-		    (strcmp(new_key, "_ENV")==0)||
-		    (strcmp(new_key, "_FILES")==0)||
-		    (strcmp(new_key, "_GET")==0)||
-		    (strcmp(new_key, "_POST")==0)||
-		    (strcmp(new_key, "_REQUEST")==0)||
-		    (strcmp(new_key, "_SESSION")==0)||
-		    (strcmp(new_key, "_SERVER")==0)) {
-		    efree(new_key);
-		    return 0;
-		}
-	} else if (strcmp(new_key, "GLOBALS")==0) {
-		efree(new_key);
 		return 0;
 	}
 

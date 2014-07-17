@@ -30,60 +30,13 @@
 #include "php_suhosin.h"
 #include "php_variables.h"
 #include "suhosin_rfc1867.h"
+#include "ext/standard/php_var.h"
 
 PHP_SUHOSIN_API int (*old_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #if !HAVE_RFC1867_CALLBACK
 PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #endif
 
-static int is_protected_varname(char *var, int var_len)
-{
-	switch (var_len) {
-	    case 18:
-		if (memcmp(var, "HTTP_RAW_POST_DATA", 18)==0) goto protected_varname2;
-		break;
-	    case 17:
-		if (memcmp(var, "HTTP_SESSION_VARS", 17)==0) goto protected_varname2;
-		break;
-	    case 16:
-		if (memcmp(var, "HTTP_SERVER_VARS", 16)==0) goto protected_varname2;
-		if (memcmp(var, "HTTP_COOKIE_VARS", 16)==0) goto protected_varname2;
-		break;
-	    case 15:
-		if (memcmp(var, "HTTP_POST_FILES", 15)==0) goto protected_varname2;
-		break;
-	    case 14:
-		if (memcmp(var, "HTTP_POST_VARS", 14)==0) goto protected_varname2;
-		break;
-	    case 13:
-		if (memcmp(var, "HTTP_GET_VARS", 13)==0) goto protected_varname2;
-		if (memcmp(var, "HTTP_ENV_VARS", 13)==0) goto protected_varname2;
-		break;
-	    case 8:
-		if (memcmp(var, "_SESSION", 8)==0) goto protected_varname2;
-		if (memcmp(var, "_REQUEST", 8)==0) goto protected_varname2;
-		break;
-	    case 7:
-		if (memcmp(var, "GLOBALS", 7)==0) goto protected_varname2;
-		if (memcmp(var, "_COOKIE", 7)==0) goto protected_varname2;
-		if (memcmp(var, "_SERVER", 7)==0) goto protected_varname2;
-		break;
-	    case 6:
-		if (memcmp(var, "_FILES", 6)==0) goto protected_varname2;
-		break;
-	    case 5:
-		if (memcmp(var, "_POST", 5)==0) goto protected_varname2;
-		break;
-	    case 4:
-		if (memcmp(var, "_ENV", 4)==0) goto protected_varname2;
-		if (memcmp(var, "_GET", 4)==0) goto protected_varname2;
-		break;
-	}
-
-	return 0;
-protected_varname2:	
-	return 1;
-}
 
 /* {{{ SAPI_UPLOAD_VARNAME_FILTER_FUNC
  */
@@ -180,8 +133,7 @@ static int check_fileupload_varname(char *varname)
 	
 	/* Drop this variable if it is one of GLOBALS, _GET, _POST, ... */
 	/* This is to protect several silly scripts that do globalizing themself */
-	
-	if (is_protected_varname(var, var_len)) {
+	if (php_varname_check(var, var_len, 0 TSRMLS_CC) == FAILURE) {
 		suhosin_log(S_FILES, "tried to register forbidden variable '%s' through FILE variables", var);
 		if (!SUHOSIN_G(simulation)) {
 			goto return_failure;

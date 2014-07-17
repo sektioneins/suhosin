@@ -29,6 +29,7 @@
 #include "ext/standard/info.h"
 #include "php_suhosin.h"
 #include "php_variables.h"
+#include "ext/standard/php_var.h"
 
 
 static void (*orig_register_server_variables)(zval *track_vars_array TSRMLS_DC) = NULL;
@@ -619,47 +620,11 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	
 	/* Drop this variable if it is one of GLOBALS, _GET, _POST, ... */
 	/* This is to protect several silly scripts that do globalizing themself */
-	
-	switch (var_len) {
-	    case 18:
-		if (memcmp(var, "HTTP_RAW_POST_DATA", 18)==0) goto protected_varname;
-		break;
-	    case 17:
-		if (memcmp(var, "HTTP_SESSION_VARS", 17)==0) goto protected_varname;
-		break;
-	    case 16:
-		if (memcmp(var, "HTTP_SERVER_VARS", 16)==0) goto protected_varname;
-		if (memcmp(var, "HTTP_COOKIE_VARS", 16)==0) goto protected_varname;
-		break;
-	    case 15:
-		if (memcmp(var, "HTTP_POST_FILES", 15)==0) goto protected_varname;
-		break;
-	    case 14:
-		if (memcmp(var, "HTTP_POST_VARS", 14)==0) goto protected_varname;
-		break;
-	    case 13:
-		if (memcmp(var, "HTTP_GET_VARS", 13)==0) goto protected_varname;
-		if (memcmp(var, "HTTP_ENV_VARS", 13)==0) goto protected_varname;
-		break;
-	    case 8:
-		if (memcmp(var, "_SESSION", 8)==0) goto protected_varname;
-		if (memcmp(var, "_REQUEST", 8)==0) goto protected_varname;
-		break;
-	    case 7:
-		if (memcmp(var, "GLOBALS", 7)==0) goto protected_varname;
-		if (memcmp(var, "_COOKIE", 7)==0) goto protected_varname;
-		if (memcmp(var, "_SERVER", 7)==0) goto protected_varname;
-		break;
-	    case 6:
-		if (memcmp(var, "_FILES", 6)==0) goto protected_varname;
-		break;
-	    case 5:
-		if (memcmp(var, "_POST", 5)==0) goto protected_varname;
-		break;
-	    case 4:
-		if (memcmp(var, "_ENV", 4)==0) goto protected_varname;
-		if (memcmp(var, "_GET", 4)==0) goto protected_varname;
-		break;
+	if (php_varname_check(var, var_len, 0 TSRMLS_CC) == FAILURE) {
+		suhosin_log(S_VARS, "tried to register forbidden variable '%s' through %s variables", var, arg == PARSE_GET ? "GET" : arg == PARSE_POST ? "POST" : "COOKIE");
+		if (!SUHOSIN_G(simulation)) {
+			return 0;
+		}
 	}
 
 	/* Okay let PHP register this variable */
@@ -681,13 +646,6 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	}
 
 	return 1;
-protected_varname:
-	suhosin_log(S_VARS, "tried to register forbidden variable '%s' through %s variables", var, arg == PARSE_GET ? "GET" : arg == PARSE_POST ? "POST" : "COOKIE");
-	if (!SUHOSIN_G(simulation)) {
-		return 0;
-	} else {
-		return 1;
-	}
 }
 /* }}} */
 

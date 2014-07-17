@@ -660,38 +660,43 @@ return_plain:
 static PHP_FUNCTION(suhosin_get_raw_cookies)
 {
 	char *var, *val, *res;
-    zval *array_ptr = return_value;
-    char *strtok_buf = NULL;
-    int val_len;
-    
-	array_init(array_ptr);
-	SDEBUG("get_raw_cookies %s", SUHOSIN_G(raw_cookie));
-    if (SUHOSIN_G(raw_cookie)) {
-        res = estrdup(SUHOSIN_G(raw_cookie));
-    } else {
-        return;
-    }
-
-	var = php_strtok_r(res, ";", &strtok_buf);
+	zval *array_ptr = return_value;
+	char *strtok_buf = NULL;
+	int val_len;
 	
-	while (var) {
-		SDEBUG("raw cookie: %s", var);
+	array_init(array_ptr);
+	
+	if (SUHOSIN_G(raw_cookie)) {
+		res = estrdup(SUHOSIN_G(raw_cookie));
+	} else {
+		return;
+	}
+
+	var = NULL;
+	while (var != res) {
+		var = strrchr(res, ';');
+		if (var) {
+			*var++ = '\0';
+		} else {
+			var = res;
+		}
+		if (!*var) { continue; }
+		
 		val = strchr(var, '=');
 		if (val) { /* have a value */
 			*val++ = '\0';
 			php_url_decode(var, strlen(var));
 			val_len = php_url_decode(val, strlen(val));
-			php_register_variable_safe(var, val, val_len, array_ptr TSRMLS_CC);
 		} else {
 			php_url_decode(var, strlen(var));
 			val_len = 0;
 			val = "";
-			php_register_variable_safe(var, "", 0, array_ptr TSRMLS_CC);
 		}
-		var = php_strtok_r(NULL, ";", &strtok_buf);
+		php_register_variable_safe(var, val, val_len, array_ptr TSRMLS_CC);
+		
 	}
-	
-    efree(res);
+
+	efree(res);
 }
 /* }}} */
 

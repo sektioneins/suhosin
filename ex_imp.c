@@ -74,29 +74,7 @@ static int php_valid_var_name(char *var_name, int len) /* {{{ */
 		}
 	}
 
-	if (var_name[0] == 'H') {
-		if ((strcmp(var_name, "HTTP_GET_VARS")==0)||
-		    (strcmp(var_name, "HTTP_POST_VARS")==0)||
-		    (strcmp(var_name, "HTTP_POST_FILES")==0)||
-		    (strcmp(var_name, "HTTP_ENV_VARS")==0)||
-		    (strcmp(var_name, "HTTP_SERVER_VARS")==0)||
-		    (strcmp(var_name, "HTTP_SESSION_VARS")==0)||
-		    (strcmp(var_name, "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(var_name, "HTTP_RAW_POST_DATA")==0)) {
-		    return 0;
-		}
-	} else if (var_name[0] == '_') {
-		if ((strcmp(var_name, "_COOKIE")==0)||
-		    (strcmp(var_name, "_ENV")==0)||
-		    (strcmp(var_name, "_FILES")==0)||
-		    (strcmp(var_name, "_GET")==0)||
-		    (strcmp(var_name, "_POST")==0)||
-		    (strcmp(var_name, "_REQUEST")==0)||
-		    (strcmp(var_name, "_SESSION")==0)||
-		    (strcmp(var_name, "_SERVER")==0)) {
-		    return 0;
-		}
-	} else if (strcmp(var_name, "GLOBALS")==0) {
+	if (php_varname_check(var_name, len, 0 TSRMLS_CC) == FAILURE) {
 		return 0;
 	}
 	

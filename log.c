@@ -122,7 +122,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	/* remove the S_GETCALLER flag */
 	loglevel = loglevel & ~S_GETCALLER;
 
-	SDEBUG("(suhosin_log) loglevel: %d log_syslog: %u - log_sapi: %u - log_script: %u", loglevel, SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script));
+	SDEBUG("(suhosin_log) loglevel: %d log_syslog: %ld - log_sapi: %ld - log_script: %ld", loglevel, SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script));
 
 	/* dump core if wanted */
 	if (SUHOSIN_G(coredump) && loglevel == S_MEMORY) {
@@ -278,7 +278,7 @@ log_file:
 
 log_sapi:
 	/* SAPI Logging activated? */
-	SDEBUG("(suhosin_log) log_syslog: %u - log_sapi: %u - log_script: %u - log_phpscript: %u", SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script), SUHOSIN_G(log_phpscript));
+	SDEBUG("(suhosin_log) log_syslog: %ld - log_sapi: %ld - log_script: %ld - log_phpscript: %ld", SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script), SUHOSIN_G(log_phpscript));
 	if (((SUHOSIN_G(log_sapi)|S_INTERNAL) & loglevel)!=0) {
 #if PHP_VERSION_ID < 50400
 		sapi_module.log_message(buf);

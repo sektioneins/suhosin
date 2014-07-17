@@ -444,6 +444,13 @@ PHP_FUNCTION(suhosin_extract)
 
 
 
+#if PHP_VERSION_ID < 50400
+/* import_request_variables() has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0. */
+#define SUHOSIN_HAVE_IRV 1
+#endif
+
+#ifdef SUHOSIN_HAVE_IRV
+
 #if PHP_VERSION_ID >= 50300
 static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list args, zend_hash_key *hash_key)
 {
@@ -657,22 +664,28 @@ PHP_FUNCTION(suhosin_import_request_variables)
 }
 /* }}} */
 
+#endif /* SUHOSIN_HAVE_IRV */
+
 ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_extract, 0, 0, 1)
 	ZEND_ARG_INFO(ZEND_SEND_PREFER_REF, arg) /* ARRAY_INFO(0, arg, 0) */
 	ZEND_ARG_INFO(0, extract_type)
 	ZEND_ARG_INFO(0, prefix)
 ZEND_END_ARG_INFO()
 
+#ifdef SUHOSIN_HAVE_IRV
 ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_import_request_variables, 0, 0, 1)
 	ZEND_ARG_INFO(0, types)
 	ZEND_ARG_INFO(0, prefix)
 ZEND_END_ARG_INFO()
+#endif
 
 /* {{{ suhosin_ex_imp_functions[]
  */
 zend_function_entry suhosin_ex_imp_functions[] = {
 	PHP_NAMED_FE(extract, PHP_FN(suhosin_extract), suhosin_arginfo_extract)
+#ifdef SUHOSIN_HAVE_IRV
 	PHP_NAMED_FE(import_request_variables, PHP_FN(suhosin_import_request_variables), suhosin_arginfo_import_request_variables)
+#endif
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -683,7 +696,9 @@ void suhosin_hook_ex_imp()
 	
 	/* replace the extract and import_request_variables functions */
 	zend_hash_del(CG(function_table), "extract", sizeof("extract"));
+#ifdef SUHOSIN_HAVE_IRV
 	zend_hash_del(CG(function_table), "import_request_variables", sizeof("import_request_variables"));
+#endif
 #ifndef ZEND_ENGINE_2
 	zend_register_functions(suhosin_ex_imp_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
 #else

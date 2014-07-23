@@ -620,7 +620,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	
 	/* Drop this variable if it is one of GLOBALS, _GET, _POST, ... */
 	/* This is to protect several silly scripts that do globalizing themself */
-	if (php_varname_check(var, var_len, 1 TSRMLS_CC) == FAILURE) {
+	if (suhosin_is_protected_varname(var, var_len)) {
 		suhosin_log(S_VARS, "tried to register forbidden variable '%s' through %s variables", var, arg == PARSE_GET ? "GET" : arg == PARSE_POST ? "POST" : "COOKIE");
 		if (!SUHOSIN_G(simulation)) {
 			return 0;

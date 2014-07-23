@@ -74,7 +74,7 @@ static int php_valid_var_name(char *var_name, int len) /* {{{ */
 		}
 	}
 
-	if (php_varname_check(var_name, len, 1 TSRMLS_CC) == FAILURE) {
+	if (suhosin_is_protected_varname(var_name, len)) {
 		return 0;
 	}
 	
@@ -459,7 +459,7 @@ static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list ar
 		zval_dtor(&num);
 	}
 
-	if (php_varname_check(Z_STRVAL(new_key), Z_STRLEN(new_key), 0 TSRMLS_CC) == FAILURE) {
+	if (php_varname_check(Z_STRVAL(new_key), Z_STRLEN(new_key), 1 TSRMLS_CC) == FAILURE || suhosin_is_protected_varname(Z_STRVAL(new_key), Z_STRLEN(new_key))) {
 		zval_dtor(&new_key);
 		return 0;
 	}
@@ -506,8 +506,8 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
                 new_key_len++;
 	}
 
-	if (php_varname_check(new_key, new_key_len-1, 0 TSRMLS_CC) == FAILURE) {
-		zval_dtor(&new_key);
+	if (php_varname_check(new_key, new_key_len-1, 1 TSRMLS_CC) == FAILURE || suhosin_is_protected_varname(new_key, new_key_len-1)) {
+		efree(new_key);
 		return 0;
 	}
 

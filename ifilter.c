@@ -187,30 +187,38 @@ static void suhosin_server_encode(HashTable *arr, char *key, int klen)
 void suhosin_register_server_variables(zval *track_vars_array TSRMLS_DC)
 {
 	HashTable *svars;
-	int retval, failure=0, i;
-
-	char *varnames[] = {
-		"HTTP_GET_VARS", "HTTP_POST_VARS", "HTTP_COOKIE_VARS",
-		"HTTP_ENV_VARS", "HTTP_SERVER_VARS", "HTTP_SESSION_VARS",
-		"HTTP_POST_FILES", "HTTP_RAW_POST_DATA",
-		NULL
-	};
+	int retval = 0, failure = 0;
 
 	orig_register_server_variables(track_vars_array TSRMLS_CC);
 
 	svars = Z_ARRVAL_P(track_vars_array);
 	if (!SUHOSIN_G(simulation)) {
-		for (i = 0; varnames[i]; i++) {
-			retval = zend_hash_del(svars, varnames[i], strlen(varnames[i])+1);
-			if (retval == SUCCESS) failure = 1;
-		}
+		retval = zend_hash_del(svars, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES"));
+		if (retval == SUCCESS) failure = 1;
+		retval = zend_hash_del(svars, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA"));
+		if (retval == SUCCESS) failure = 1;
 	} else {
-		for (i = 0; varnames[i]; i++) {
-			if (zend_hash_exists(svars, varnames[i], strlen(varnames[i])+1)) {
-				failure = 1;
-				break;
-			}
-		}
+		retval = zend_hash_exists(svars, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS"));
+		retval+= zend_hash_exists(svars, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES"));
+		retval+= zend_hash_exists(svars, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA"));
+		if (retval > 0) failure = 1;
 	}
 
 	if (failure) {

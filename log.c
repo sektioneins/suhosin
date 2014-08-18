@@ -112,7 +112,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	char *ip_address;
 	char *fname;
 	char *alertstring;
-	int lineno;
+	int lineno = 0;
 	va_list ap;
 	TSRMLS_FETCH();
 
@@ -160,12 +160,15 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	if (zend_is_executing(TSRMLS_C)) {
 		zend_execute_data *exdata = EG(current_execute_data);
 		if (exdata) {
-			if (getcaller && exdata->prev_execute_data) {
+			if (getcaller && exdata->prev_execute_data && exdata->prev_execute_data->opline && exdata->prev_execute_data->op_array) {
 				lineno = exdata->prev_execute_data->opline->lineno;
-				fname = (char *)exdata->prev_execute_data->op_array->filename;									
-			} else {
+				fname = (char *)exdata->prev_execute_data->op_array->filename;
+			} else if (exdata->opline && exdata->op_array) {
 				lineno = exdata->opline->lineno;
-				fname = (char *)exdata->op_array->filename;				
+				fname = (char *)exdata->op_array->filename;
+			} else {
+				lineno = 0;
+				fname = "[unknown filename]";
 			}
 		} else {
 			lineno = zend_get_executed_lineno(TSRMLS_C);

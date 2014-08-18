@@ -263,7 +263,7 @@ log_file:
 
 	gettimeofday(&tv, NULL);
 	now = tv.tv_sec;
-	php_gmtime_r(&now, &tm);
+	php_localtime_r(&now, &tm);
 	ap_php_snprintf(error, sizeof(error), "%s %2d %02d:%02d:%02d [%u] %s\n", month_names[tm.tm_mon], tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, getpid(),buf);
 	towrite = strlen(error);
 	wbuf = error;

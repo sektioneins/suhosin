@@ -150,7 +150,7 @@ static int suhosin_check_filename(char *s, int len TSRMLS_DC)
 		return SUHOSIN_CODE_TYPE_MANYDOTS;
 	}
 	
-SDEBUG("xxx %08x %08x",SUHOSIN_G(include_whitelist),SUHOSIN_G(include_blacklist));
+SDEBUG("xxx %p %p",SUHOSIN_G(include_whitelist),SUHOSIN_G(include_blacklist));
 	/* no black or whitelist then disallow all */
 	if (SUHOSIN_G(include_whitelist)==NULL && SUHOSIN_G(include_blacklist)==NULL) {
 		/* disallow all URLs */
@@ -519,7 +519,7 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 	} else {
 		if (suhosin_zend_extension_entry.resource_number != -1) {
 			suhosin_flags = (unsigned long *) &op_array->reserved[suhosin_zend_extension_entry.resource_number];
-			SDEBUG("suhosin flags: %08x", *suhosin_flags);
+			SDEBUG("suhosin flags: %08lx", *suhosin_flags);
 			
 			if (*suhosin_flags & SUHOSIN_FLAG_CREATED_BY_EVAL) {
 				SUHOSIN_G(in_code_type) = SUHOSIN_EVAL;
@@ -632,7 +632,6 @@ not_evaled_code:
 	    case SUHOSIN_CODE_TYPE_UNKNOWN:
 	    case SUHOSIN_CODE_TYPE_GOODFILE:
 			goto continue_execution;
-		    break;
 	}
 
 continue_execution:
@@ -1060,9 +1059,8 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 			if (!SUHOSIN_G(simulation)) {
 				RETVAL_FALSE;
 				return (1);
-			} else {
-				break;
 			}
+			break;
 		}
 		cp++;
 	}

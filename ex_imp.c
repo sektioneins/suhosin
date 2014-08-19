@@ -74,29 +74,7 @@ static int php_valid_var_name(char *var_name, int len) /* {{{ */
 		}
 	}
 
-	if (var_name[0] == 'H') {
-		if ((strcmp(var_name, "HTTP_GET_VARS")==0)||
-		    (strcmp(var_name, "HTTP_POST_VARS")==0)||
-		    (strcmp(var_name, "HTTP_POST_FILES")==0)||
-		    (strcmp(var_name, "HTTP_ENV_VARS")==0)||
-		    (strcmp(var_name, "HTTP_SERVER_VARS")==0)||
-		    (strcmp(var_name, "HTTP_SESSION_VARS")==0)||
-		    (strcmp(var_name, "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(var_name, "HTTP_RAW_POST_DATA")==0)) {
-		    return 0;
-		}
-	} else if (var_name[0] == '_') {
-		if ((strcmp(var_name, "_COOKIE")==0)||
-		    (strcmp(var_name, "_ENV")==0)||
-		    (strcmp(var_name, "_FILES")==0)||
-		    (strcmp(var_name, "_GET")==0)||
-		    (strcmp(var_name, "_POST")==0)||
-		    (strcmp(var_name, "_REQUEST")==0)||
-		    (strcmp(var_name, "_SESSION")==0)||
-		    (strcmp(var_name, "_SERVER")==0)) {
-		    return 0;
-		}
-	} else if (strcmp(var_name, "GLOBALS")==0) {
+	if (suhosin_is_protected_varname(var_name, len)) {
 		return 0;
 	}
 	
@@ -443,6 +421,14 @@ PHP_FUNCTION(suhosin_extract)
 /* }}} */
 
 
+
+#if PHP_VERSION_ID < 50400
+/* import_request_variables() has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0. */
+#define SUHOSIN_HAVE_IRV 1
+#endif
+
+#ifdef SUHOSIN_HAVE_IRV
+
 #if PHP_VERSION_ID >= 50300
 static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list args, zend_hash_key *hash_key)
 {
@@ -473,36 +459,7 @@ static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list ar
 		zval_dtor(&num);
 	}
 
-	if (php_varname_check(Z_STRVAL(new_key), Z_STRLEN(new_key), 0 TSRMLS_CC) == FAILURE) {
-		zval_dtor(&new_key);
-		return 0;
-	}
-
-	if (Z_STRVAL(new_key)[0] == 'H') {
-		if ((strcmp(Z_STRVAL(new_key), "HTTP_GET_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_POST_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_POST_FILES")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_ENV_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_SERVER_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_SESSION_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(Z_STRVAL(new_key), "HTTP_RAW_POST_DATA")==0)) {
-		    zval_dtor(&new_key);
-		    return 0;
-		}
-	} else if (Z_STRVAL(new_key)[0] == '_') {
-		if ((strcmp(Z_STRVAL(new_key), "_COOKIE")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_ENV")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_FILES")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_GET")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_POST")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_REQUEST")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_SESSION")==0)||
-		    (strcmp(Z_STRVAL(new_key), "_SERVER")==0)) {
-		    zval_dtor(&new_key);
-		    return 0;
-		}
-	} else if (strcmp(Z_STRVAL(new_key), "GLOBALS")==0) {
+	if (php_varname_check(Z_STRVAL(new_key), Z_STRLEN(new_key), 1 TSRMLS_CC) == FAILURE || suhosin_is_protected_varname(Z_STRVAL(new_key), Z_STRLEN(new_key))) {
 		zval_dtor(&new_key);
 		return 0;
 	}
@@ -549,36 +506,7 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
                 new_key_len++;
 	}
 
-	if (php_varname_check(new_key, new_key_len-1, 0 TSRMLS_CC) == FAILURE) {
-		zval_dtor(&new_key);
-		return 0;
-	}
-
-	if (new_key[0] == 'H') {
-		if ((strcmp(new_key, "HTTP_GET_VARS")==0)||
-		    (strcmp(new_key, "HTTP_POST_VARS")==0)||
-		    (strcmp(new_key, "HTTP_POST_FILES")==0)||
-		    (strcmp(new_key, "HTTP_ENV_VARS")==0)||
-		    (strcmp(new_key, "HTTP_SERVER_VARS")==0)||
-		    (strcmp(new_key, "HTTP_SESSION_VARS")==0)||
-		    (strcmp(new_key, "HTTP_COOKIE_VARS")==0)||
-		    (strcmp(new_key, "HTTP_RAW_POST_DATA")==0)) {
-		    efree(new_key);
-		    return 0;
-		}
-	} else if (new_key[0] == '_') {
-		if ((strcmp(new_key, "_COOKIE")==0)||
-		    (strcmp(new_key, "_ENV")==0)||
-		    (strcmp(new_key, "_FILES")==0)||
-		    (strcmp(new_key, "_GET")==0)||
-		    (strcmp(new_key, "_POST")==0)||
-		    (strcmp(new_key, "_REQUEST")==0)||
-		    (strcmp(new_key, "_SESSION")==0)||
-		    (strcmp(new_key, "_SERVER")==0)) {
-		    efree(new_key);
-		    return 0;
-		}
-	} else if (strcmp(new_key, "GLOBALS")==0) {
+	if (php_varname_check(new_key, new_key_len-1, 1 TSRMLS_CC) == FAILURE || suhosin_is_protected_varname(new_key, new_key_len-1)) {
 		efree(new_key);
 		return 0;
 	}
@@ -714,22 +642,28 @@ PHP_FUNCTION(suhosin_import_request_variables)
 }
 /* }}} */
 
+#endif /* SUHOSIN_HAVE_IRV */
+
 ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_extract, 0, 0, 1)
 	ZEND_ARG_INFO(ZEND_SEND_PREFER_REF, arg) /* ARRAY_INFO(0, arg, 0) */
 	ZEND_ARG_INFO(0, extract_type)
 	ZEND_ARG_INFO(0, prefix)
 ZEND_END_ARG_INFO()
 
+#ifdef SUHOSIN_HAVE_IRV
 ZEND_BEGIN_ARG_INFO_EX(suhosin_arginfo_import_request_variables, 0, 0, 1)
 	ZEND_ARG_INFO(0, types)
 	ZEND_ARG_INFO(0, prefix)
 ZEND_END_ARG_INFO()
+#endif
 
 /* {{{ suhosin_ex_imp_functions[]
  */
 zend_function_entry suhosin_ex_imp_functions[] = {
 	PHP_NAMED_FE(extract, PHP_FN(suhosin_extract), suhosin_arginfo_extract)
+#ifdef SUHOSIN_HAVE_IRV
 	PHP_NAMED_FE(import_request_variables, PHP_FN(suhosin_import_request_variables), suhosin_arginfo_import_request_variables)
+#endif
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -740,7 +674,9 @@ void suhosin_hook_ex_imp()
 	
 	/* replace the extract and import_request_variables functions */
 	zend_hash_del(CG(function_table), "extract", sizeof("extract"));
+#ifdef SUHOSIN_HAVE_IRV
 	zend_hash_del(CG(function_table), "import_request_variables", sizeof("import_request_variables"));
+#endif
 #ifndef ZEND_ENGINE_2
 	zend_register_functions(suhosin_ex_imp_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
 #else

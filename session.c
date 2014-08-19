@@ -1020,7 +1020,7 @@ static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
     int r;
     char *tmp;
 
-    if ((ps_mod_user) && (SUHOSIN_G(s_original_mod) == ps_mod_user) && (strcmp(new_value, "user") == NULL)) {
+    if ((ps_mod_user) && (SUHOSIN_G(s_original_mod) == ps_mod_user) && (strcmp(new_value, "user") == 0)) {
         return SUCCESS;
     }
 

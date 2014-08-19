@@ -22,7 +22,7 @@
 #ifndef PHP_SUHOSIN_H
 #define PHP_SUHOSIN_H
 
-#define SUHOSIN_EXT_VERSION  "0.9.36"
+#define SUHOSIN_EXT_VERSION  "0.9.37-dev"
 
 /*#define SUHOSIN_DEBUG*/
 #define SUHOSIN_LOG "/tmp/suhosin_log.txt"
@@ -37,6 +37,10 @@
 #else
 #define SDEBUG(...)
 #endif    
+#endif
+
+#ifndef PHP_VERSION_ID
+#define PHP_VERSION_ID (PHP_MAJOR_VERSION * 10000 + PHP_MINOR_VERSION * 100 + PHP_RELEASE_VERSION)
 #endif
 
 extern zend_module_entry suhosin_module_entry;
@@ -65,6 +69,101 @@ PHP_RSHUTDOWN_FUNCTION(suhosin);
 PHP_MINFO_FUNCTION(suhosin);
 
 #include "ext/standard/basic_functions.h"
+
+static inline int suhosin_is_protected_varname(char *var, int var_len)
+{
+	switch (var_len) {
+		case 18:
+		if (memcmp(var, "HTTP_RAW_POST_DATA", 18)==0) goto protected_varname;
+		break;
+		case 17:
+		if (memcmp(var, "HTTP_SESSION_VARS", 17)==0) goto protected_varname;
+		break;
+		case 16:
+		if (memcmp(var, "HTTP_SERVER_VARS", 16)==0) goto protected_varname;
+		if (memcmp(var, "HTTP_COOKIE_VARS", 16)==0) goto protected_varname;
+		break;
+		case 15:
+		if (memcmp(var, "HTTP_POST_FILES", 15)==0) goto protected_varname;
+		break;
+		case 14:
+		if (memcmp(var, "HTTP_POST_VARS", 14)==0) goto protected_varname;
+		break;
+		case 13:
+		if (memcmp(var, "HTTP_GET_VARS", 13)==0) goto protected_varname;
+		if (memcmp(var, "HTTP_ENV_VARS", 13)==0) goto protected_varname;
+		break;
+		case 8:
+		if (memcmp(var, "_SESSION", 8)==0) goto protected_varname;
+		if (memcmp(var, "_REQUEST", 8)==0) goto protected_varname;
+		break;
+		case 7:
+		if (memcmp(var, "GLOBALS", 7)==0) goto protected_varname;
+		if (memcmp(var, "_COOKIE", 7)==0) goto protected_varname;
+		if (memcmp(var, "_SERVER", 7)==0) goto protected_varname;
+		break;
+		case 6:
+		if (memcmp(var, "_FILES", 6)==0) goto protected_varname;
+		break;
+		case 5:
+		if (memcmp(var, "_POST", 5)==0) goto protected_varname;
+		break;
+		case 4:
+		if (memcmp(var, "_ENV", 4)==0) goto protected_varname;
+		if (memcmp(var, "_GET", 4)==0) goto protected_varname;
+		break;
+	}
+
+	return 0;
+protected_varname:
+	return 1;
+}
+
+
+#if PHP_VERSION_ID < 50203
+static inline int php_varname_check(char *name, int name_len, zend_bool silent TSRMLS_DC) /* {{{ */
+{
+    if (name_len == sizeof("GLOBALS") - 1 && !memcmp(name, "GLOBALS", sizeof("GLOBALS") - 1)) {
+		if (!silent) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted GLOBALS variable overwrite");
+		}
+        return FAILURE;
+    } else if (name[0] == '_' &&
+            (
+             (name_len == sizeof("_GET") - 1 && !memcmp(name, "_GET", sizeof("_GET") - 1)) ||
+             (name_len == sizeof("_POST") - 1 && !memcmp(name, "_POST", sizeof("_POST") - 1)) ||
+             (name_len == sizeof("_COOKIE") - 1 && !memcmp(name, "_COOKIE", sizeof("_COOKIE") - 1)) ||
+             (name_len == sizeof("_ENV") - 1 && !memcmp(name, "_ENV", sizeof("_ENV") - 1)) ||
+             (name_len == sizeof("_SERVER") - 1 && !memcmp(name, "_SERVER", sizeof("_SERVER") - 1)) ||
+             (name_len == sizeof("_SESSION") - 1 && !memcmp(name, "_SESSION", sizeof("_SESSION") - 1)) ||
+             (name_len == sizeof("_FILES") - 1  && !memcmp(name, "_FILES", sizeof("_FILES") - 1)) ||
+             (name_len == sizeof("_REQUEST") -1 && !memcmp(name, "_REQUEST", sizeof("_REQUEST") - 1))
+            )
+            ) {
+		if (!silent) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted super-global (%s) variable overwrite", name);
+		}
+        return FAILURE;
+    } else if (name[0] == 'H' &&
+            (
+             (name_len == sizeof("HTTP_POST_VARS") - 1 && !memcmp(name, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_GET_VARS") - 1 && !memcmp(name, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_COOKIE_VARS") - 1 && !memcmp(name, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_ENV_VARS") - 1 && !memcmp(name, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_SERVER_VARS") - 1 && !memcmp(name, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_SESSION_VARS") - 1 && !memcmp(name, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS") - 1)) ||
+             (name_len == sizeof("HTTP_RAW_POST_DATA") - 1 && !memcmp(name, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA") - 1)) ||
+             (name_len == sizeof("HTTP_POST_FILES") - 1 && !memcmp(name, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES") - 1))
+            )
+            ) {
+		if (!silent) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted long input array (%s) overwrite", name);
+		}
+        return FAILURE;
+    }
+	return SUCCESS;
+}
+#endif
 
 ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_uint in_code_type;

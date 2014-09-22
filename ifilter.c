@@ -34,6 +34,13 @@
 
 static void (*orig_register_server_variables)(zval *track_vars_array TSRMLS_DC) = NULL;
 
+#if !HAVE_STRNLEN
+static size_t strnlen(const char *s, size_t maxlen) {
+	char *r = memchr(s, '\0', maxlen);
+	return r ? r-s : maxlen;
+}
+#endif
+
 
 /* {{{ normalize_varname
  */
@@ -590,7 +597,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 
 	/* Check if variable value is truncated by a \0 */
 	
-	if (val && *val && val_len != strlen(*val)) {
+	if (val && *val && val_len != strnlen(*val, val_len)) {
 	
 		if (SUHOSIN_G(disallow_nul)) {
 			suhosin_log(S_VARS, "ASCII-NUL chars not allowed within request variables - dropped variable '%s'", var);

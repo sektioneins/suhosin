@@ -386,6 +386,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_syslog)
 	if (!new_value) {
 		SUHOSIN_G(log_syslog) = (S_ALL & ~S_SQL) | S_MEMORY;
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_syslog) = (S_ALL & ~S_SQL) | S_MEMORY;
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.syslog=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_syslog) = atoi(new_value) | S_MEMORY;
 	}
 	return SUCCESS;
@@ -416,6 +421,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_sapi)
 	if (!new_value) {
 		SUHOSIN_G(log_sapi) = (S_ALL & ~S_SQL);
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_sapi) = (S_ALL & ~S_SQL);
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.sapi=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_sapi) = atoi(new_value);
 	}
 	return SUCCESS;
@@ -426,6 +436,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_stdout)
 	if (!new_value) {
 		SUHOSIN_G(log_stdout) = (S_ALL & ~S_SQL);
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_stdout) = (S_ALL & ~S_SQL);
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.stdout=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_stdout) = atoi(new_value);
 	}
 	return SUCCESS;
@@ -436,6 +451,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_script)
 	if (!new_value) {
 		SUHOSIN_G(log_script) = S_ALL & ~S_MEMORY;
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_script) = S_ALL & ~S_MEMORY;
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.script=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_script) = atoi(new_value) & (~S_MEMORY) & (~S_INTERNAL);
 	}
 	return SUCCESS;
@@ -458,6 +478,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_phpscript)
 	if (!new_value) {
 		SUHOSIN_G(log_phpscript) = S_ALL & ~S_MEMORY;
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_phpscript) = S_ALL & ~S_MEMORY;
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.phpscript=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_phpscript) = atoi(new_value) & (~S_MEMORY) & (~S_INTERNAL);
 	}
 	return SUCCESS;
@@ -468,6 +493,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_file)
 	if (!new_value) {
 		SUHOSIN_G(log_file) = S_ALL & ~S_MEMORY;
 	} else {
+		if (is_numeric_string(new_value, strlen(new_value), NULL, NULL, 0) != IS_LONG) {
+			SUHOSIN_G(log_file) = S_ALL & ~S_MEMORY;
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "unknown constant in suhosin.log.file=%s", new_value);
+			return FAILURE;
+		}
 		SUHOSIN_G(log_file) = atoi(new_value) & (~S_MEMORY) & (~S_INTERNAL);
 	}
 	return SUCCESS;
@@ -921,7 +951,6 @@ PHP_MINIT_FUNCTION(suhosin)
 	ZEND_INIT_MODULE_GLOBALS(suhosin, php_suhosin_init_globals, NULL);
 
 	/* only register constants if they have not previously been registered by a possible patched PHP */
-	
 	if (zend_hash_exists(EG(zend_constants), "S_MEMORY", sizeof("S_MEMORY"))==0) {
 		REGISTER_MAIN_LONG_CONSTANT("S_MEMORY", S_MEMORY, CONST_PERSISTENT | CONST_CS);
 		REGISTER_MAIN_LONG_CONSTANT("S_VARS", S_VARS, CONST_PERSISTENT | CONST_CS);

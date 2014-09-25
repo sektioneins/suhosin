@@ -446,6 +446,8 @@ extern unsigned int (*old_input_filter)(int arg, char *var, char **val, unsigned
 void normalize_varname(char *varname);
 int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TSRMLS_DC);
 void suhosin_bailout(TSRMLS_D);
+size_t suhosin_strnspn(const char *input, size_t n, const char *accept);
+size_t suhosin_strncspn(const char *input, size_t n, const char *reject);
 
 /* Add pseudo refcount macros for PHP version < 5.3 */
 #ifndef Z_REFCOUNT_PP

@@ -41,7 +41,7 @@ static size_t strnlen(const char *s, size_t maxlen) {
 }
 #endif
 
-static size_t strnspn(const char *input, size_t n, const char *accept)
+size_t suhosin_strnspn(const char *input, size_t n, const char *accept)
 {
 	size_t count = 0;
 	for (; *input != '\0' && count < n; input++, count++) {
@@ -51,7 +51,7 @@ static size_t strnspn(const char *input, size_t n, const char *accept)
 	return count;
 }
 
-static size_t strncspn(const char *input, size_t n, const char *reject)
+size_t suhosin_strncspn(const char *input, size_t n, const char *reject)
 {
 	size_t count = 0;
 	for (; *input != '\0' && count < n; input++, count++) {
@@ -581,14 +581,14 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 		
 		/* index whitelist/blacklist */
 		if (SUHOSIN_G(array_index_whitelist) && *(SUHOSIN_G(array_index_whitelist))) {
-			if (strnspn(index, index_length, SUHOSIN_G(array_index_whitelist)) != index_length) {
+			if (suhosin_strnspn(index, index_length, SUHOSIN_G(array_index_whitelist)) != index_length) {
 				suhosin_log(S_VARS, "array index contains not whitelisted characters - dropped variable '%s'", var);
 				if (!SUHOSIN_G(simulation)) {
 					return 0;
 				}
 			}
 		} else if (SUHOSIN_G(array_index_blacklist) && *(SUHOSIN_G(array_index_blacklist))) {
-			if (strncspn(index, index_length, SUHOSIN_G(array_index_blacklist)) != index_length) {
+			if (suhosin_strncspn(index, index_length, SUHOSIN_G(array_index_blacklist)) != index_length) {
 				suhosin_log(S_VARS, "array index contains blacklisted characters - dropped variable '%s'", var);
 				if (!SUHOSIN_G(simulation)) {
 					return 0;

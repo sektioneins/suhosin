@@ -41,6 +41,26 @@ static size_t strnlen(const char *s, size_t maxlen) {
 }
 #endif
 
+static size_t strnspn(const char *input, size_t n, const char *accept)
+{
+	size_t count = 0;
+	for (; *input != '\0' && count < n; input++, count++) {
+		if (strchr(accept, *input) == NULL)
+			break;
+	}
+	return count;
+}
+
+static size_t strncspn(const char *input, size_t n, const char *reject)
+{
+	size_t count = 0;
+	for (; *input != '\0' && count < n; input++, count++) {
+		if (strchr(reject, *input) != NULL)
+			break;
+	}
+	return count;
+}
+
 
 /* {{{ normalize_varname
  */
@@ -524,7 +544,8 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 		}
 		
 		index_length = index_end - index;
-			
+		
+		/* max. array index length */
 		if (SUHOSIN_G(max_array_index_length) && SUHOSIN_G(max_array_index_length) < index_length) {
 			suhosin_log(S_VARS, "configured request variable array index length limit exceeded - dropped variable '%s'", var);
 			if (!SUHOSIN_G(simulation)) {
@@ -556,6 +577,23 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 					}
 				} 
 				break;
+		}
+		
+		/* index whitelist/blacklist */
+		if (SUHOSIN_G(array_index_whitelist) && *(SUHOSIN_G(array_index_whitelist))) {
+			if (strnspn(index, index_length, SUHOSIN_G(array_index_whitelist)) != index_length) {
+				suhosin_log(S_VARS, "array index contains not whitelisted characters - dropped variable '%s'", var);
+				if (!SUHOSIN_G(simulation)) {
+					return 0;
+				}
+			}
+		} else if (SUHOSIN_G(array_index_blacklist) && *(SUHOSIN_G(array_index_blacklist))) {
+			if (strncspn(index, index_length, SUHOSIN_G(array_index_blacklist)) != index_length) {
+				suhosin_log(S_VARS, "array index contains blacklisted characters - dropped variable '%s'", var);
+				if (!SUHOSIN_G(simulation)) {
+					return 0;
+				}
+			}
 		}
 		
 		index = strchr(index, '[');

@@ -208,6 +208,8 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	long  max_value_length;
 	long  max_array_depth;
 	long  max_array_index_length;
+	char* array_index_whitelist;
+	char* array_index_blacklist;
 	zend_bool  disallow_nul;
 	zend_bool  disallow_ws;
 /*	cookie variables */

@@ -7,7 +7,7 @@ suhosin.log.stdout=32
 --SKIPIF--
 <?php
 include('skipifmysqli.inc');
-include('skipif.inc');
+include('../skipif.inc');
 ?>
 --FILE--
 <?php

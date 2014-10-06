@@ -11,7 +11,7 @@ suhosin.sql.union=0
 --SKIPIF--
 <?php
 include('skipifmysqli.inc');
-include('skipif.inc');
+include('../skipif.inc');
 ?>
 --FILE--
 <?php

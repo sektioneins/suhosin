@@ -3,12 +3,15 @@ suhosin input filter (suhosin.get.max_array_depth)
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
-suhosin.log.stdout=255
 suhosin.log.script=0
+suhosin.log.file=255
+suhosin.log.file.time=0
+suhosin.log.file.name={PWD}/suhosintest.$$.log.tmp
+auto_append_file={PWD}/suhosintest.$$.log.tmp
 suhosin.request.max_array_depth=0
 suhosin.get.max_array_depth=4
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 --GET--
 var1[]=1&var2[][]=2&var3[][][]=3&var4[][][][]=4&var5[][][][][]=5&var6[][][][][][]=6&

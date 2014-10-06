@@ -9,7 +9,7 @@ suhosin.log.stdout=255
 suhosin.log.script=0
 suhosin.server.strip=Off
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --ENV--
 return <<<END
 HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 6.0; rv:29.0) <script>alert('123');</script>Gecko/20100101 Firefox/29.0

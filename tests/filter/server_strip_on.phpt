@@ -9,7 +9,7 @@ suhosin.log.stdout=255
 suhosin.log.script=0
 suhosin.server.strip=On
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --ENV--
 return <<<END
 SCRIPT_NAME=X/index.php/THIS_IS_A_FAKE_NAME<>"'`!AAA

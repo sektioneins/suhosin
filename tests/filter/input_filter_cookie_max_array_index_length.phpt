@@ -3,12 +3,15 @@ suhosin input filter (suhosin.cookie.max_array_index_length)
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
-suhosin.log.stdout=255
 suhosin.log.script=0
+suhosin.log.file=255
+suhosin.log.file.time=0
+suhosin.log.file.name={PWD}/suhosintest.$$.log.tmp
+auto_append_file={PWD}/suhosintest.$$.log.tmp
 suhosin.request.max_array_index_length=0
 suhosin.cookie.max_array_index_length=3
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 var1[AAA]=1;var2[BBBB]=1;var3[AAA][BBB]=1;var4[AAA][BBBB]=4;var5[AAA][BBB][CCC]=1;var6[AAA][BBBB][CCC]=1;
 --GET--

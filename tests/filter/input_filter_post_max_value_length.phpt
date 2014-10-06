@@ -3,12 +3,15 @@ suhosin input filter (suhosin.post.max_value_length)
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
-suhosin.log.stdout=255
 suhosin.log.script=0
+suhosin.log.file=255
+suhosin.log.file.time=0
+suhosin.log.file.name={PWD}/suhosintest.$$.log.tmp
+auto_append_file={PWD}/suhosintest.$$.log.tmp
 suhosin.request.max_value_length=0
 suhosin.post.max_value_length=3
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 --GET--
 --POST--

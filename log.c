@@ -261,10 +261,14 @@ log_file:
 	    return;
 	}
 
-	gettimeofday(&tv, NULL);
-	now = tv.tv_sec;
-	php_localtime_r(&now, &tm);
-	ap_php_snprintf(error, sizeof(error), "%s %2d %02d:%02d:%02d [%u] %s\n", month_names[tm.tm_mon], tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, getpid(),buf);
+	if (SUHOSIN_G(log_file_time)) {
+		gettimeofday(&tv, NULL);
+		now = tv.tv_sec;
+		php_localtime_r(&now, &tm);
+		ap_php_snprintf(error, sizeof(error), "%s %2d %02d:%02d:%02d [%u] %s\n", month_names[tm.tm_mon], tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, getpid(),buf);
+	} else {
+		ap_php_snprintf(error, sizeof(error), "%s\n", buf);
+	}
 	towrite = strlen(error);
 	wbuf = error;
 	php_flock(fd, LOCK_EX);
@@ -290,7 +294,7 @@ log_sapi:
 #endif
 	}
 	if ((SUHOSIN_G(log_stdout) & loglevel)!=0) {
-		printf("%s\n", buf);
+		fprintf(stdout, "%s\n", buf);
 	}
 
 /*log_script:*/

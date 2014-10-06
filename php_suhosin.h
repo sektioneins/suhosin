@@ -275,6 +275,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool log_phpscript_is_safe;
 	long	log_file;
 	char	*log_filename;
+	zend_bool log_file_time;
 
 /*	header handler */
 	zend_bool allow_multiheader;

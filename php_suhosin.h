@@ -250,7 +250,9 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool  upload_disallow_elf;
 	zend_bool  upload_disallow_binary;
 	zend_bool  upload_remove_binary;
+#ifdef SUHOSIN_EXPERIMENTAL
 	zend_bool  upload_allow_utf8;
+#endif
 	char *upload_verification_script;
         
 	zend_bool  no_more_variables;

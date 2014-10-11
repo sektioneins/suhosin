@@ -824,7 +824,9 @@ PHP_INI_BEGIN()
         STD_PHP_INI_ENTRY("suhosin.upload.disallow_elf", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_elf, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.upload.disallow_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_binary, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.upload.remove_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_remove_binary, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.upload.allow_utf8", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_allow_utf8, zend_suhosin_globals, suhosin_globals)
+#ifdef SUHOSIN_EXPERIMENTAL
+        STD_PHP_INI_BOOLEAN("suhosin.upload.allow_utf8", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_allow_utf8, zend_suhosin_globals, suhosin_globals)
+#endif
         STD_PHP_INI_ENTRY("suhosin.upload.verification_script", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadString, upload_verification_script, zend_suhosin_globals, suhosin_globals)
 
 

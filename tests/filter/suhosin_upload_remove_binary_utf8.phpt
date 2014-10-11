@@ -12,7 +12,9 @@ suhosin.upload.allow_utf8=On
 max_file_uploads=40
 suhosin.upload.max_uploads=40
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('skipif.inc');
+if (ini_get('suhosin.upload.allow_utf8') === FALSE) { die("skip feature not compiled in"); }
+?>
 --COOKIE--
 --GET--
 --POST_RAW--

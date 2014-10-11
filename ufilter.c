@@ -149,19 +149,23 @@ return_failure:
 }
 /* }}} */
 
-static inline int suhosin_validate_utf8_multibyte(const char* cp)
+#ifdef SUHOSIN_EXPERIMENTAL
+static inline int suhosin_validate_utf8_multibyte(const char* cp, size_t maxlen)
 {
+	if (maxlen < 2 || !(*cp & 0x80)) { return 0; }
 	if ((*cp & 0xe0) == 0xc0 &&					// 1st byte is 110xxxxx
 		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
 		(*cp & 0x1e)) {							// overlong check 110[xxxx]x 10xxxxxx
 			 return 2;
 	}
+	if (maxlen < 3) { return 0; }
 	if ((*cp & 0xf0) == 0xe0 &&					// 1st byte is 1110xxxx
 		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
 		(*(cp+2) & 0xc0) == 0x80 &&				// 3rd byte is 10xxxxxx
 		((*cp & 0x0f) | (*(cp+1) & 0x20))) {	// 1110[xxxx] 10[x]xxxxx 10xxxxxx
 			return 3;
 	}
+	if (maxlen < 4) { return 0; }
 	if ((*cp & 0xf8) == 0xf0 &&				// 1st byte is 11110xxx
 		(*(cp+1) & 0xc0) == 0x80 &&				// 2nd byte is 10xxxxxx
 		(*(cp+2) & 0xc0) == 0x80 &&				// 3rd byte is 10xxxxxx
@@ -171,6 +175,7 @@ static inline int suhosin_validate_utf8_multibyte(const char* cp)
 	}
 	return 0;
 }
+#endif
 
 int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TSRMLS_DC)
 {
@@ -236,14 +241,15 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 					if (*cp >= 32 || isspace(*cp)) {
 						continue;
 					}
+#ifdef SUHOSIN_EXPERIMENTAL
 					if ((*cp & 0x80) && SUHOSIN_G(upload_allow_utf8)) {
 						SDEBUG("checking char %x", *cp);
-						if ((n = suhosin_validate_utf8_multibyte(cp))) { // valid UTF8 multibyte character
+						if ((n = suhosin_validate_utf8_multibyte(cp, cpend-cp))) { // valid UTF8 multibyte character
 							cp += n - 1;
 							continue;
 						}
 					}
-					
+#endif
 					suhosin_log(S_FILES, "uploaded file contains binary data - file dropped");
 					if (!SUHOSIN_G(simulation)) {
 						goto continue_with_failure;
@@ -261,15 +267,17 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 				for (i=0, j=0; i<mefd->length; i++) {
 					if (mefd->data[i] >= 32 || isspace(mefd->data[i])) {
 						mefd->data[j++] = mefd->data[i];
-					} else if (SUHOSIN_G(upload_allow_utf8) && mefd->data[i] & 0x80) {
-						n = suhosin_validate_utf8_multibyte(mefd->data + i);
+					}
+#ifdef SUHOSIN_EXPERIMENTAL
+					else if (SUHOSIN_G(upload_allow_utf8) && mefd->data[i] & 0x80) {
+						n = suhosin_validate_utf8_multibyte(mefd->data + i, mefd->length - i);
 						if (!n) { continue; }
-						while (n) {
+						while (n--) {
 							mefd->data[j++] = mefd->data[i++];
-							n--;
 						}
 						i--;
 					}
+#endif
 				}
 				mefd->data[j] = '\0';
 				

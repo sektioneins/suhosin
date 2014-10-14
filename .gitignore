@@ -25,4 +25,4 @@
 /modules/
 /run-tests.php
 /suhosin.la
-
+/tests/*/*.tmp

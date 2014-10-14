@@ -5,10 +5,13 @@ suhosin.executor.allow_symlink=Off
 --INI--
 error_reporting=E_ALL
 open_basedir=
-suhosin.log.stdout=255
-suhosin.log.script=0
 suhosin.log.syslog=0
 suhosin.log.sapi=0
+suhosin.log.script=0
+suhosin.log.file=255
+suhosin.log.file.time=0
+suhosin.log.file.name={PWD}/suhosintest.$$.log.tmp
+auto_append_file={PWD}/suhosintest.$$.log.tmp
 suhosin.executor.allow_symlink=Off
 --FILE--
 <?php

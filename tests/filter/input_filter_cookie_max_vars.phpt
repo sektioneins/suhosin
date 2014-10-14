@@ -5,8 +5,11 @@ suhosin input filter (suhosin.cookie.max_vars)
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
-suhosin.log.stdout=255
 suhosin.log.script=0
+suhosin.log.file=255
+suhosin.log.file.time=0
+suhosin.log.file.name={PWD}/suhosintest.$$.log.tmp
+auto_append_file={PWD}/suhosintest.$$.log.tmp
 suhosin.cookie.max_vars=3
 --COOKIE--
 a=1; b=2; c=3; d=4

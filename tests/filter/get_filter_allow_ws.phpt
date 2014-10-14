@@ -10,7 +10,7 @@ suhosin.get.disallow_ws=0
 suhosin.post.disallow_ws=0
 suhosin.cookie.disallow_ws=0
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 +var1=1;var2=2;%20var3=3; var4=4;
 --GET--

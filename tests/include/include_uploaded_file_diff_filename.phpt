@@ -5,9 +5,8 @@ Testing include file from $_FILES (but change name a bit)
 --INI--
 suhosin.log.syslog=0
 suhosin.log.sapi=0
-suhosin.log.stdout=255
 suhosin.log.script=0
-suhosin.log.phpscript=0
+suhosin.log.stdout=255
 suhosin.executor.include.whitelist=
 suhosin.executor.include.blacklist=
 --POST_RAW--

@@ -9,7 +9,7 @@ suhosin.log.stdout=255
 suhosin.log.script=0
 suhosin.server.encode=Off
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --ENV--
 return <<<END
 REQUEST_URI=AAA<>"'`!AAA

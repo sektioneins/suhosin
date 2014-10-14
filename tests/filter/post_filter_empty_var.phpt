@@ -6,7 +6,7 @@ suhosin.log.sapi=0
 suhosin.log.stdout=255
 suhosin.log.script=0
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 --GET--
 --POST--

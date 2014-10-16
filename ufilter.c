@@ -113,6 +113,24 @@ static int check_fileupload_varname(char *varname)
 			}
 		} 
 		
+		/* index whitelist/blacklist */
+		if (SUHOSIN_G(array_index_whitelist) && *(SUHOSIN_G(array_index_whitelist))) {
+			if (suhosin_strnspn(index, index_length, SUHOSIN_G(array_index_whitelist)) != index_length) {
+				suhosin_log(S_VARS, "array index contains not whitelisted characters - dropped variable '%s'", var);
+				if (!SUHOSIN_G(simulation)) {
+					goto return_failure;
+				}
+			}
+		} else if (SUHOSIN_G(array_index_blacklist) && *(SUHOSIN_G(array_index_blacklist))) {
+			if (suhosin_strncspn(index, index_length, SUHOSIN_G(array_index_blacklist)) != index_length) {
+				suhosin_log(S_VARS, "array index contains blacklisted characters - dropped variable '%s'", var);
+				if (!SUHOSIN_G(simulation)) {
+					goto return_failure;
+				}
+			}
+		}
+		
+		
 		index = strchr(index, '[');		
 	}
 	

@@ -9,11 +9,14 @@
       configure --enable-suhosin-experimental, e.g. MSSQL.
     - disallow_ws now matches all single-byte whitespace characters
     - remove_binary and disallow_binary now optionally allow UTF-8.
-    - introduced suhosin.upload.allow_utf8
-    - reimplemented suhosin_get_raw_cookies()
-    - fixed potential segfault for disable_display_errors=fail (only on ARM)
-    - fixed potential NULL-pointer dereference with func.blacklist and logging
-    - logging timestamps are localtime instead of gmt now (thanks to mkrokos)
+    - Introduced suhosin.upload.allow_utf8 (experimental)
+    - Reimplemented suhosin_get_raw_cookies()
+    - Fixed potential segfault for disable_display_errors=fail (only on ARM)
+    - Fixed potential NULL-pointer dereference with func.blacklist and logging
+    - Logging timestamps are localtime instead of gmt now (thanks to mkrokos)
+    - Added new array index filter (character whitelist/blacklist)
+    - Added option to suppress date/time for suhosin file logging (suhosin.log.file.time=0)
+    - Added simple script to create binary Debian package
 
 2014-06-10 - 0.9.36
 

@@ -871,7 +871,8 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.sql.opencomment", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLLong, sql_opencomment, zend_suhosin_globals, suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.sql.multiselect", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLLong, sql_mselect, zend_suhosin_globals, suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.sql.union", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLLong, sql_union, zend_suhosin_globals, suhosin_globals)
-    
+
+#ifdef HAVE_PHP_SESSION
 	STD_ZEND_INI_BOOLEAN("suhosin.session.encrypt",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, session_encrypt,	zend_suhosin_globals,	suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.session.cryptkey", "", PHP_INI_ALL, OnUpdateString, session_cryptkey, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptua",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, session_cryptua,	zend_suhosin_globals,	suhosin_globals)
@@ -879,7 +880,10 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.session.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_cryptraddr, zend_suhosin_globals, suhosin_globals)	
 	STD_PHP_INI_ENTRY("suhosin.session.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_checkraddr, zend_suhosin_globals, suhosin_globals)	
 	STD_PHP_INI_ENTRY("suhosin.session.max_id_length", "128", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_max_id_length, zend_suhosin_globals, suhosin_globals)
-	
+#else /* HAVE_PHP_SESSION */
+#warning BUILDING SUHOSIN WITHOUT SESSION SUPPORT
+#endif /* HAVE_PHP_SESSION */
+
 
 	STD_ZEND_INI_BOOLEAN("suhosin.cookie.encrypt",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, cookie_encrypt,	zend_suhosin_globals,	suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.cookie.cryptkey", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, cookie_cryptkey, zend_suhosin_globals, suhosin_globals)

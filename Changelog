@@ -17,6 +17,8 @@
     - Added new array index filter (character whitelist/blacklist)
     - Added option to suppress date/time for suhosin file logging (suhosin.log.file.time=0)
     - Added simple script to create binary Debian package
+    - Fixed additional recursion problems with session handler
+    - Suhosin now depends on php_session.h instead of version-specific struct code
 
 2014-06-10 - 0.9.36
 

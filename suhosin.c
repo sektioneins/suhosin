@@ -1016,9 +1016,9 @@ PHP_MINIT_FUNCTION(suhosin)
 		zend_ini_entry *i;
 		if (zend_hash_find(EG(ini_directives), "display_errors", sizeof("display_errors"), (void **) &i) == SUCCESS) {
 			if (i->on_modify) {
-				i->on_modify(i, "0", strlen("0"), i->mh_arg1, i->mh_arg2, i->mh_arg3, ZEND_INI_STAGE_STARTUP TSRMLS_CC);
+				i->on_modify(i, "0", 1, i->mh_arg1, i->mh_arg2, i->mh_arg3, ZEND_INI_STAGE_STARTUP TSRMLS_CC);
 				if (SUHOSIN_G(disable_display_errors) > 1) {
-					i->value = estrdup("0");
+					i->value = "0";
 					i->value_length = strlen(i->value);
 					i->on_modify = OnUpdate_fail;
 				} else {

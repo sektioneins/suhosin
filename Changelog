@@ -15,6 +15,7 @@
     - Fixed potential NULL-pointer dereference with func.blacklist and logging
     - Logging timestamps are localtime instead of gmt now (thanks to mkrokos)
     - Added new array index filter (character whitelist/blacklist)
+    - Set default array index blacklist to '"+-<>;()
     - Added option to suppress date/time for suhosin file logging (suhosin.log.file.time=0)
     - Added simple script to create binary Debian package
     - Fixed additional recursion problems with session handler

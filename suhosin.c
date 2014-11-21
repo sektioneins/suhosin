@@ -1062,6 +1062,10 @@ PHP_MINIT_FUNCTION(suhosin)
 	php_error_docref(NULL TSRMLS_CC, E_WARNING, "Suhosin Extension does not officially support PHP 5.2 and below anymore, because it is discontinued. Use it at your own risk.");
 #endif
 
+#if !defined(HAVE_PHP_SESSION) && !defined(SUHOSIN_NO_SESSION_WARNING)
+	php_error_docref(NULL TSRMLS_CC, E_WARNING, "Suhosin was compiled without session support, which is probably not what you want. All session related features will not be available, e.g. session encryption. If session support is really not needed, recompile Suhosin with -DSUHOSIN_NO_SESSION_WARNING=1 to suppress this warning.");
+#endif
+
 	return SUCCESS;
 }
 /* }}} */

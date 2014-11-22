@@ -74,10 +74,9 @@ static PHP_INI_MH(suhosin_OnChangeMemoryLimit)
 /* }}} */
 
 
-void suhosin_hook_memory_limit()
+void suhosin_hook_memory_limit(TSRMLS_D)
 {
 	zend_ini_entry *ini_entry;
-	TSRMLS_FETCH();
 
 	/* check if we are compiled against memory_limit */
 	if (zend_hash_find(EG(ini_directives), "memory_limit", sizeof("memory_limit"), (void **) &ini_entry)==FAILURE) {

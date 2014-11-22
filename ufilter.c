@@ -32,7 +32,6 @@
 #include "suhosin_rfc1867.h"
 #include "ext/standard/php_var.h"
 
-PHP_SUHOSIN_API int (*old_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #if !HAVE_RFC1867_CALLBACK
 PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC) = NULL;
 #endif
@@ -40,11 +39,10 @@ PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data
 
 /* {{{ SAPI_UPLOAD_VARNAME_FILTER_FUNC
  */
-static int check_fileupload_varname(char *varname)
+static int check_fileupload_varname(char *varname TSRMLS_DC)
 {
 	char *index, *prev_index = NULL, *var;
 	unsigned int var_len, total_len, depth = 0;
-	TSRMLS_FETCH();
 
 	var = estrdup(varname);
 
@@ -226,7 +224,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 		  		}
 		    
 			    
-			    if (check_fileupload_varname(mefs->name) == FAILURE) {
+			    if (check_fileupload_varname(mefs->name TSRMLS_CC) == FAILURE) {
 				    goto continue_with_failure;
 			    }
 		    }

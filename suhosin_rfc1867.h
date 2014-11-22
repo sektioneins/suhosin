@@ -78,7 +78,7 @@ typedef struct _multipart_event_end {
 
 SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler);
 
-void destroy_uploaded_files_hash(TSRMLS_D);
+// void destroy_uploaded_files_hash(TSRMLS_D);
 extern PHP_SUHOSIN_API int (*old_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC);
 #if !HAVE_RFC1867_CALLBACK
 extern PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC);

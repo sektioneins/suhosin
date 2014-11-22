@@ -1677,7 +1677,7 @@ internal_function_handler ihandlers[] = {
 #define FUNCTION_WARNING() zend_error(E_WARNING, "%s() has been disabled for security reasons", get_active_function_name(TSRMLS_C));
 #define FUNCTION_SIMULATE_WARNING() zend_error(E_WARNING, "SIMULATION - %s() has been disabled for security reasons", get_active_function_name(TSRMLS_C));
 
-/* {{{ void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int return_value_used TSRMLS_DC)
+/* {{{ void suhosin_execute_internal
  *    This function provides a hook for internal execution */
 #if PHP_VERSION_ID >= 50500
 #define EX_T(offset) (*EX_TMP_VAR(execute_data_ptr, offset))

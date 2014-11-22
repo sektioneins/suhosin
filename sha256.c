@@ -402,10 +402,8 @@ static zend_function_entry suhosin_sha256_functions[] = {
 /* }}} */
 
 
-void suhosin_hook_sha256()
+void suhosin_hook_sha256(TSRMLS_D)
 {
-	TSRMLS_FETCH();
-	
 	/* check if we already have sha256 support */
 	if (zend_hash_exists(CG(function_table), "sha256", sizeof("sha256"))) {
 		return;		
@@ -417,10 +415,6 @@ void suhosin_hook_sha256()
 #else
 	zend_register_functions(NULL, suhosin_sha256_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
 #endif
- 
-	
-	
-			
 }
 
 

@@ -668,10 +668,8 @@ zend_function_entry suhosin_ex_imp_functions[] = {
 };
 /* }}} */
 
-void suhosin_hook_ex_imp()
+void suhosin_hook_ex_imp(TSRMLS_D)
 {
-	TSRMLS_FETCH();
-	
 	/* replace the extract and import_request_variables functions */
 	zend_hash_del(CG(function_table), "extract", sizeof("extract"));
 #ifdef SUHOSIN_HAVE_IRV
@@ -682,10 +680,6 @@ void suhosin_hook_ex_imp()
 #else
 	zend_register_functions(NULL, suhosin_ex_imp_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
 #endif
- 
-	
-	
-			
 }
 
 

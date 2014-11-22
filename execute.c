@@ -24,7 +24,6 @@
 #endif
 
 #include <fcntl.h>
-#include <fnmatch.h>
 #include "php.h"
 #include "php_ini.h"
 #include "zend_hash.h"
@@ -40,9 +39,15 @@
 #include "sha256.h"
 
 #ifdef PHP_WIN32
+# ifdef HAVE_FNMATCH
+#  include "win32/fnmatch.h"
+# endif
 # include "win32/winutil.h"
 # include "win32/time.h"
 #else
+# ifdef HAVE_FNMATCH
+#  include <fnmatch.h>
+# endif
 # include <sys/time.h>
 #endif
 

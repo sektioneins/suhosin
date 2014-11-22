@@ -34,6 +34,9 @@
 #include "ext/standard/url.h"
 #include "ext/standard/php_smart_str.h"
 
+#ifdef PHP_WIN32
+#include "win32/php_inttypes.h"
+#endif
 
 SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler);
 

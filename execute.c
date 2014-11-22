@@ -1386,7 +1386,7 @@ static void suhosin_gen_entropy(php_uint32 *entropybuf TSRMLS_DC)
     }
 #else
     /* we have to live with the possibility that this call fails */
-    php_win32_get_random_bytes(rbuf, 8 * sizeof(php_uint32));
+    php_win32_get_random_bytes((unsigned char*)&seedbuf[6], 8 * sizeof(php_uint32));
 #endif
 
     suhosin_SHA256Init(&context);

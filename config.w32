@@ -5,4 +5,10 @@ ARG_ENABLE("suhosin", "whether to enable suhosin support", "yes");
 
 if (PHP_SUHOSIN == "yes") {
 	EXTENSION("suhosin", "suhosin.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867.c rfc1867_new.c log.c header.c execute.c ex_imp.c session.c aes.c crypt.c");
+	ARG_ENABLE("suhosin-experimental", "Enable experimental suhosin features", "no");
+
+	if (PHP_SUHOSIN_EXPERIMENTAL != "no") {
+		ADD_FLAG("CFLAGS_SUHOSIN", "/D SUHOSIN_EXPERIMENTAL");
+		AC_DEFINE("SUHOSIN_EXPERIMENTAL", 1, "Whether to enable experimental suhosin features");
+	}
 }

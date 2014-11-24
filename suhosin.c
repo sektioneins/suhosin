@@ -211,7 +211,7 @@ static void suhosin_shutdown(zend_extension *extension)
 
 static int suhosin_startup_wrapper(zend_extension *ext)
 {
-	int res;
+	int res = SUCCESS;
 	zend_extension *ex = &suhosin_zend_extension_entry;
 	char *new_info;
 	int new_info_length;
@@ -244,7 +244,9 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 	    ze->op_array_dtor = stealth_op_array_dtor;
     /*}*/
 	
-	res = old_startup(ext);
+	if (old_startup != NULL) {
+		res = old_startup(ext);
+	}
 
 /*    ex->name = NULL; 
     ex->author = NULL;

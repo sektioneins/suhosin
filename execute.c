@@ -39,9 +39,7 @@
 #include "sha256.h"
 
 #ifdef PHP_WIN32
-# ifdef HAVE_FNMATCH
-#  include "win32/fnmatch.h"
-# endif
+# include "win32/fnmatch.h"
 # include "win32/winutil.h"
 # include "win32/time.h"
 #else

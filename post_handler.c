@@ -34,7 +34,7 @@
 #include "ext/standard/url.h"
 #include "ext/standard/php_smart_str.h"
 
-#ifdef PHP_WIN32
+#if defined(PHP_WIN32) && PHP_VERSION_ID >= 50600
 #include "win32/php_inttypes.h"
 #endif
 

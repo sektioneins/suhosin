@@ -299,12 +299,12 @@ static zend_bool suhosin_zend_open(const char *filename, zend_file_handle *fh)
 			break;		    	
 
 		    case SUHOSIN_CODE_TYPE_BLACKURL:
-			suhosin_log(S_INCLUDE, "Include filename ('%s') is an URL that is forbidden by the blacklist", filename);
+			suhosin_log(S_INCLUDE, "Include filename ('%s') is a URL that is forbidden by the blacklist", filename);
 			suhosin_bailout(TSRMLS_C);
 			break;
 			
 		    case SUHOSIN_CODE_TYPE_BADURL:
-			suhosin_log(S_INCLUDE, "Include filename ('%s') is an URL that is not allowed", filename);
+			suhosin_log(S_INCLUDE, "Include filename ('%s') is a URL that is not allowed", filename);
 			suhosin_bailout(TSRMLS_C);
 			break;
 
@@ -607,12 +607,12 @@ not_evaled_code:
     			break;		    	
 
 	    case SUHOSIN_CODE_TYPE_BLACKURL:
-			suhosin_log(S_INCLUDE|S_GETCALLER, "Include filename ('%s') is an URL that is forbidden by the blacklist", op_array->filename);
+			suhosin_log(S_INCLUDE|S_GETCALLER, "Include filename ('%s') is a URL that is forbidden by the blacklist", op_array->filename);
 			suhosin_bailout(TSRMLS_C);
 			break;
 			
 	    case SUHOSIN_CODE_TYPE_BADURL:
-			suhosin_log(S_INCLUDE|S_GETCALLER, "Include filename ('%s') is an URL that is not allowed", op_array->filename);
+			suhosin_log(S_INCLUDE|S_GETCALLER, "Include filename ('%s') is a URL that is not allowed", op_array->filename);
 		    suhosin_bailout(TSRMLS_C);
 			break;
 

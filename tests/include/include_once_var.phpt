@@ -15,4 +15,4 @@ suhosin.executor.include.blacklist=
     include_once $var;
 ?>
 --EXPECTF--
-ALERT - Include filename ('http://127.0.0.1/') is an URL that is not allowed (attacker 'REMOTE_ADDR not set', file '%s', line 3)
+ALERT - Include filename ('http://127.0.0.1/') is a URL that is not allowed (attacker 'REMOTE_ADDR not set', file '%s', line 3)

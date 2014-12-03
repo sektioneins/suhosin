@@ -1,4 +1,6 @@
-2014-06-24 - 0.9.37-dev
+2014-xx-xx - 0.9.38-dev
+
+2014-12-03 - 0.9.37
 
     - Added SQL injection protection for Mysqli and several test cases
     - Added wildcard matching for SQL username

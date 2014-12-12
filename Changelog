@@ -1,3 +1,7 @@
+2014-12-12 - 0.9.37.1
+    - Changed version string to 0.9.37.1 (without -dev)
+    - Relaxed array index blacklist (removed '-') due to wordpress incompatibility
+
 2014-12-03 - 0.9.37
 
     - Added SQL injection protection for Mysqli and several test cases

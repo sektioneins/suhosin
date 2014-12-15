@@ -824,7 +824,7 @@ PHP_INI_BEGIN()
         STD_PHP_INI_ENTRY("suhosin.request.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_totalname_length, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.request.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_array_index_length, zend_suhosin_globals, suhosin_globals)
 		STD_PHP_INI_ENTRY("suhosin.request.array_index_whitelist", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_whitelist, zend_suhosin_globals, suhosin_globals)
-		STD_PHP_INI_ENTRY("suhosin.request.array_index_blacklist", "'\"+-<>;()", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_blacklist, zend_suhosin_globals, suhosin_globals)
+		STD_PHP_INI_ENTRY("suhosin.request.array_index_blacklist", "'\"+<>;()", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_blacklist, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.request.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_nul, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.request.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_ws, zend_suhosin_globals, suhosin_globals)
     

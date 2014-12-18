@@ -86,7 +86,7 @@ static int php_valid_var_name(char *var_name, int len) /* {{{ */
    Imports variables into symbol table from an array */
 PHP_FUNCTION(suhosin_extract)
 {
-#if PHP_VERSION_ID >= 50300	
+#if 1 //PHP_VERSION_ID >= 50300	
 	zval *var_array, *prefix = NULL;
 	long extract_type = EXTR_OVERWRITE;
 	zval **entry, *data;
@@ -422,14 +422,14 @@ PHP_FUNCTION(suhosin_extract)
 
 
 
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 /* import_request_variables() has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0. */
 #define SUHOSIN_HAVE_IRV 1
 #endif
 
 #ifdef SUHOSIN_HAVE_IRV
 
-#if PHP_VERSION_ID >= 50300
+#if 1 //PHP_VERSION_ID >= 50300
 static int copy_request_variable(void *pDest TSRMLS_DC, int num_args, va_list args, zend_hash_key *hash_key)
 {
 	zval *prefix, new_key;
@@ -527,7 +527,7 @@ static int copy_request_variable(void *pDest, int num_args, va_list args, zend_h
    Import GET/POST/Cookie variables into the global scope */
 PHP_FUNCTION(suhosin_import_request_variables)
 {
-#if PHP_VERSION_ID >= 50300	
+#if 1 //PHP_VERSION_ID >= 50300	
 	char *types;
 	int types_len;
 	zval *prefix = NULL;

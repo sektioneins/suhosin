@@ -86,7 +86,7 @@ static PHP_FUNCTION(suhosin_sha256_file)
 		return;
 	}
 
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 	if (PG(safe_mode) && (!php_checkuid(arg, NULL, CHECKUID_CHECK_FILE_AND_DIR))) {
 		RETURN_FALSE;
 	}

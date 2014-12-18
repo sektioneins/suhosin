@@ -859,7 +859,8 @@ int ih_mail(IH_HANDLER_PARAMS)
 
 int ih_querycheck(IH_HANDLER_PARAMS)
 {
-#ifdef PHP_ATLEAST_5_3
+// #ifdef PHP_ATLEAST_5_3
+#if 1
     void **p = zend_vm_stack_top(TSRMLS_C) - 1;
 #else
 	void **p = EG(argument_stack).top_element-2;
@@ -1020,7 +1021,8 @@ int ih_querycheck(IH_HANDLER_PARAMS)
 
 int ih_fixusername(IH_HANDLER_PARAMS)
 {
-#ifdef PHP_ATLEAST_5_3
+// #ifdef PHP_ATLEAST_5_3
+#if 1
     void **p = zend_vm_stack_top(TSRMLS_C) - 1;
 #else
 	void **p = EG(argument_stack).top_element-2;
@@ -1115,7 +1117,8 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 
 static int ih_function_exists(IH_HANDLER_PARAMS)
 {
-#ifndef PHP_ATLEAST_5_3
+// #ifndef PHP_ATLEAST_5_3
+#if 1
 	zval **function_name;
 #endif
 	zend_function *func;
@@ -1123,7 +1126,8 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	zend_bool retval;
 	int func_name_len;
 	
-#ifndef PHP_ATLEAST_5_3
+// #ifndef PHP_ATLEAST_5_3
+#if 1
 	if (ZEND_NUM_ARGS()!=1 || zend_get_parameters_ex(1, &function_name)==FAILURE) {
 		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
 	}
@@ -1559,7 +1563,8 @@ static int ih_rand(IH_HANDLER_PARAMS)
 
 static int ih_getrandmax(IH_HANDLER_PARAMS)
 {
-#ifdef PHP_ATLEAST_5_3
+// #ifdef PHP_ATLEAST_5_3
+#if 1
 	if (zend_parse_parameters_none() == FAILURE) {
 		return(0);
 	}
@@ -1737,7 +1742,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 
 #if PHP_VERSION_ID < 50500	
 #ifdef ZEND_ENGINE_2  
-# if PHP_VERSION_ID < 50400
+# if 0 // PHP_VERSION_ID < 50400
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.u.var)).var.ptr;
 # else
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;

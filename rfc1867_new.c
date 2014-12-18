@@ -35,7 +35,7 @@
 #include "suhosin_rfc1867.h"
 #include "ext/standard/php_string.h"
 
-#if PHP_VERSION_ID >= 50400
+#if 1 //PHP_VERSION_ID >= 50400
 
 #define DEBUG_FILE_UPLOAD ZEND_DEBUG
 

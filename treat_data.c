@@ -39,7 +39,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 	int free_buffer = 0;
 	char *strtok_buf = NULL;
 	
-#if PHP_VERSION_ID >= 50311
+#if 1 //PHP_VERSION_ID >= 50311
 	long count = 0;
 #endif
 
@@ -148,7 +148,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 		}
 		val = strchr(var, '=');
 		
-#if PHP_VERSION_ID >= 50311
+#if 1 //PHP_VERSION_ID >= 50311
 		if (++count > PG(max_input_vars)) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
 			break;
@@ -210,7 +210,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 
 void suhosin_hook_treat_data()
 {
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 	sapi_register_treat_data(suhosin_treat_data);
 #else
 	TSRMLS_FETCH();

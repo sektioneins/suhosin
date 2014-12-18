@@ -46,7 +46,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
 {
 	char *var, *val, *e, *s, *p;
 	zval *array_ptr = (zval *) arg;
-#if PHP_VERSION_ID >= 50311	
+#if 1 //PHP_VERSION_ID >= 50311	
 	long count = 0;
 #endif
 	if (SG(request_info).post_data == NULL) {
@@ -61,7 +61,7 @@ last_value:
 		if ((val = memchr(s, '=', (p - s)))) { /* have a value */
 			unsigned int val_len, new_val_len;
 
-#if PHP_VERSION_ID >= 50311	
+#if 1 //PHP_VERSION_ID >= 50311	
 			if (++count > PG(max_input_vars)) {
 				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
 				return;
@@ -266,7 +266,7 @@ void suhosin_hook_post_handlers(TSRMLS_D)
 	HashTable tempht;
 	zend_ini_entry *ini_entry;
 	
-#if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
+#if 1 //PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 0)
 	sapi_unregister_post_entry(&suhosin_post_entries[0] TSRMLS_CC);
 	sapi_unregister_post_entry(&suhosin_post_entries[1] TSRMLS_CC);
 	sapi_register_post_entries(suhosin_post_entries TSRMLS_CC);

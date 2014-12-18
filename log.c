@@ -287,7 +287,7 @@ log_sapi:
 	/* SAPI Logging activated? */
 	SDEBUG("(suhosin_log) log_syslog: %ld - log_sapi: %ld - log_script: %ld - log_phpscript: %ld", SUHOSIN_G(log_syslog), SUHOSIN_G(log_sapi), SUHOSIN_G(log_script), SUHOSIN_G(log_phpscript));
 	if (((SUHOSIN_G(log_sapi)|S_INTERNAL) & loglevel)!=0) {
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 		sapi_module.log_message(buf);
 #else
 		sapi_module.log_message(buf TSRMLS_CC);
@@ -372,7 +372,7 @@ log_phpscript:
 		zval *result = NULL;
 		
 		long orig_execution_depth = SUHOSIN_G(execution_depth);
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 		zend_bool orig_safe_mode = PG(safe_mode);
 #endif
 		char *orig_basedir = PG(open_basedir);
@@ -411,7 +411,7 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 				
 				SUHOSIN_G(execution_depth) = 0;
 				if (SUHOSIN_G(log_phpscript_is_safe)) {
-#if PHP_VERSION_ID < 50400
+#if 0 //PHP_VERSION_ID < 50400
 					PG(safe_mode) = 0;
 #endif
 					PG(open_basedir) = NULL;
@@ -420,7 +420,7 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 				zend_execute(new_op_array TSRMLS_CC);
 				
 				SUHOSIN_G(execution_depth) = orig_execution_depth;
-#if PHP_VERSION_ID < 50400				
+#if 0 //PHP_VERSION_ID < 50400				
 				PG(safe_mode) = orig_safe_mode;
 #endif
 				PG(open_basedir) = orig_basedir;

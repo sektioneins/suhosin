@@ -120,7 +120,7 @@ protected_varname:
 }
 
 
-#if PHP_VERSION_ID < 50203
+#if 0 //PHP_VERSION_ID < 50203
 static inline int php_varname_check(char *name, int name_len, zend_bool silent TSRMLS_DC) /* {{{ */
 {
     if (name_len == sizeof("GLOBALS") - 1 && !memcmp(name, "GLOBALS", sizeof("GLOBALS") - 1)) {
@@ -453,8 +453,8 @@ size_t suhosin_strnspn(const char *input, size_t n, const char *accept);
 size_t suhosin_strncspn(const char *input, size_t n, const char *reject);
 
 /* Add pseudo refcount macros for PHP version < 5.3 */
-#ifndef Z_REFCOUNT_PP
-
+// #ifndef Z_REFCOUNT_PP
+#if 0
 #define Z_REFCOUNT_PP(ppz)		Z_REFCOUNT_P(*(ppz))
 #define Z_SET_REFCOUNT_PP(ppz, rc)	Z_SET_REFCOUNT_P(*(ppz), rc)
 #define Z_ADDREF_PP(ppz)		Z_ADDREF_P(*(ppz))
@@ -522,9 +522,9 @@ static zend_always_inline zend_bool zval_set_isref_to_p(zval* pz, zend_bool isre
 	return pz->is_ref = isref;
 }
 
-#else
+// #else
 
-#define PHP_ATLEAST_5_3   true
+// #define PHP_ATLEAST_5_3   true
 
 #endif
 

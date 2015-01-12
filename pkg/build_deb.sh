@@ -32,6 +32,7 @@ PKGDIR=$HERE
 PHP_EX=`php-config --extension-dir`
 eval `dpkg-architecture -l`
 VERSION=${SUHOSIN_VERSION:-$1}
+PHPVERSION=$(dpkg -s php5-common | grep Version | sed -e 's/Version: //')
 
 if [ "$VERSION" == "" ]; then
 	echo "[E] please set SUHOSIN_VERSION, e.g. $0 0.9.36-1~dev1"
@@ -39,12 +40,13 @@ if [ "$VERSION" == "" ]; then
 fi
 
 echo "[*] -----------------------------------------------------------"
-echo "[+]         suhosin dir: $SUHOSIN"
-echo "[+]             tmp dir: $ROOT"
-echo "[+]   PHP extension dir: $PHP_EX"
+echo "[+]                   suhosin dir: $SUHOSIN"
+echo "[+]                       tmp dir: $ROOT"
+echo "[+]             PHP extension dir: $PHP_EX"
 echo "[+]        architecture: $DEB_HOST_ARCH"
-echo "[+] suhosin deb version: $VERSION"
-echo "[+]      pkg output dir: $PKGDIR"
+echo "[+]           suhosin deb version: $VERSION"
+echo "[+]                pkg output dir: $PKGDIR"
+echo "[+] depend on php5-common version: $PHPVERSION"
 yn_or_exit
 
 if [ ! -f "$SUHOSIN/modules/suhosin.so" ]; then
@@ -105,6 +107,7 @@ EOF
 
 echo "Architecture: $DEB_HOST_ARCH" >>$ROOT/DEBIAN/control
 echo "Version: $VERSION" >>$ROOT/DEBIAN/control
+echo "Depends: php5-common (= $PHPVERSION)" >>$ROOT/DEBIAN/control
 
 install -d -g 0 -o 0 $ROOT$PHP_EX
 install -g 0 -o 0 $SUHOSIN/modules/suhosin.so $ROOT$PHP_EX

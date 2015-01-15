@@ -1058,11 +1058,8 @@ PHP_MINIT_FUNCTION(suhosin)
 	php_register_info_logo(SUHOSIN_LOGO_GUID, "image/jpeg", suhosin_logo, sizeof(suhosin_logo));
 #endif
 
-#if PHP_VERSION_ID < 50400 //PHP_MAJOR_VERSION < 5
+#if PHP_VERSION_ID < 50400
 #error Suhosin Extension is not designed to run with PHP versions lower than 5.4.
-#endif
-#if 0 //PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION <= 2 && !SUHOSIN_DEBUG
-	php_error_docref(NULL TSRMLS_CC, E_WARNING, "Suhosin Extension does not officially support PHP 5.2 and below anymore, because it is discontinued. Use it at your own risk.");
 #endif
 
 #if !defined(HAVE_PHP_SESSION) && !defined(SUHOSIN_NO_SESSION_WARNING)

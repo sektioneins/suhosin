@@ -859,12 +859,7 @@ int ih_mail(IH_HANDLER_PARAMS)
 
 int ih_querycheck(IH_HANDLER_PARAMS)
 {
-// #ifdef PHP_ATLEAST_5_3
-#if 1
-    void **p = zend_vm_stack_top(TSRMLS_C) - 1;
-#else
-	void **p = EG(argument_stack).top_element-2;
-#endif
+	void **p = zend_vm_stack_top(TSRMLS_C) - 1;
 	unsigned long arg_count;
 	zval **arg;
 	char *query, *s, *e;
@@ -1021,12 +1016,7 @@ int ih_querycheck(IH_HANDLER_PARAMS)
 
 int ih_fixusername(IH_HANDLER_PARAMS)
 {
-// #ifdef PHP_ATLEAST_5_3
-#if 1
-    void **p = zend_vm_stack_top(TSRMLS_C) - 1;
-#else
-	void **p = EG(argument_stack).top_element-2;
-#endif
+	void **p = zend_vm_stack_top(TSRMLS_C) - 1;
 	unsigned long arg_count;
 	zval **arg;
 	char *prefix, *postfix, *user, *user_match, *cp;
@@ -1117,17 +1107,12 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 
 static int ih_function_exists(IH_HANDLER_PARAMS)
 {
-// #ifndef PHP_ATLEAST_5_3
-#if 1
 	zval **function_name;
-#endif
 	zend_function *func;
 	char *lcname;
 	zend_bool retval;
 	int func_name_len;
 	
-// #ifndef PHP_ATLEAST_5_3
-#if 1
 	if (ZEND_NUM_ARGS()!=1 || zend_get_parameters_ex(1, &function_name)==FAILURE) {
 		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
 	}
@@ -1135,18 +1120,6 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	func_name_len = Z_STRLEN_PP(function_name);
 	lcname = estrndup(Z_STRVAL_PP(function_name), func_name_len);	
 	zend_str_tolower(lcname, func_name_len);
-#else
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &lcname, &func_name_len) == FAILURE) {
-		return (1);
-	}
-
-	/* Ignore leading "\" */
-	if (func_name_len > 0 && lcname[0] == '\\') {
-		lcname = &lcname[1];
-		func_name_len--;
-	}
-	lcname = zend_str_tolower_dup(lcname, func_name_len);	
-#endif
 
 	retval = (zend_hash_find(EG(function_table), lcname, func_name_len+1, (void **)&func) == SUCCESS);
 	
@@ -1563,18 +1536,9 @@ static int ih_rand(IH_HANDLER_PARAMS)
 
 static int ih_getrandmax(IH_HANDLER_PARAMS)
 {
-// #ifdef PHP_ATLEAST_5_3
-#if 1
 	if (zend_parse_parameters_none() == FAILURE) {
 		return(0);
 	}
-#else
-        int argc = ZEND_NUM_ARGS();
-
-        if (argc != 0) {
-		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
-        }
-#endif    
 	RETVAL_LONG(PHP_MT_RAND_MAX);
 	return (1);
 }
@@ -1742,11 +1706,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 
 #if PHP_VERSION_ID < 50500	
 #ifdef ZEND_ENGINE_2  
-# if 0 // PHP_VERSION_ID < 50400
-	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.u.var)).var.ptr;
-# else
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
-# endif
 #else
         return_value = execute_data_ptr->Ts[execute_data_ptr->opline->result.u.var].var.ptr;
 #endif

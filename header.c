@@ -32,11 +32,7 @@
 #include "SAPI.h"
 #include "php_variables.h"
 
-#if 1 //PHP_VERSION_ID >= 50300
 static int (*orig_header_handler)(sapi_header_struct *sapi_header, sapi_header_op_enum op, sapi_headers_struct *sapi_headers TSRMLS_DC) = NULL;
-#else
-static int (*orig_header_handler)(sapi_header_struct *sapi_header, sapi_headers_struct *sapi_headers TSRMLS_DC) = NULL;
-#endif
 
 char *suhosin_encrypt_single_cookie(char *name, int name_len, char *value, int value_len, char *key TSRMLS_DC)
 {
@@ -190,20 +186,14 @@ char *suhosin_cookie_decryptor(TSRMLS_D)
 
 /* {{{ suhosin_header_handler
  */
-#if 1 //PHP_VERSION_ID >= 50300
 int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_header_op_enum op, sapi_headers_struct *sapi_headers TSRMLS_DC)
-#else
-int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_headers_struct *sapi_headers TSRMLS_DC)
-#endif
 {
 	int retval = SAPI_HEADER_ADD, i;
 	char *tmp;
 
-#if 1 //PHP_VERSION_ID >= 50300
 	if (op != SAPI_HEADER_ADD && op != SAPI_HEADER_REPLACE) {
-                goto suhosin_skip_header_handling;
+		goto suhosin_skip_header_handling;
 	}
-#endif
 	
 	if (sapi_header && sapi_header->header) {
 	
@@ -294,11 +284,7 @@ int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_headers_struct 
 suhosin_skip_header_handling:
 	/* If existing call the sapi header handler */
 	if (orig_header_handler) {
-#if 1 //PHP_VERSION_ID >= 50300
 		retval = orig_header_handler(sapi_header, op, sapi_headers TSRMLS_CC);
-#else
-		retval = orig_header_handler(sapi_header, sapi_headers TSRMLS_CC);
-#endif
 	}
 
 	return retval;

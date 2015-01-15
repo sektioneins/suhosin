@@ -120,51 +120,6 @@ protected_varname:
 }
 
 
-#if 0 //PHP_VERSION_ID < 50203
-static inline int php_varname_check(char *name, int name_len, zend_bool silent TSRMLS_DC) /* {{{ */
-{
-    if (name_len == sizeof("GLOBALS") - 1 && !memcmp(name, "GLOBALS", sizeof("GLOBALS") - 1)) {
-		if (!silent) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted GLOBALS variable overwrite");
-		}
-        return FAILURE;
-    } else if (name[0] == '_' &&
-            (
-             (name_len == sizeof("_GET") - 1 && !memcmp(name, "_GET", sizeof("_GET") - 1)) ||
-             (name_len == sizeof("_POST") - 1 && !memcmp(name, "_POST", sizeof("_POST") - 1)) ||
-             (name_len == sizeof("_COOKIE") - 1 && !memcmp(name, "_COOKIE", sizeof("_COOKIE") - 1)) ||
-             (name_len == sizeof("_ENV") - 1 && !memcmp(name, "_ENV", sizeof("_ENV") - 1)) ||
-             (name_len == sizeof("_SERVER") - 1 && !memcmp(name, "_SERVER", sizeof("_SERVER") - 1)) ||
-             (name_len == sizeof("_SESSION") - 1 && !memcmp(name, "_SESSION", sizeof("_SESSION") - 1)) ||
-             (name_len == sizeof("_FILES") - 1  && !memcmp(name, "_FILES", sizeof("_FILES") - 1)) ||
-             (name_len == sizeof("_REQUEST") -1 && !memcmp(name, "_REQUEST", sizeof("_REQUEST") - 1))
-            )
-            ) {
-		if (!silent) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted super-global (%s) variable overwrite", name);
-		}
-        return FAILURE;
-    } else if (name[0] == 'H' &&
-            (
-             (name_len == sizeof("HTTP_POST_VARS") - 1 && !memcmp(name, "HTTP_POST_VARS", sizeof("HTTP_POST_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_GET_VARS") - 1 && !memcmp(name, "HTTP_GET_VARS", sizeof("HTTP_GET_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_COOKIE_VARS") - 1 && !memcmp(name, "HTTP_COOKIE_VARS", sizeof("HTTP_COOKIE_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_ENV_VARS") - 1 && !memcmp(name, "HTTP_ENV_VARS", sizeof("HTTP_ENV_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_SERVER_VARS") - 1 && !memcmp(name, "HTTP_SERVER_VARS", sizeof("HTTP_SERVER_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_SESSION_VARS") - 1 && !memcmp(name, "HTTP_SESSION_VARS", sizeof("HTTP_SESSION_VARS") - 1)) ||
-             (name_len == sizeof("HTTP_RAW_POST_DATA") - 1 && !memcmp(name, "HTTP_RAW_POST_DATA", sizeof("HTTP_RAW_POST_DATA") - 1)) ||
-             (name_len == sizeof("HTTP_POST_FILES") - 1 && !memcmp(name, "HTTP_POST_FILES", sizeof("HTTP_POST_FILES") - 1))
-            )
-            ) {
-		if (!silent) {
-			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Attempted long input array (%s) overwrite", name);
-		}
-        return FAILURE;
-    }
-	return SUCCESS;
-}
-#endif
-
 ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_uint in_code_type;
 	long execution_depth;
@@ -451,82 +406,6 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 void suhosin_bailout(TSRMLS_D);
 size_t suhosin_strnspn(const char *input, size_t n, const char *accept);
 size_t suhosin_strncspn(const char *input, size_t n, const char *reject);
-
-/* Add pseudo refcount macros for PHP version < 5.3 */
-// #ifndef Z_REFCOUNT_PP
-#if 0
-#define Z_REFCOUNT_PP(ppz)		Z_REFCOUNT_P(*(ppz))
-#define Z_SET_REFCOUNT_PP(ppz, rc)	Z_SET_REFCOUNT_P(*(ppz), rc)
-#define Z_ADDREF_PP(ppz)		Z_ADDREF_P(*(ppz))
-#define Z_DELREF_PP(ppz)		Z_DELREF_P(*(ppz))
-#define Z_ISREF_PP(ppz)			Z_ISREF_P(*(ppz))
-#define Z_SET_ISREF_PP(ppz)		Z_SET_ISREF_P(*(ppz))
-#define Z_UNSET_ISREF_PP(ppz)		Z_UNSET_ISREF_P(*(ppz))
-#define Z_SET_ISREF_TO_PP(ppz, isref)	Z_SET_ISREF_TO_P(*(ppz), isref)
-
-#define Z_REFCOUNT_P(pz)		zval_refcount_p(pz)
-#define Z_SET_REFCOUNT_P(pz, rc)	zval_set_refcount_p(pz, rc)
-#define Z_ADDREF_P(pz)			zval_addref_p(pz)
-#define Z_DELREF_P(pz)			zval_delref_p(pz)
-#define Z_ISREF_P(pz)			zval_isref_p(pz)
-#define Z_SET_ISREF_P(pz)		zval_set_isref_p(pz)
-#define Z_UNSET_ISREF_P(pz)		zval_unset_isref_p(pz)
-#define Z_SET_ISREF_TO_P(pz, isref)	zval_set_isref_to_p(pz, isref)
-
-#define Z_REFCOUNT(z)			Z_REFCOUNT_P(&(z))
-#define Z_SET_REFCOUNT(z, rc)		Z_SET_REFCOUNT_P(&(z), rc)
-#define Z_ADDREF(z)			Z_ADDREF_P(&(z))
-#define Z_DELREF(z)			Z_DELREF_P(&(z))
-#define Z_ISREF(z)			Z_ISREF_P(&(z))
-#define Z_SET_ISREF(z)			Z_SET_ISREF_P(&(z))
-#define Z_UNSET_ISREF(z)		Z_UNSET_ISREF_P(&(z))
-#define Z_SET_ISREF_TO(z, isref)	Z_SET_ISREF_TO_P(&(z), isref)
-
-#if defined(__GNUC__)
-#define zend_always_inline inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-#define zend_always_inline __forceinline
-#else
-#define zend_always_inline inline
-#endif
-
-static zend_always_inline zend_uint zval_refcount_p(zval* pz) {
-	return pz->refcount;
-}
-
-static zend_always_inline zend_uint zval_set_refcount_p(zval* pz, zend_uint rc) {
-	return pz->refcount = rc;
-}
-
-static zend_always_inline zend_uint zval_addref_p(zval* pz) {
-	return ++pz->refcount;
-}
-
-static zend_always_inline zend_uint zval_delref_p(zval* pz) {
-	return --pz->refcount;
-}
-
-static zend_always_inline zend_bool zval_isref_p(zval* pz) {
-	return pz->is_ref;
-}
-
-static zend_always_inline zend_bool zval_set_isref_p(zval* pz) {
-	return pz->is_ref = 1;
-}
-
-static zend_always_inline zend_bool zval_unset_isref_p(zval* pz) {
-	return pz->is_ref = 0;
-}
-
-static zend_always_inline zend_bool zval_set_isref_to_p(zval* pz, zend_bool isref) {
-	return pz->is_ref = isref;
-}
-
-// #else
-
-// #define PHP_ATLEAST_5_3   true
-
-#endif
 
 
 #endif	/* PHP_SUHOSIN_H */

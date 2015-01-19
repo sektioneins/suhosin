@@ -58,22 +58,6 @@ static int suhosin_get_session_var(char *name, size_t namelen, zval ***state_var
 
     if (SESSION_G(http_session_vars) && SESSION_G(http_session_vars)->type == IS_ARRAY) {
         ret = zend_hash_find(Z_ARRVAL_P(SESSION_G(http_session_vars)), name, namelen + 1, (void **) state_var);
-
-#if PHP_VERSION_ID < 50400
-        /* If register_globals is enabled, and
-         * if there is an entry for the slot in $_SESSION, and
-         * if that entry is still set to NULL, and
-         * if the global var exists, then
-         * we prefer the same key in the global sym table. */
-
-        if (PG(register_globals) && ret == SUCCESS && Z_TYPE_PP(*state_var) == IS_NULL) {
-            zval **tmp;
-
-            if (zend_hash_find(&EG(symbol_table), name, namelen + 1, (void **) &tmp) == SUCCESS) {
-                *state_var = tmp;
-            }
-        }
-#endif
     }
     return ret;
 }
@@ -123,7 +107,6 @@ static void suhosin_send_cookie(TSRMLS_D)
     
     /* The following is requires to be 100% compatible to PHP 
        versions where the hash extension is not available by default */
-#if (PHP_MAJOR_VERSION >= 5 && PHP_MINOR_VERSION >= 3)
     if (zend_hash_find(EG(ini_directives), "session.hash_bits_per_character", sizeof("session.hash_bits_per_character"), (void **) &ini_entry) == SUCCESS) {
 #ifndef ZTS
         base = (char *) ini_entry->mh_arg2;
@@ -132,7 +115,6 @@ static void suhosin_send_cookie(TSRMLS_D)
 #endif
         session_send_cookie = (int *) (base+(size_t) ini_entry->mh_arg1+sizeof(long));
     }
-#endif
     *session_send_cookie = 1;
 }
 
@@ -155,9 +137,7 @@ static int suhosin_hook_s_read(void **mod_data, const char *key, char **val, int
     /* protect dumb session handlers */
     if (key == NULL || !key[0] || 
 		(*mod_data == NULL
-#if PHP_VERSION_ID >= 50400
 		&& !SESSION_G(mod_user_implemented)
-#endif
 		)) {
 regenerate:
         SDEBUG("regenerating key is %s", key);
@@ -169,14 +149,6 @@ regenerate:
             goto regenerate;
         }
     }
-#if (PHP_MAJOR_VERSION < 5) || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION < 2)
-      else if (strpbrk(KEY, "\r\n\t <>'\"\\")) {
-        suhosin_log(S_SESSION, "session id ('%s') contains invalid chars - regenerating", KEY);
-        if (!SUHOSIN_G(simulation)) {
-            goto regenerate;
-        }
-    }
-#endif
 
     r = SUHOSIN_G(old_s_read)(mod_data, KEY, val, vallen TSRMLS_CC);
 
@@ -209,9 +181,7 @@ static int suhosin_hook_s_write(void **mod_data, const char *key, const char *va
     /* protect dumb session handlers */
     if (key == NULL || !key[0] || val == NULL || strlen(key) > SUHOSIN_G(session_max_id_length) || 
 		(*mod_data == NULL
-#if PHP_VERSION_ID >= 50400
 		&& !SESSION_G(mod_user_implemented)
-#endif
 		)) {
         r = FAILURE;
         goto return_write;
@@ -257,9 +227,7 @@ static int suhosin_hook_s_destroy(void **mod_data, const char *key TSRMLS_DC)
     /* protect dumb session handlers */
     if (key == NULL || !key[0] || strlen(key) > SUHOSIN_G(session_max_id_length) || 
 		(*mod_data == NULL
-#if PHP_VERSION_ID >= 50400
 		&& !SESSION_G(mod_user_implemented)
-#endif
 		)) {
         return FAILURE;
     }
@@ -343,7 +311,6 @@ void suhosin_hook_session(TSRMLS_D)
         return;
     }
     /* retrieve globals from module entry struct if possible */
-#if PHP_VERSION_ID >= 50200
 #ifdef ZTS
     if (session_globals_id == 0) {
     session_globals_id = *module->globals_id_ptr;
@@ -352,32 +319,6 @@ void suhosin_hook_session(TSRMLS_D)
     if (session_globals == NULL) {
     session_globals = module->globals_ptr;
     }
-#endif
-#else
-    /* retrieve globals from symbols if PHP version is old */
-#ifdef ZTS
-    if (session_globals_id == 0) {
-        ps_globals_id_ptr = DL_FETCH_SYMBOL(module->handle, "ps_globals_id");
-        if (ps_globals_id_ptr == NULL) {
-            ps_globals_id_ptr = DL_FETCH_SYMBOL(module->handle, "_ps_globals_id");
-        }
-        if (ps_globals_id_ptr == NULL) {
-            return;
-        }
-        
-        session_globals_id = *ps_globals_id_ptr;
-    }
-#else
-    if (session_globals == NULL) {
-        session_globals = DL_FETCH_SYMBOL(module->handle, "ps_globals");
-        if (session_globals == NULL) {
-            session_globals = DL_FETCH_SYMBOL(module->handle, "_ps_globals");
-        }
-        if (session_globals == NULL) {
-            return;
-        }
-    }
-#endif
 #endif
     
     if (old_OnUpdateSaveHandler != NULL) {
@@ -401,12 +342,10 @@ void suhosin_hook_session(TSRMLS_D)
     suhosin_hook_session_module(TSRMLS_C);
     
     /* Protect the PHP serializer from ! attacks */
-# if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 2)
     serializer = (ps_serializer *) SESSION_G(serializer);
     if (serializer != NULL && strcmp(serializer->name, "php")==0) {
         serializer->encode = suhosin_session_encode;
     }
-#endif
 
     /* increase session identifier entropy */
     if (SESSION_G(entropy_length) == 0 || SESSION_G(entropy_file) == NULL) {

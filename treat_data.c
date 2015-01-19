@@ -39,9 +39,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 	int free_buffer = 0;
 	char *strtok_buf = NULL;
 	
-#if PHP_VERSION_ID >= 50311
 	long count = 0;
-#endif
 
 	/* Mark that we were not yet called */
 	SUHOSIN_G(already_scanned) = 0;
@@ -148,12 +146,10 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 		}
 		val = strchr(var, '=');
 		
-#if PHP_VERSION_ID >= 50311
 		if (++count > PG(max_input_vars)) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
 			break;
 		}
-#endif
 		
 		if (val) { /* have a value */
 			int val_len;
@@ -210,13 +206,9 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 
 void suhosin_hook_treat_data()
 {
-#if PHP_VERSION_ID < 50400
-	sapi_register_treat_data(suhosin_treat_data);
-#else
 	TSRMLS_FETCH();
 
 	sapi_register_treat_data(suhosin_treat_data TSRMLS_CC);
-#endif
 #ifdef ZEND_ENGINE_2
 	if (old_input_filter == NULL) {
 		old_input_filter = sapi_module.input_filter;

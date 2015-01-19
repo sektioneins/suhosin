@@ -1,4 +1,5 @@
-2014-xx-xx - 0.9.38-dev
+2015-xx-xx - 0.9.38-dev
+	- removed code compatibility for PHP <5.4 (lots of code + ifdefs)
 
 2014-12-12 - 0.9.37.1
     - Changed version string to 0.9.37.1 (without -dev)

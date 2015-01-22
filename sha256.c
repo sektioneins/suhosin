@@ -404,11 +404,7 @@ void suhosin_hook_sha256(TSRMLS_D)
 	}
 	
 	/* add the sha256 functions */
-#ifndef ZEND_ENGINE_2
-	zend_register_functions(suhosin_sha256_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
-#else
 	zend_register_functions(NULL, suhosin_sha256_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
-#endif
 }
 
 

@@ -160,13 +160,9 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 			val_len = php_url_decode(val, strlen(val));
 			val = estrndup(val, val_len);
 			if (suhosin_input_filter(arg, var, &val, val_len, &new_val_len TSRMLS_CC)) {
-#ifdef ZEND_ENGINE_2
 				if (sapi_module.input_filter(arg, var, &val, new_val_len, &new_val_len TSRMLS_CC)) {
-#endif
 					php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
-#ifdef ZEND_ENGINE_2
 				}
-#endif			
 			} else {
 				SUHOSIN_G(abort_request) = 1;
 			}
@@ -179,13 +175,9 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 			val_len = 0;
 			val = estrndup("", val_len);
 			if (suhosin_input_filter(arg, var, &val, val_len, &new_val_len TSRMLS_CC)) {
-#ifdef ZEND_ENGINE_2
 				if (sapi_module.input_filter(arg, var, &val, new_val_len, &new_val_len TSRMLS_CC)) {
-#endif
 					php_register_variable_safe(var, val, new_val_len, array_ptr TSRMLS_CC);
-#ifdef ZEND_ENGINE_2
 				}
-#endif			
 			} else {
 				SUHOSIN_G(abort_request) = 1;
 			}
@@ -209,12 +201,11 @@ void suhosin_hook_treat_data()
 	TSRMLS_FETCH();
 
 	sapi_register_treat_data(suhosin_treat_data TSRMLS_CC);
-#ifdef ZEND_ENGINE_2
+
 	if (old_input_filter == NULL) {
 		old_input_filter = sapi_module.input_filter;
 	}
 	sapi_module.input_filter = suhosin_input_filter_wrapper;
-#endif			
 }
 
 

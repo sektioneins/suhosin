@@ -994,11 +994,7 @@ PHP_MINIT_FUNCTION(suhosin)
 			
 			SDEBUG("updating ini %s=%s", i->name, i->value);
 			
-#ifdef ZEND_ENGINE_2
 			i->modifiable = p->modifiable;
-#else
-			i->modifyable = p->modifyable;
-#endif
 			i->module_number = module_number;
 			i->on_modify = p->on_modify;
 			i->mh_arg1 = p->mh_arg1;

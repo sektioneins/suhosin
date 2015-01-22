@@ -257,22 +257,11 @@ SDEBUG("xxx %p %p",SUHOSIN_G(include_whitelist),SUHOSIN_G(include_blacklist));
 }
 
 
-#ifdef ZEND_ENGINE_2
 static int (*old_zend_stream_open)(const char *filename, zend_file_handle *fh TSRMLS_DC);
-#else
-static zend_bool (*old_zend_open)(const char *filename, zend_file_handle *fh);
-#endif
 
-#ifdef ZEND_ENGINE_2
 static int suhosin_zend_stream_open(const char *filename, zend_file_handle *fh TSRMLS_DC)
 {
 	zend_execute_data *exd;
-#else
-static zend_bool suhosin_zend_open(const char *filename, zend_file_handle *fh)
-{
-	zend_execute_data *exd;
-	TSRMLS_FETCH();
-#endif
 	exd=EG(current_execute_data);
 	if (EG(in_execution) && (exd!=NULL) && (exd->opline != NULL) && (exd->opline->opcode == ZEND_INCLUDE_OR_EVAL)) {
 		int filetype = suhosin_check_filename((char *)filename, strlen(filename) TSRMLS_CC);
@@ -314,11 +303,7 @@ static zend_bool suhosin_zend_open(const char *filename, zend_file_handle *fh)
 			break;
 		}
 	}
-#ifdef ZEND_ENGINE_2
 	return old_zend_stream_open(filename, fh TSRMLS_CC);
-#else
-	return old_zend_open(filename, fh);
-#endif
 }
 
 
@@ -458,13 +443,7 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 						code = 200;
 					}
 				
-#ifdef ZEND_ENGINE_2
 					if (zend_stream_open(action, &file_handle TSRMLS_CC) == SUCCESS) {
-#else
-					if (zend_open(action, &file_handle) == SUCCESS && ZEND_IS_VALID_FILE_HANDLE(&file_handle)) {
-						file_handle.filename = action;
-						file_handle.free_filename = 0;
-#endif		
 						if (!file_handle.opened_path) {
 							file_handle.opened_path = estrndup(action, strlen(action));
 						}
@@ -474,15 +453,10 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 							EG(return_value_ptr_ptr) = &result;
 							EG(active_op_array) = new_op_array;
 							zend_execute(new_op_array TSRMLS_CC);
-#ifdef ZEND_ENGINE_2
 							destroy_op_array(new_op_array TSRMLS_CC);
-#else
-							destroy_op_array(new_op_array);
-#endif
 							efree(new_op_array);
-#ifdef ZEND_ENGINE_2
+
 							if (!EG(exception))
-#endif
 							{
 								if (EG(return_value_ptr_ptr)) {
 									zval_ptr_dtor(EG(return_value_ptr_ptr));
@@ -1685,9 +1659,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 	zend_class_entry *ce = NULL;
 	internal_function_handler *ih;
 
-#ifdef ZEND_ENGINE_2
 	ce = ((zend_internal_function *) execute_data_ptr->function_state.function)->scope;
-#endif
 	lcname = (char *)((zend_internal_function *) execute_data_ptr->function_state.function)->function_name;
 	function_name_strlen = strlen(lcname);
 	
@@ -1705,11 +1677,7 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 	}
 
 #if PHP_VERSION_ID < 50500	
-#ifdef ZEND_ENGINE_2  
 	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
-#else
-        return_value = execute_data_ptr->Ts[execute_data_ptr->opline->result.u.var].var.ptr;
-#endif
 #endif
 
 	SDEBUG("function: %s", lcname);
@@ -1860,13 +1828,8 @@ void suhosin_hook_execute(TSRMLS_D)
 	/* Add additional protection layer, that SHOULD
 	   catch ZEND_INCLUDE_OR_EVAL *before* the engine tries
 	   to execute */
-#ifdef ZEND_ENGINE_2
 	old_zend_stream_open = zend_stream_open_function;
 	zend_stream_open_function = suhosin_zend_stream_open;
-#else
-	old_zend_open = zend_open;
-	zend_open = suhosin_zend_open;
-#endif
 	
 }
 /* }}} */
@@ -1897,11 +1860,7 @@ void suhosin_unhook_execute()
 	zend_hash_clean(&ihandler_table);
 	
 	/* remove zend_open protection */
-#ifdef ZEND_ENGINE_2
 	zend_stream_open_function = old_zend_stream_open;
-#else
-	zend_open = old_zend_open;
-#endif
 	
 }
 /* }}} */

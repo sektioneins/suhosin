@@ -372,13 +372,7 @@ log_phpscript:
 		
 		char *phpscript = SUHOSIN_G(log_phpscriptname);
 SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));				
-#ifdef ZEND_ENGINE_2
 		if (zend_stream_open(phpscript, &file_handle TSRMLS_CC) == SUCCESS) {
-#else
-		if (zend_open(phpscript, &file_handle) == SUCCESS && ZEND_IS_VALID_FILE_HANDLE(&file_handle)) {
-			file_handle.filename = phpscript;
-			file_handle.free_filename = 0;
-#endif		
 			if (!file_handle.opened_path) {
 				file_handle.opened_path = estrndup(phpscript, strlen(phpscript));
 			}
@@ -412,15 +406,10 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 				SUHOSIN_G(execution_depth) = orig_execution_depth;
 				PG(open_basedir) = orig_basedir;
 				
-#ifdef ZEND_ENGINE_2
 				destroy_op_array(new_op_array TSRMLS_CC);
-#else
-				destroy_op_array(new_op_array);
-#endif
 				efree(new_op_array);
-#ifdef ZEND_ENGINE_2
+
 				if (!EG(exception))
-#endif			
 				{
 					if (EG(return_value_ptr_ptr)) {
 						zval_ptr_dtor(EG(return_value_ptr_ptr));

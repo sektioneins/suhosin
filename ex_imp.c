@@ -263,11 +263,7 @@ void suhosin_hook_ex_imp(TSRMLS_D)
 {
 	/* replace the extract and import_request_variables functions */
 	zend_hash_del(CG(function_table), "extract", sizeof("extract"));
-#ifndef ZEND_ENGINE_2
-	zend_register_functions(suhosin_ex_imp_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
-#else
 	zend_register_functions(NULL, suhosin_ex_imp_functions, NULL, MODULE_PERSISTENT TSRMLS_CC);
-#endif
 }
 
 

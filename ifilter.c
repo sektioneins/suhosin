@@ -281,9 +281,8 @@ void suhosin_register_server_variables(zval *track_vars_array TSRMLS_DC)
 /* }}} */
 
 
-#ifdef ZEND_ENGINE_2
-	/* Old Input filter */
-	unsigned int (*old_input_filter)(int arg, char *var, char **val, unsigned int val_len, unsigned int *new_val_len TSRMLS_DC) = NULL;
+/* Old Input filter */
+unsigned int (*old_input_filter)(int arg, char *var, char **val, unsigned int val_len, unsigned int *new_val_len TSRMLS_DC) = NULL;
 
 /* {{{ suhosin_input_filter_wrapper
  */
@@ -314,7 +313,6 @@ unsigned int suhosin_input_filter_wrapper(int arg, char *var, char **val, unsign
 		return 1;
 	}
 }
-#endif
 
 /* {{{ suhosin_input_filter
  */

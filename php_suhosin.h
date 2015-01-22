@@ -330,13 +330,6 @@ ZEND_END_MODULE_GLOBALS(suhosin)
 #ifndef ZEND_INI_STAGE_HTACCESS
 #define ZEND_INI_STAGE_HTACCESS (1<<5)
 #endif
- 
-#ifndef ZEND_ENGINE_2
-#define OnUpdateLong OnUpdateInt
-#define zend_symtable_find zend_hash_find
-#define zend_symtable_update zend_hash_update
-#define zend_symtable_exists zend_hash_exists
-#endif
 
 
 /* Error Constants */

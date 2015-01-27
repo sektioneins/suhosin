@@ -423,7 +423,8 @@ static void suhosin_execute_ex(zend_op_array *op_array, int zo, long dummy TSRML
 		
 			if (*action) {
 			
-				if (strncmp("http://", action, sizeof("http://")-1)==0) {
+				if (strncasecmp("http://", action, sizeof("http://")-1)==0
+				|| strncasecmp("https://", action, sizeof("https://")-1)==0) {
 					sapi_header_line ctr = {0};
 				
 					if (code == -1) {

@@ -1,5 +1,6 @@
 2015-xx-xx - 0.9.38-dev
-	- removed code compatibility for PHP <5.4 (lots of code + ifdefs)
+    - removed code compatibility for PHP <5.4 (lots of code + ifdefs)
+    - allow https location for suhosin.filter.action
 
 2014-12-12 - 0.9.37.1
     - Changed version string to 0.9.37.1 (without -dev)

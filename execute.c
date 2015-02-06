@@ -751,7 +751,10 @@ int ih_mail(IH_HANDLER_PARAMS)
 		return (1);
 	}
 
-	if (headers_len > 0 && headers && (strstr(headers,"\n\n") || strstr(headers,"\r\n\r\n")) ) {
+	if (headers_len > 0 && headers &&
+		(strstr(headers, "\n\n") || strstr(headers, "\n\r\n") /* double newline */
+			|| *headers == '\n' || (headers[0] == '\r' && headers[1] == '\n') /* starts with newline */
+	)) {
 		suhosin_log(S_MAIL, "mail() - double newline in headers, possible injection, mail dropped");
 		if (!SUHOSIN_G(simulation)) {
 			RETVAL_FALSE;
@@ -762,14 +765,14 @@ int ih_mail(IH_HANDLER_PARAMS)
 	/* check for spam attempts with buggy webforms */
 	if (to_len > 0 && to) {
 		do {
-			tmp = strchr(to, '\n');
-			tmp = tmp == NULL ? strchr(to, '\r') : tmp;
+			if ((tmp = strchr(to, '\n')) == NULL)
+				tmp = strchr(to, '\r');
 			if (tmp == NULL) break;
-			to = tmp+1;
-			if (isspace(*to)) continue;
+			to = tmp + 1;
+			if (!isspace(*to)) break;
 		} while (1);
 		if (tmp != NULL) {
-			suhosin_log(S_MAIL, "mail() - newline in to header, possible injection, mail dropped");
+			suhosin_log(S_MAIL, "mail() - newline in To header, possible injection, mail dropped");
 			if (!SUHOSIN_G(simulation)) {
 				RETVAL_FALSE;
 				return (1);
@@ -779,14 +782,14 @@ int ih_mail(IH_HANDLER_PARAMS)
 
 	if (subject_len > 0 && subject) {
 		do {
-			tmp = strchr(subject, '\n');
-			tmp = tmp == NULL ? strchr(subject, '\r') : tmp;
+			if ((tmp = strchr(subject, '\n')) == NULL)
+				tmp = strchr(subject, '\r');
 			if (tmp == NULL) break;
-			subject = tmp+1;
-			if (isspace(*subject)) continue;
+			subject = tmp + 1;
+			if (!isspace(*subject)) break;
 		} while (1);
 		if (tmp != NULL) {
-			suhosin_log(S_MAIL, "mail() - newline in subject header, possible injection, mail dropped");
+			suhosin_log(S_MAIL, "mail() - newline in Subject header, possible injection, mail dropped");
 			if (!SUHOSIN_G(simulation)) {
 				RETVAL_FALSE;
 				return (1);

@@ -1446,22 +1446,24 @@ static int ih_srand(IH_HANDLER_PARAMS)
 
 static int ih_mt_srand(IH_HANDLER_PARAMS)
 {
-    int argc = ZEND_NUM_ARGS();
+	int argc = ZEND_NUM_ARGS();
 	long seed;
 
-	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(mt_srand_ignore)) {
-    	if (SUHOSIN_G(mt_srand_ignore)) {
-    		SUHOSIN_G(mt_is_seeded) = 0;
-    	}
-    	return (1);
-    }
-    
-    if (argc == 0) {
-        suhosin_mt_srand_auto(TSRMLS_C);
-    } else {
-        suhosin_mt_srand(seed TSRMLS_CC);
-    }
-	return (1);
+	if (SUHOSIN_G(mt_srand_ignore)) {
+		SUHOSIN_G(mt_is_seeded) = 0;
+		return 1;
+	}
+	
+	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE) {
+		return 1;
+	}
+
+	if (argc) {
+		suhosin_mt_srand(seed TSRMLS_CC);
+	} else {
+		suhosin_mt_srand_auto(TSRMLS_C);
+	}
+	return 1;
 }
 
 static int ih_mt_rand(IH_HANDLER_PARAMS)

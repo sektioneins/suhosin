@@ -1426,21 +1426,23 @@ static php_uint32 suhosin_rand(TSRMLS_D)
 
 static int ih_srand(IH_HANDLER_PARAMS)
 {
-    int argc = ZEND_NUM_ARGS();
+	int argc = ZEND_NUM_ARGS();
 	long seed;
 
-	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE || SUHOSIN_G(srand_ignore)) {
-    	if (SUHOSIN_G(srand_ignore)) {
-    		SUHOSIN_G(r_is_seeded) = 0;
-    	}
-    	return (1);
-    }
+	if (SUHOSIN_G(srand_ignore)) {
+		SUHOSIN_G(r_is_seeded) = 0;
+		return 1;
+	}
+	
+	if (zend_parse_parameters(argc TSRMLS_CC, "|l", &seed) == FAILURE) {
+		return 1;
+	}
 
-    if (argc == 0) {
-        suhosin_srand_auto(TSRMLS_C);
-    } else {
-        suhosin_srand(seed TSRMLS_CC);
-    }
+	if (argc) {
+		suhosin_srand(seed TSRMLS_CC);
+	} else {
+		suhosin_srand_auto(TSRMLS_C);
+	}
 	return (1);
 }
 

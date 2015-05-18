@@ -35,7 +35,7 @@
 #define SDEBUG(msg...) \
     {FILE *f;f=fopen(SUHOSIN_LOG, "a+");if(f){fprintf(f,"[%u] ",getpid());fprintf(f, msg);fprintf(f,"\n");fclose(f);}}
 #else
-#define SDEBUG(...)
+#define SDEBUG(msg...)
 #endif    
 #endif
 

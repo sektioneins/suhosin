@@ -387,6 +387,7 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 	char *line;
 	mime_header_entry prev_entry = {0}, entry;
 	int prev_len, cur_len;
+	int newlines = 0;
 
 	/* didn't find boundary, abort */
 	if (!find_boundary(self, self->boundary TSRMLS_CC)) {
@@ -416,6 +417,7 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 
 			entry.value = estrdup(value);
 			entry.key = estrdup(key);
+			newlines = 0;
 
 		} else if (zend_llist_count(header)) { /* If no ':' on the line, add to previous line */
 
@@ -428,6 +430,12 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 			entry.value[cur_len + prev_len] = '\0';
 
 			entry.key = estrdup(prev_entry.key);
+			newlines++;
+			if (newlines > SUHOSIN_G(upload_max_newlines)) {
+				SUHOSIN_G(abort_request) = 1;
+				suhosin_log(S_FILES, "configured maximum number of newlines in RFC1867 MIME headers limit exceeded - dropping rest of upload");
+				return 0;
+			}
 
 			zend_llist_remove_tail(header);
 		} else {

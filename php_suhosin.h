@@ -203,6 +203,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 
 /*	fileupload */
 	long  upload_limit;
+	long  upload_max_newlines;
 	long  num_uploads;
 	zend_bool  upload_disallow_elf;
 	zend_bool  upload_disallow_binary;

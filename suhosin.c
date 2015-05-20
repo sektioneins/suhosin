@@ -856,6 +856,7 @@ PHP_INI_BEGIN()
         STD_PHP_INI_ENTRY("suhosin.post.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostBool, disallow_post_ws, zend_suhosin_globals, suhosin_globals)
 
         STD_PHP_INI_ENTRY("suhosin.upload.max_uploads", "25", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_limit, zend_suhosin_globals, suhosin_globals)
+        STD_PHP_INI_ENTRY("suhosin.upload.max_newlines", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_max_newlines, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.upload.disallow_elf", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_elf, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.upload.disallow_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_binary, zend_suhosin_globals, suhosin_globals)
         STD_PHP_INI_ENTRY("suhosin.upload.remove_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_remove_binary, zend_suhosin_globals, suhosin_globals)

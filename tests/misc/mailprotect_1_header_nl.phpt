@@ -8,7 +8,7 @@ suhosin.log.stdout=0
 suhosin.log.script=0
 suhosin.log.syslog=0
 suhosin.mail.protect=1
-sendmail_path=/usr/bin/true
+sendmail_path=$([ -f /bin/true ]&& echo /bin/true || echo /usr/bin/true)
 --FILE--
 <?php
 	var_dump(mail("to", "subject", "msg", "\r\nFoo: bar"));

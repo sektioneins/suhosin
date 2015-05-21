@@ -1,4 +1,4 @@
-2015-xx-xx - 0.9.38-dev
+2015-05-21 - 0.9.38
     - removed code compatibility for PHP <5.4 (lots of code + ifdefs)
     - allow https location for suhosin.filter.action
     - fixed newline detection for suhosin.mail.protect

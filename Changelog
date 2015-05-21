@@ -4,6 +4,7 @@
     - fixed newline detection for suhosin.mail.protect
     - Added suhosin.upload.max_newlines to protect againt DOS attack via many 
       MIME headers in RFC1867 uploads (CVE-2015-4024)
+    - mail related test cases now work on linux
 
 2014-12-12 - 0.9.37.1
     - Changed version string to 0.9.37.1 (without -dev)

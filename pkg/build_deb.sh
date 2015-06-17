@@ -111,7 +111,7 @@ install -g 0 -o 0 -m 644 $SUHOSIN/modules/suhosin.so $ROOT$PHP_EX
 install -d -g 0 -o 0 $ROOT/usr/share/doc/php5-suhosin-extension
 install -g 0 -o 0 -m 644 $SUHOSIN/suhosin.ini $ROOT/usr/share/doc/php5-suhosin-extension/suhosin.ini.example
 install -d -g 0 -o 0 $ROOT/etc/php5/mods-available
-sed -e 's/^;extension=/extension=/' $SUHOSIN/suhosin.ini >$ROOT/etc/php5/mods-available/suhosin.ini
+( echo '; priority=70' ; sed -e 's/^;extension=/extension=/' $SUHOSIN/suhosin.ini ) >$ROOT/etc/php5/mods-available/suhosin.ini
 chown root:root $ROOT/etc/php5/mods-available/suhosin.ini
 
 fakeroot dpkg-deb -b $ROOT $PKGDIR

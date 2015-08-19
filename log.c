@@ -130,18 +130,22 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		volatile int y = *x;
 	}
 	
+	char*	remote_addr_hdr;
+
 	if (SUHOSIN_G(log_use_x_forwarded_for)) {
-		ip_address = suhosin_getenv("HTTP_X_FORWARDED_FOR", 20 TSRMLS_CC);
-		if (ip_address == NULL) {
-			ip_address = "X-FORWARDED-FOR not set";
-		}
+		remote_addr_hdr = SUHOSIN_G(log_remote_addr_header);
 	} else {
-		ip_address = suhosin_getenv("REMOTE_ADDR", 11 TSRMLS_CC);
-		if (ip_address == NULL) {
-			ip_address = "REMOTE_ADDR not set";
-		}
+		remote_addr_hdr = "REMOTE_ADDR";
 	}
-	
+
+	ip_address = suhosin_getenv(remote_addr_hdr, strlen(remote_addr_hdr) TSRMLS_CC);
+
+	char	ip_address_string[5000];
+
+	if (ip_address == NULL ) {
+		ip_address = ip_address_string;
+		ap_php_snprintf(ip_address_string, sizeof(ip_address_string), "%s not set", remote_addr_hdr);
+	}
 	
 	va_start(ap, fmt);
 	ap_php_vsnprintf(error, sizeof(error), fmt, ap);

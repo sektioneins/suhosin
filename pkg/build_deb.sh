@@ -51,6 +51,8 @@ if [ ! -f "$SUHOSIN/modules/suhosin.so" ]; then
 	echo "[+] Cannot find suhosin.so. I will try to build it."
 	yn_or_exit
 	
+	eval `dpkg-buildflags --export=sh`
+	
 	if [ ! -f "$SUHOSIN/configure" ]; then
 		echo "[*] phpize"
 		cd $SUHOSIN
@@ -81,7 +83,7 @@ fi
 ##
 
 mkdir -p $ROOT/DEBIAN
-echo "9" >$ROOT/DEBIAN/compat
+#echo "9" >$ROOT/DEBIAN/compat
 cat >$ROOT/DEBIAN/control <<EOF
 Package: php5-suhosin-extension
 Section: php
@@ -89,6 +91,7 @@ Priority: extra
 Maintainer: Ben Fuhrmannek <ben@sektioneins.de>
 Homepage: http://www.suhosin.org/
 Conflicts: php5-suhosin
+Depends: php5-common
 Description: advanced protection system for PHP5
  This package provides a PHP hardening module.
  .

@@ -52,16 +52,6 @@ static php_ps_globals *session_globals = NULL;
 
 ps_serializer *(*suhosin_find_ps_serializer)(char *name TSRMLS_DC) = NULL;
 
-static int suhosin_get_session_var(char *name, size_t namelen, zval ***state_var TSRMLS_DC) /* {{{ */
-{
-    int ret = FAILURE;
-
-    if (SESSION_G(http_session_vars) && SESSION_G(http_session_vars)->type == IS_ARRAY) {
-        ret = zend_hash_find(Z_ARRVAL_P(SESSION_G(http_session_vars)), name, namelen + 1, (void **) state_var);
-    }
-    return ret;
-}
-
 #define PS_DELIMITER '|'
 #define PS_UNDEF_MARKER '!'
 

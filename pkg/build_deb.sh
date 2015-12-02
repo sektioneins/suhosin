@@ -81,13 +81,15 @@ fi
 ##
 
 mkdir -p $ROOT/DEBIAN
-echo "9" >$ROOT/DEBIAN/compat
+#echo "9" >$ROOT/DEBIAN/compat
+echo "/etc/php5/mods-available/suhosin.ini" >$ROOT/DEBIAN/conffiles
 cat >$ROOT/DEBIAN/control <<EOF
 Package: php5-suhosin-extension
 Section: php
 Priority: extra
 Maintainer: Ben Fuhrmannek <ben@sektioneins.de>
 Homepage: http://www.suhosin.org/
+Depends: libc6 (>= 2.4), phpapi-20131226, php5-common, ucf
 Conflicts: php5-suhosin
 Description: advanced protection system for PHP5
  This package provides a PHP hardening module.
@@ -110,6 +112,10 @@ install -d -g 0 -o 0 $ROOT$PHP_EX
 install -g 0 -o 0 -m 644 $SUHOSIN/modules/suhosin.so $ROOT$PHP_EX
 install -d -g 0 -o 0 $ROOT/usr/share/doc/php5-suhosin-extension
 install -g 0 -o 0 -m 644 $SUHOSIN/suhosin.ini $ROOT/usr/share/doc/php5-suhosin-extension/suhosin.ini.example
+install -g 0 -o 0 -m 644 $SUHOSIN/LICENSE $ROOT/usr/share/doc/php5-suhosin-extension/copyright
+gzip -9 < $SUHOSIN/Changelog > $SUHOSIN/Changelog.gz
+install -g 0 -o 0 -m 644 $SUHOSIN/pkg/changelog.Debian.gz $ROOT/usr/share/doc/php5-suhosin-extension
+install -g 0 -o 0 -m 644 $SUHOSIN/Changelog.gz $ROOT/usr/share/doc/php5-suhosin-extension/changelog.gz
 install -d -g 0 -o 0 $ROOT/etc/php5/mods-available
 ( echo '; priority=70' ; sed -e 's/^;extension=/extension=/' $SUHOSIN/suhosin.ini ) >$ROOT/etc/php5/mods-available/suhosin.ini
 chown root:root $ROOT/etc/php5/mods-available/suhosin.ini

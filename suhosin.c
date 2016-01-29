@@ -604,12 +604,14 @@ static ZEND_INI_MH(OnUpdate_eval_whitelist)
 
 static ZEND_INI_MH(OnUpdate_cookie_cryptlist)
 {
+	COOKIE_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(cookie_cryptlist), new_value, 0);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_cookie_plainlist)
 {
+	COOKIE_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(cookie_plainlist), new_value, 0);
 	return SUCCESS;
 }
@@ -876,13 +878,13 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.sql.union", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLLong, sql_union, zend_suhosin_globals, suhosin_globals)
 
 #ifdef HAVE_PHP_SESSION
-	STD_ZEND_INI_BOOLEAN("suhosin.session.encrypt",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, session_encrypt,	zend_suhosin_globals,	suhosin_globals)
-	STD_PHP_INI_ENTRY("suhosin.session.cryptkey", "", PHP_INI_ALL, OnUpdateString, session_cryptkey, zend_suhosin_globals, suhosin_globals)
-	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptua",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, session_cryptua,	zend_suhosin_globals,	suhosin_globals)
-	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptdocroot",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, session_cryptdocroot,	zend_suhosin_globals,	suhosin_globals)
-	STD_PHP_INI_ENTRY("suhosin.session.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_cryptraddr, zend_suhosin_globals, suhosin_globals)	
-	STD_PHP_INI_ENTRY("suhosin.session.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_checkraddr, zend_suhosin_globals, suhosin_globals)	
-	STD_PHP_INI_ENTRY("suhosin.session.max_id_length", "128", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, session_max_id_length, zend_suhosin_globals, suhosin_globals)
+	STD_ZEND_INI_BOOLEAN("suhosin.session.encrypt",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, session_encrypt,	zend_suhosin_globals,	suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.session.cryptkey", "", PHP_INI_ALL, OnUpdateMiscString, session_cryptkey, zend_suhosin_globals, suhosin_globals)
+	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptua",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, session_cryptua,	zend_suhosin_globals,	suhosin_globals)
+	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptdocroot",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, session_cryptdocroot,	zend_suhosin_globals,	suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.session.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_cryptraddr, zend_suhosin_globals, suhosin_globals)	
+	STD_PHP_INI_ENTRY("suhosin.session.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_checkraddr, zend_suhosin_globals, suhosin_globals)	
+	STD_PHP_INI_ENTRY("suhosin.session.max_id_length", "128", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_max_id_length, zend_suhosin_globals, suhosin_globals)
 #else /* HAVE_PHP_SESSION */
 #warning BUILDING SUHOSIN WITHOUT SESSION SUPPORT
 #endif /* HAVE_PHP_SESSION */
@@ -900,7 +902,7 @@ PHP_INI_BEGIN()
 	STD_ZEND_INI_BOOLEAN("suhosin.server.encode", "1", ZEND_INI_SYSTEM, OnUpdateBool, server_encode,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.server.strip", "1", ZEND_INI_SYSTEM, OnUpdateBool, server_strip,zend_suhosin_globals,	suhosin_globals)
 
-	STD_PHP_INI_ENTRY("suhosin.rand.seedingkey", "", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateString, seedingkey, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.rand.seedingkey", "", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscString, seedingkey, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.rand.reseed_every_request", "0", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, reseed_every_request, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, srand_ignore,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.mt_srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, mt_srand_ignore,zend_suhosin_globals,	suhosin_globals)

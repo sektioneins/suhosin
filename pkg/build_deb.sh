@@ -109,6 +109,8 @@ EOF
 echo "Architecture: $DEB_HOST_ARCH" >>$ROOT/DEBIAN/control
 echo "Version: $VERSION" >>$ROOT/DEBIAN/control
 
+echo "/etc/php5/mods-available/suhosin.ini" >$ROOT/DEBIAN/conffiles
+
 install -d -g 0 -o 0 $ROOT$PHP_EX
 install -g 0 -o 0 -m 644 $SUHOSIN/modules/suhosin.so $ROOT$PHP_EX
 install -d -g 0 -o 0 $ROOT/usr/share/doc/php5-suhosin-extension

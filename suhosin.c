@@ -907,6 +907,8 @@ PHP_INI_BEGIN()
 	STD_ZEND_INI_BOOLEAN("suhosin.srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, srand_ignore,zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.mt_srand.ignore", "1", ZEND_INI_SYSTEM|ZEND_INI_PERDIR, OnUpdateMiscBool, mt_srand_ignore,zend_suhosin_globals,	suhosin_globals)
 
+	STD_PHP_INI_ENTRY("suhosin.secureconfig.cryptkey", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscString, secureconfig_cryptkey, zend_suhosin_globals, suhosin_globals)
+
 PHP_INI_END()
 /* }}} */
 
@@ -1051,7 +1053,10 @@ PHP_MINIT_FUNCTION(suhosin)
 	suhosin_hook_memory_limit(TSRMLS_C);
 	suhosin_hook_sha256(TSRMLS_C);
 	suhosin_hook_ex_imp(TSRMLS_C);
-
+#ifdef SUHOSIN_EXPERIMENTAL
+	suhosin_hook_secureconfig(TSRMLS_C);
+#endif
+	
 #if PHP_VERSION_ID < 50500
 	/* register the logo for phpinfo */
 	php_register_info_logo(SUHOSIN_LOGO_GUID, "image/jpeg", suhosin_logo, sizeof(suhosin_logo));

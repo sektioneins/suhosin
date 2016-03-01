@@ -320,6 +320,9 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool sql_perdir;
 	zend_bool misc_perdir;
 
+	// misc
+	char*	secureconfig_cryptkey;
+
 ZEND_END_MODULE_GLOBALS(suhosin)
 
 #ifdef ZTS
@@ -400,6 +403,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 void suhosin_bailout(TSRMLS_D);
 size_t suhosin_strnspn(const char *input, size_t n, const char *accept);
 size_t suhosin_strncspn(const char *input, size_t n, const char *reject);
+void suhosin_hook_secureconfig(TSRMLS_D);
 
 
 #endif	/* PHP_SUHOSIN_H */

@@ -761,7 +761,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 
 	zend_llist_init(&header, sizeof(mime_header_entry), (llist_dtor_func_t) php_free_hdr_entry, 0);
 
-	if (suhosin_rfc1867_filter != NULL) {
+	if (&suhosin_rfc1867_filter != NULL) {
 		multipart_event_start event_start;
 
 		event_start.content_length = SG(request_info).content_length;
@@ -865,7 +865,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 				}
 				
 				if (++count <= PG(max_input_vars) && sapi_module.input_filter(PARSE_POST, param, &value, new_val_len, &new_val_len TSRMLS_CC)) {
-					if (suhosin_rfc1867_filter != NULL) {
+					if (&suhosin_rfc1867_filter != NULL) {
 						multipart_event_formdata event_formdata;
 						size_t newlength = new_val_len;
 
@@ -887,7 +887,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 						php_error_docref(NULL TSRMLS_CC, E_WARNING, "Input variables exceeded %ld. To increase the limit change max_input_vars in php.ini.", PG(max_input_vars));
 					}
 				
-					if (suhosin_rfc1867_filter != NULL) {
+					if (&suhosin_rfc1867_filter != NULL) {
 						multipart_event_formdata event_formdata;
 
 						event_formdata.post_bytes_processed = SG(read_post_bytes);
@@ -961,7 +961,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 			temp_filename = NULL;
 			fd = -1;
 
-			if (!skip_upload && suhosin_rfc1867_filter != NULL) {
+			if (!skip_upload && &suhosin_rfc1867_filter != NULL) {
 				multipart_event_file_start event_file_start;
 
 				event_file_start.post_bytes_processed = SG(read_post_bytes);
@@ -1011,7 +1011,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 
 			while (!cancel_upload && (blen > 0))
 			{
-				if (suhosin_rfc1867_filter != NULL) {
+				if (&suhosin_rfc1867_filter != NULL) {
 					multipart_event_file_data event_file_data;
 
 					event_file_data.post_bytes_processed = SG(read_post_bytes);
@@ -1075,7 +1075,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 				cancel_upload = 5;
 			}
 #endif
-			if (suhosin_rfc1867_filter != NULL) {
+			if (&suhosin_rfc1867_filter != NULL) {
 				multipart_event_file_end event_file_end;
 
 				event_file_end.post_bytes_processed = SG(read_post_bytes);
@@ -1255,7 +1255,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 	}
 
 fileupload_done:
-	if (suhosin_rfc1867_filter != NULL) {
+	if (&suhosin_rfc1867_filter != NULL) {
 		multipart_event_end event_end;
 
 		event_end.post_bytes_processed = SG(read_post_bytes);

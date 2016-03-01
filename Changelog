@@ -3,6 +3,7 @@
     - removed dead code
     - better debian integration
     - fixed perdir checks
+    - merged PHP changes to RFC1867 code
 
 2015-05-21 - 0.9.38
     - removed code compatibility for PHP <5.4 (lots of code + ifdefs)

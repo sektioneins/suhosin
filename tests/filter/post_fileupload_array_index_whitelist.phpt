@@ -11,7 +11,7 @@ auto_append_file={PWD}/suhosintest.$$.log.tmp
 file_uploads=1
 suhosin.request.array_index_whitelist=abcdefghijklmnopqrstuvwxyz
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php include('../skipif.inc'); ?>
 --COOKIE--
 --GET--
 --POST_RAW--

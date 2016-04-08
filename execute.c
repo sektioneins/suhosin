@@ -674,7 +674,7 @@ int ih_preg_replace(IH_HANDLER_PARAMS)
 	     **limit, **zcount;
 
 	 if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ZZZ|ZZ", &regex, &replace, &subject, &limit, &zcount) == FAILURE) {
-	 	return(0);
+		return (1);
 	 }
 		
 	if (Z_TYPE_PP(regex) == IS_ARRAY) {
@@ -1529,8 +1529,9 @@ static int ih_rand(IH_HANDLER_PARAMS)
 static int ih_getrandmax(IH_HANDLER_PARAMS)
 {
 	if (zend_parse_parameters_none() == FAILURE) {
-		return(0);
+		return (1);
 	}
+
 	RETVAL_LONG(PHP_MT_RAND_MAX);
 	return (1);
 }

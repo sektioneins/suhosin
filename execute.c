@@ -1647,30 +1647,14 @@ internal_function_handler ihandlers[] = {
 
 static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, zend_fcall_info *fci, int return_value_used TSRMLS_DC)
 {
-	zval *return_value;
 	zval **return_value_ptr;
 	zval *this_ptr;
-	int ht;
-
-	if (fci) {
-		return_value = *fci->retval_ptr_ptr;
-		return_value_ptr = fci->retval_ptr_ptr;
-		this_ptr = fci->object_ptr;
-		ht = fci->param_count;
-	} else {
-		temp_variable *ret = &EX_T(execute_data_ptr->opline->result.var);
-		zend_function *fbc = execute_data_ptr->function_state.function;
-		return_value = ret->var.ptr;
-		return_value_ptr = (fbc->common.fn_flags & ZEND_ACC_RETURN_REFERENCE) ? &ret->var.ptr : NULL;
-		this_ptr = execute_data_ptr->object;
-		ht = execute_data_ptr->opline->extended_value;
-	}
 #else
 static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int return_value_used TSRMLS_DC)
 {
-	zval *return_value;
-	int ht = execute_data_ptr->opline->extended_value;
 #endif
+	zval *return_value;
+	int ht;
 	char *lcname;
 	int function_name_strlen, free_lcname = 0;
 	zend_class_entry *ce = NULL;
@@ -1692,10 +1676,6 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 		lcname[function_name_strlen] = 0;
 		zend_str_tolower(lcname, function_name_strlen);
 	}
-
-#if PHP_VERSION_ID < 50500
-	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
-#endif
 
 	SDEBUG("function: %s", lcname);
 
@@ -1746,6 +1726,25 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 
 		int retval = 0;
 		void *handler = ((zend_internal_function *) execute_data_ptr->function_state.function)->handler;
+
+#if PHP_VERSION_ID < 50500
+		return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
+		ht = execute_data_ptr->opline->extended_value;
+#else
+		if (fci) {
+			return_value = *fci->retval_ptr_ptr;
+			return_value_ptr = fci->retval_ptr_ptr;
+			this_ptr = fci->object_ptr;
+			ht = fci->param_count;
+		} else {
+			temp_variable *ret = &EX_T(execute_data_ptr->opline->result.var);
+			zend_function *fbc = execute_data_ptr->function_state.function;
+			return_value = ret->var.ptr;
+			return_value_ptr = (fbc->common.fn_flags & ZEND_ACC_RETURN_REFERENCE) ? &ret->var.ptr : NULL;
+			this_ptr = execute_data_ptr->object;
+			ht = execute_data_ptr->opline->extended_value;
+		}
+#endif
 
 		if (handler != ZEND_FN(display_disabled_function)) {
 		    retval = ih->handler(IH_HANDLER_PARAM_PASSTHRU);

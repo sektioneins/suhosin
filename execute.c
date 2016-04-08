@@ -377,7 +377,7 @@ static int suhosin_detect_codetype(zend_op_array *op_array TSRMLS_DC)
 
 /* {{{ void suhosin_execute_ex(zend_op_array *op_array TSRMLS_DC)
  *    This function provides a hook for execution */
-#if PHP_VERSION_ID > 50500
+#if PHP_VERSION_ID >= 50500
 static void suhosin_execute_ex(zend_execute_data *execute_data TSRMLS_DC)
 {
 	zend_op_array *op_array = execute_data->op_array;

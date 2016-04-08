@@ -339,7 +339,7 @@ void suhosin_hook_session(TSRMLS_D)
 
     /* increase session identifier entropy */
     if (SESSION_G(entropy_length) == 0 || SESSION_G(entropy_file) == NULL) {
-        
+#ifndef PHP_WIN32
         /* ensure that /dev/urandom exists */
         int fd = VCWD_OPEN("/dev/urandom", O_RDONLY);
         if (fd >= 0) {
@@ -347,6 +347,7 @@ void suhosin_hook_session(TSRMLS_D)
             SESSION_G(entropy_length) = 16;
             SESSION_G(entropy_file) = pestrdup("/dev/urandom", 1);
         }
+#endif
     }
 }
 

@@ -1327,10 +1327,11 @@ static void suhosin_gen_entropy(php_uint32 *entropybuf TSRMLS_DC)
     suhosin_SHA256_CTX   context;
     int fd;
 
+#if SIZEOF_LONG==8
     code_value ^= code_value >> 32;
     stack_value ^= stack_value >> 32;
     heap_value ^= heap_value >> 32;
-
+#endif
     seedbuf[0] = code_value;
     seedbuf[1] = stack_value;
     seedbuf[2] = heap_value;

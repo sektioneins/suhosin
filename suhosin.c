@@ -772,9 +772,9 @@ ZEND_GET_MODULE(suhosin)
 /* {{{ PHP_INI
  */
 static zend_ini_entry shared_ini_entries[] = {
-	ZEND_INI_ENTRY("suhosin.log.syslog",			NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog)
-	ZEND_INI_ENTRY("suhosin.log.syslog.facility",		NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_facility)
-	ZEND_INI_ENTRY("suhosin.log.syslog.priority",		NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_priority)
+	ZEND_INI_ENTRY("suhosin.log.syslog",			NULL /* S_ALL & ~S_SQL */,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog)
+	ZEND_INI_ENTRY("suhosin.log.syslog.facility",		NULL /* LOG_USER */,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_facility)
+	ZEND_INI_ENTRY("suhosin.log.syslog.priority",		NULL /* LOG_ALERT */,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_syslog_priority)
 	ZEND_INI_ENTRY("suhosin.log.sapi",				"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_sapi)
 	ZEND_INI_ENTRY("suhosin.log.stdout",				"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_stdout)
 	ZEND_INI_ENTRY("suhosin.log.script",			"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSuhosin_log_script)

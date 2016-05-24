@@ -1051,6 +1051,7 @@ PHP_MINIT_FUNCTION(suhosin)
 	suhosin_hook_memory_limit(TSRMLS_C);
 	suhosin_hook_sha256(TSRMLS_C);
 	suhosin_hook_ex_imp(TSRMLS_C);
+	suhosin_hook_pledge(TSRMLS_C);
 
 #if PHP_VERSION_ID < 50500
 	/* register the logo for phpinfo */

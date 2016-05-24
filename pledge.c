@@ -83,6 +83,7 @@ static PHP_FUNCTION(suhosin_pledge)
         if (pm == NULL) {
             if (strcmp(p, "stdio") != 0)
                 php_error_docref(NULL TSRMLS_CC, E_WARNING, "pledge: %s invalid or forbidden promise", p);
+            efree(p);
             continue;
         }
         efree(p);

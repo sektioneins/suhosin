@@ -107,8 +107,8 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	unsigned short etype;
 	DWORD evid;
 #endif
-	char buf[5000];
-	char error[5000];
+	char buf[5000] = {0};
+	char error[5000] = {0};
 	char *ip_address;
 	char *fname;
 	char *alertstring;
@@ -146,6 +146,9 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	va_start(ap, fmt);
 	ap_php_vsnprintf(error, sizeof(error), fmt, ap);
 	va_end(ap);
+	if (SUHOSIN_G(log_max_error_length) > 0 && SUHOSIN_G(log_max_error_length) < (sizeof(error) - 4)) {
+		memcpy(error + SUHOSIN_G(log_max_error_length), "...", 4);
+	}
 	while (error[i]) {
 		if (error[i] < 32) error[i] = '.';
 		i++;
@@ -437,5 +440,3 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
  * vim600: noet sw=4 ts=4 fdm=marker
  * vim<600: noet sw=4 ts=4
  */
-
-

@@ -1085,21 +1085,26 @@ int ih_fixusername(IH_HANDLER_PARAMS)
 
 static int ih_function_exists(IH_HANDLER_PARAMS)
 {
-	zval **function_name;
+	char *name;
+	int name_len;
 	zend_function *func;
 	char *lcname;
 	zend_bool retval;
-	int func_name_len;
-	
-	if (ZEND_NUM_ARGS()!=1 || zend_get_parameters_ex(1, &function_name)==FAILURE) {
-		ZEND_WRONG_PARAM_COUNT_WITH_RETVAL(1);
-	}
-	convert_to_string_ex(function_name);
-	func_name_len = Z_STRLEN_PP(function_name);
-	lcname = estrndup(Z_STRVAL_PP(function_name), func_name_len);	
-	zend_str_tolower(lcname, func_name_len);
 
-	retval = (zend_hash_find(EG(function_table), lcname, func_name_len+1, (void **)&func) == SUCCESS);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_len) == FAILURE) {
+		return 1;
+	}
+
+	lcname = zend_str_tolower_dup(name, name_len);
+
+	/* Ignore leading "\" */
+	name = lcname;
+	if (lcname[0] == '\\') {
+		name = &lcname[1];
+		name_len--;
+	}
+
+	retval = (zend_hash_find(EG(function_table), name, name_len+1, (void **)&func) == SUCCESS);
 	
 	/*
 	 * A bit of a hack, but not a bad one: we see if the handler of the function
@@ -1107,36 +1112,41 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 	 */
 	if (retval && func->type == ZEND_INTERNAL_FUNCTION &&
 		func->internal_function.handler == zif_display_disabled_function) {
-		retval = 0;
+			retval = 0;
+			goto ret;
 	}
 
 	/* Now check if function is forbidden by Suhosin */
 	if (SUHOSIN_G(in_code_type) == SUHOSIN_EVAL) {
 		if (SUHOSIN_G(eval_whitelist) != NULL) {
-			if (!zend_hash_exists(SUHOSIN_G(eval_whitelist), lcname, func_name_len+1)) {
-			    retval = 0;
+			if (!zend_hash_exists(SUHOSIN_G(eval_whitelist), name, name_len+1)) {
+				retval = 0;
+				goto ret;
 			}
 		} else if (SUHOSIN_G(eval_blacklist) != NULL) {
-			if (zend_hash_exists(SUHOSIN_G(eval_blacklist), lcname, func_name_len+1)) {
-			    retval = 0;
+			if (zend_hash_exists(SUHOSIN_G(eval_blacklist), name, name_len+1)) {
+				retval = 0;
+				goto ret;
 			}
 		}
 	}
 	
 	if (SUHOSIN_G(func_whitelist) != NULL) {
-		if (!zend_hash_exists(SUHOSIN_G(func_whitelist), lcname, func_name_len+1)) {
-		    retval = 0;
+		if (!zend_hash_exists(SUHOSIN_G(func_whitelist), name, name_len+1)) {
+			retval = 0;
+			goto ret;
 		}
 	} else if (SUHOSIN_G(func_blacklist) != NULL) {
-		if (zend_hash_exists(SUHOSIN_G(func_blacklist), lcname, func_name_len+1)) {
-		    retval = 0;
+		if (zend_hash_exists(SUHOSIN_G(func_blacklist), name, name_len+1)) {
+			retval = 0;
+			goto ret;
 		}
 	}
 
+ret:
 	efree(lcname);
-
 	RETVAL_BOOL(retval);
-	return (1);
+	return 1;
 }
 
 /* MT RAND FUNCTIONS */

@@ -1,4 +1,5 @@
-2016-xx-xx - 0.9.39dev
+2016-xx-xx - 0.9.39dev1
+    - fixed function_exists wrapper to ignore backslash-prefixes (#92)
     - backport of PHP bug 71152: mt_rand() returns the different values from original mt19937ar.c
     - removed dead code
     - better debian integration

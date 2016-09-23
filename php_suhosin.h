@@ -236,7 +236,8 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	long	log_file;
 	char	*log_filename;
 	zend_bool log_file_time;
-
+	long log_max_error_length;
+	
 /*	header handler */
 	zend_bool allow_multiheader;
 

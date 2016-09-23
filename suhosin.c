@@ -789,7 +789,8 @@ static zend_ini_entry shared_ini_entries[] = {
 ZEND_INI_END()
  
 PHP_INI_BEGIN()
-    ZEND_INI_ENTRY("suhosin.perdir",		"0",		ZEND_INI_SYSTEM,	OnUpdateSuhosin_perdir)
+	STD_PHP_INI_ENTRY("suhosin.log.max_error_length", "0", PHP_INI_SYSTEM, OnUpdateLogLong, log_max_error_length, zend_suhosin_globals, suhosin_globals)
+	ZEND_INI_ENTRY("suhosin.perdir",		"0",		ZEND_INI_SYSTEM,	OnUpdateSuhosin_perdir)
 	STD_ZEND_INI_ENTRY("suhosin.executor.include.max_traversal",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecLong, executor_include_max_traversal,	zend_suhosin_globals,	suhosin_globals)
 	ZEND_INI_ENTRY("suhosin.executor.include.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_include_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.include.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_include_blacklist)

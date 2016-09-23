@@ -1,4 +1,7 @@
-2016-xx-xx - 0.9.39dev1
+2016-xx-xx - 0.9.39dev2
+    - some improvements for Windows (NewEraCracker)
+    - fixes for test cases (NewEraCracker)
+    - new feature: suhosin.log.max_error_length to limit the error output
     - fixed function_exists wrapper to ignore backslash-prefixes (#92)
     - backport of PHP bug 71152: mt_rand() returns the different values from original mt19937ar.c
     - removed dead code

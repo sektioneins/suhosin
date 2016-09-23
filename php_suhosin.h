@@ -36,7 +36,7 @@
     {FILE *f;f=fopen(SUHOSIN_LOG, "a+");if(f){fprintf(f,"[%u] ",getpid());fprintf(f, msg);fprintf(f,"\n");fclose(f);}}
 #else
 #define SDEBUG(msg...)
-#endif    
+#endif
 #endif
 
 #ifndef PHP_VERSION_ID
@@ -124,7 +124,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_uint in_code_type;
 	long execution_depth;
 	zend_bool simulation;
-    zend_bool stealth;
+	zend_bool stealth;
 	zend_bool protectkey;
 	zend_bool executor_allow_symlink;
 	char *filter_action;
@@ -135,7 +135,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	long sql_opencomment;
 	long sql_union;
 	long sql_mselect;
-	
+
 	long max_execution_depth;
 	zend_bool	abort_request;
 	long executor_include_max_traversal;
@@ -212,7 +212,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	zend_bool  upload_allow_utf8;
 #endif
 	char *upload_verification_script;
-        
+
 	zend_bool  no_more_variables;
 	zend_bool  no_more_get_variables;
 	zend_bool  no_more_post_variables;
@@ -237,13 +237,13 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	char	*log_filename;
 	zend_bool log_file_time;
 	long log_max_error_length;
-	
+
 /*	header handler */
 	zend_bool allow_multiheader;
 
 /*	mailprotect */
 	long	mailprotect;
-	
+
 /*	memory_limit */
 	long	memory_limit;
 	long 	hard_memory_limit;
@@ -263,18 +263,18 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	BYTE fi[24],ri[24];
 	WORD fkey[120];
 	WORD rkey[120];
-	
+
 	zend_bool	session_encrypt;
 	char*	session_cryptkey;
 	zend_bool	session_cryptua;
 	zend_bool	session_cryptdocroot;
 	long		session_cryptraddr;
 	long		session_checkraddr;
-	
+
 	long	session_max_id_length;
-	
+
 	char*	decrypted_cookie;
-    char*	raw_cookie;
+	char*	raw_cookie;
 	zend_bool	cookie_encrypt;
 	char*	cookie_cryptkey;
 	zend_bool	cookie_cryptua;
@@ -283,30 +283,30 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 	long		cookie_checkraddr;
 	HashTable *cookie_plainlist;
 	HashTable *cookie_cryptlist;
-	
+
 	zend_bool	coredump;
 	zend_bool	apc_bug_workaround;
 	zend_bool	already_scanned;
-        zend_bool       do_not_scan;
-	
+	zend_bool	do_not_scan;
+
 	zend_bool	server_encode;
 	zend_bool	server_strip;
-	
+
 	zend_bool	disable_display_errors;
 
-	php_uint32   r_state[625];
-	php_uint32   *r_next;
-	int          r_left;
-    zend_bool    srand_ignore;
-    zend_bool    mt_srand_ignore;
-	php_uint32   mt_state[625];
-	php_uint32   *mt_next;
-	int          mt_left;
+	php_uint32	r_state[625];
+	php_uint32	*r_next;
+	int			r_left;
+	zend_bool	srand_ignore;
+	zend_bool	mt_srand_ignore;
+	php_uint32	mt_state[625];
+	php_uint32	*mt_next;
+	int			mt_left;
 
 	char         *seedingkey;
 	zend_bool    reseed_every_request;
 
-	zend_bool r_is_seeded; 
+	zend_bool r_is_seeded;
 	zend_bool mt_is_seeded;
 
 	/* PERDIR Handling */

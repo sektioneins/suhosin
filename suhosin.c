@@ -77,7 +77,7 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 	NULL,
 	suhosin_op_array_ctor,
 	suhosin_op_array_dtor,
-	
+
 	STANDARD_ZEND_EXTENSION_PROPERTIES
 };
 
@@ -86,15 +86,15 @@ static void suhosin_op_array_ctor(zend_op_array *op_array)
 	TSRMLS_FETCH();
 
 	if (suhosin_zend_extension_entry.resource_number != -1) {
-	
+
 		unsigned long suhosin_flags = 0;
-		
+
 		if (SUHOSIN_G(in_code_type) == SUHOSIN_EVAL) {
 			suhosin_flags |= SUHOSIN_FLAG_CREATED_BY_EVAL;
 		}
-		
+
 		op_array->reserved[suhosin_zend_extension_entry.resource_number] = (void *)suhosin_flags;
-		
+
 	}
 }
 
@@ -112,16 +112,16 @@ static void suhosin_op_array_dtor(zend_op_array *op_array)
 static void stealth_op_array_ctor(zend_op_array *op_array)
 {
 	if (orig_op_array_ctor != NULL) {
-        orig_op_array_ctor(op_array);
-    }
+		orig_op_array_ctor(op_array);
+	}
 	suhosin_op_array_ctor(op_array);
 }
 
 static void stealth_op_array_dtor(zend_op_array *op_array)
 {
 	if (orig_op_array_dtor != NULL) {
-	    orig_op_array_dtor(op_array);
-    }
+		orig_op_array_dtor(op_array);
+	}
 	suhosin_op_array_dtor(op_array);
 }
 
@@ -129,14 +129,14 @@ static int stealth_module_startup(zend_extension *extension)
 {
 	int r = orig_module_startup == NULL ? SUCCESS : orig_module_startup(extension);
 	suhosin_module_startup(extension);
-    return r;
+	return r;
 }
 
 static void stealth_module_shutdown(zend_extension *extension)
 {
 	if (orig_module_shutdown != NULL) {
-	    orig_module_shutdown(extension);
-    }
+		orig_module_shutdown(extension);
+	}
 	suhosin_shutdown(extension);
 }
 
@@ -146,22 +146,22 @@ static int suhosin_module_startup(zend_extension *extension)
 	zend_module_entry *module_entry_ptr;
 	int resid;
 	TSRMLS_FETCH();
-	
+
 /*	zend_register_module(&suhosin_module_entry TSRMLS_CC); */
-	
+
 	if (zend_hash_find(&module_registry, "suhosin", sizeof("suhosin"), (void **)&module_entry_ptr)==SUCCESS) {
-		
+
 		if (extension) {
-		    extension->handle = module_entry_ptr->handle;
+			extension->handle = module_entry_ptr->handle;
 		} else {
-		    zend_extension ext;
-		    ext = suhosin_zend_extension_entry;
-		    ext.handle = module_entry_ptr->handle;
-		    /*
-		    zend_llist_add_element(&zend_extensions, &ext);
-		    extension = zend_llist_get_last(&zend_extensions);
-		    */
-		    extension = &suhosin_zend_extension_entry;
+			zend_extension ext;
+			ext = suhosin_zend_extension_entry;
+			ext.handle = module_entry_ptr->handle;
+			/*
+			zend_llist_add_element(&zend_extensions, &ext);
+			extension = zend_llist_get_last(&zend_extensions);
+			*/
+			extension = &suhosin_zend_extension_entry;
 		}
 		module_entry_ptr->handle = NULL;
 
@@ -198,14 +198,13 @@ static void suhosin_shutdown(zend_extension *extension)
 	suhosin_unhook_header_handler();
 	suhosin_unhook_post_handlers(TSRMLS_C);
 	/* suhosin_unhook_session(); - enabling this causes compability problems */
-    
-    if (ze != NULL) {
-	    ze->startup = orig_module_startup;
-	    ze->shutdown = orig_module_shutdown;
-	    ze->op_array_ctor = orig_op_array_ctor;
-	    ze->op_array_dtor = orig_op_array_dtor;
-    }
-    
+
+	if (ze != NULL) {
+		ze->startup = orig_module_startup;
+		ze->shutdown = orig_module_shutdown;
+		ze->op_array_ctor = orig_op_array_ctor;
+		ze->op_array_dtor = orig_op_array_dtor;
+	}
 }
 
 
@@ -216,10 +215,10 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 	char *new_info;
 	int new_info_length;
 	TSRMLS_FETCH();
-	
+
 	/* Ugly but working hack */
 	new_info_length = sizeof("%s\n    with %s v%s, %s, by %s\n")
-                        + strlen(ext->author)
+						+ strlen(ext->author)
 						+ strlen(ex->name)
 						+ strlen(ex->version)
 						+ strlen(ex->copyright)
@@ -230,43 +229,42 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 	ext->author = new_info;
 
 	ze->startup = old_startup;
-	
+
 	/* Stealth Mode */
 	orig_module_startup = ze->startup;
 	orig_module_shutdown = ze->shutdown;
 	orig_op_array_ctor = ze->op_array_ctor;
 	orig_op_array_dtor = ze->op_array_dtor;
 
-    /*if (SUHOSIN_G(stealth) != 0) {*/
-	    ze->startup = stealth_module_startup;
-	    ze->shutdown = stealth_module_shutdown;
-	    ze->op_array_ctor = stealth_op_array_ctor;
-	    ze->op_array_dtor = stealth_op_array_dtor;
-    /*}*/
-	
+	/*if (SUHOSIN_G(stealth) != 0) {*/
+		ze->startup = stealth_module_startup;
+		ze->shutdown = stealth_module_shutdown;
+		ze->op_array_ctor = stealth_op_array_ctor;
+		ze->op_array_dtor = stealth_op_array_dtor;
+	/*}*/
+
 	if (old_startup != NULL) {
 		res = old_startup(ext);
 	}
 
-/*    ex->name = NULL; 
-    ex->author = NULL;
-    ex->copyright = NULL;
-    ex->version = NULL;*/
+/*	ex->name = NULL;
+	ex->author = NULL;
+	ex->copyright = NULL;
+	ex->version = NULL;*/
 
-    /*zend_extensions.head=NULL;*/
+	/*zend_extensions.head=NULL;*/
 
 	suhosin_module_startup(NULL);
-    
-	
+
 	return res;
 }
 
 /*static zend_extension_version_info extension_version_info = { ZEND_EXTENSION_API_NO, ZEND_VERSION, ZTS_V, ZEND_DEBUG };*/
 
 #define PERDIR_CHECK(upper, lower) \
-    if (!SUHOSIN_G(lower ## _perdir) && stage == ZEND_INI_STAGE_HTACCESS) { \
-        return FAILURE; \
-    } 
+	if (!SUHOSIN_G(lower ## _perdir) && stage == ZEND_INI_STAGE_HTACCESS) { \
+		return FAILURE; \
+	}
 
 #define LOG_PERDIR_CHECK() PERDIR_CHECK(LOG, log)
 #define EXEC_PERDIR_CHECK() PERDIR_CHECK(EXEC, exec)
@@ -283,94 +281,94 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 
 static ZEND_INI_MH(OnUpdateSuhosin_perdir)
 {
-        char *tmp;
+	char *tmp;
 
 	if (SUHOSIN_G(perdir)) {
-    		pefree(SUHOSIN_G(perdir), 1);
+			pefree(SUHOSIN_G(perdir), 1);
 	}
 	SUHOSIN_G(perdir) = NULL;
-    
-        /* Initialize the perdir flags */
-        SUHOSIN_G(log_perdir) = 0;
-        SUHOSIN_G(exec_perdir) = 0;
-        SUHOSIN_G(get_perdir) = 0;
-        SUHOSIN_G(cookie_perdir) = 0;
-        SUHOSIN_G(post_perdir) = 0;
-        SUHOSIN_G(request_perdir) = 0;
-        SUHOSIN_G(sql_perdir) = 0;
-        SUHOSIN_G(upload_perdir) = 0;
-        SUHOSIN_G(misc_perdir) = 0;
-    
+
+	/* Initialize the perdir flags */
+	SUHOSIN_G(log_perdir) = 0;
+	SUHOSIN_G(exec_perdir) = 0;
+	SUHOSIN_G(get_perdir) = 0;
+	SUHOSIN_G(cookie_perdir) = 0;
+	SUHOSIN_G(post_perdir) = 0;
+	SUHOSIN_G(request_perdir) = 0;
+	SUHOSIN_G(sql_perdir) = 0;
+	SUHOSIN_G(upload_perdir) = 0;
+	SUHOSIN_G(misc_perdir) = 0;
+
 	if (new_value == NULL) {
 		return SUCCESS;
 	}
-	
-        tmp = SUHOSIN_G(perdir) = pestrdup(new_value,1);
-        
-        /* trim the whitespace */
-        while (isspace(*tmp)) tmp++;
-        
-        /* should we deactivate perdir completely? */
-        if (*tmp == 0 || *tmp == '0') {
-            return SUCCESS;
-        }
-        
-        /* no deactivation so check the flags */
-        while (*tmp) {
-            switch (*tmp) {
-                case 'l':
-                case 'L':
-                    SUHOSIN_G(log_perdir) = 1;
-                    break;
-                case 'e':
-                case 'E':
-                    SUHOSIN_G(exec_perdir) = 1;
-                    break;
-                case 'g':
-                case 'G':
-                    SUHOSIN_G(get_perdir) = 1;
-                    break;
-                case 'c':
-                case 'C':
-                    SUHOSIN_G(cookie_perdir) = 1;
-                    break;
-                case 'p':
-                case 'P':
-                    SUHOSIN_G(post_perdir) = 1;
-                    break;
-                case 'r':
-                case 'R':
-                    SUHOSIN_G(request_perdir) = 1;
-                    break;
-                case 's':
-                case 'S':
-                    SUHOSIN_G(sql_perdir) = 1;
-                    break;
-                case 'u':
-                case 'U':
-                    SUHOSIN_G(upload_perdir) = 1;
-                    break;
-                case 'm':
-                case 'M':
-                    SUHOSIN_G(misc_perdir) = 1;
-                    break;
-            }
-            tmp++;
-        }        
+
+	tmp = SUHOSIN_G(perdir) = pestrdup(new_value,1);
+
+	/* trim the whitespace */
+	while (isspace(*tmp)) tmp++;
+
+	/* should we deactivate perdir completely? */
+	if (*tmp == 0 || *tmp == '0') {
+		return SUCCESS;
+	}
+
+	/* no deactivation so check the flags */
+	while (*tmp) {
+		switch (*tmp) {
+			case 'l':
+			case 'L':
+				SUHOSIN_G(log_perdir) = 1;
+				break;
+			case 'e':
+			case 'E':
+				SUHOSIN_G(exec_perdir) = 1;
+				break;
+			case 'g':
+			case 'G':
+				SUHOSIN_G(get_perdir) = 1;
+				break;
+			case 'c':
+			case 'C':
+				SUHOSIN_G(cookie_perdir) = 1;
+				break;
+			case 'p':
+			case 'P':
+				SUHOSIN_G(post_perdir) = 1;
+				break;
+			case 'r':
+			case 'R':
+				SUHOSIN_G(request_perdir) = 1;
+				break;
+			case 's':
+			case 'S':
+				SUHOSIN_G(sql_perdir) = 1;
+				break;
+			case 'u':
+			case 'U':
+				SUHOSIN_G(upload_perdir) = 1;
+				break;
+			case 'm':
+			case 'M':
+				SUHOSIN_G(misc_perdir) = 1;
+				break;
+		}
+		tmp++;
+	}
 	return SUCCESS;
 }
 
 #define dohandler(handler, name, upper, lower) \
-    static ZEND_INI_MH(OnUpdate ## name ## handler) \
-    { \
-        PERDIR_CHECK(upper, lower) \
-        return OnUpdate ## handler (ZEND_INI_MH_PASSTHRU); \
-    } \
+	static ZEND_INI_MH(OnUpdate ## name ## handler) \
+	{ \
+		PERDIR_CHECK(upper, lower) \
+		return OnUpdate ## handler (ZEND_INI_MH_PASSTHRU); \
+	} \
 
 #define dohandlers(name, upper, lower) \
-    dohandler(Bool, name, upper, lower) \
-    dohandler(String, name, upper, lower) \
-    dohandler(Long, name, upper, lower) \
+	dohandler(Bool, name, upper, lower) \
+	dohandler(String, name, upper, lower) \
+	dohandler(Long, name, upper, lower) \
 
 dohandlers(Log, LOG, log)
 dohandlers(Exec, EXEC, exec)
@@ -384,7 +382,7 @@ dohandlers(SQL, SQL, sql)
 
 static ZEND_INI_MH(OnUpdateSuhosin_log_syslog)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_syslog) = (S_ALL & ~S_SQL) | S_MEMORY;
 	} else {
@@ -399,7 +397,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_syslog)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_syslog_facility)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_syslog_facility) = LOG_USER;
 	} else {
@@ -409,7 +407,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_syslog_facility)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_syslog_priority)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_syslog_priority) = LOG_ALERT;
 	} else {
@@ -419,7 +417,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_syslog_priority)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_sapi)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_sapi) = (S_ALL & ~S_SQL);
 	} else {
@@ -434,7 +432,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_sapi)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_stdout)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_stdout) = (S_ALL & ~S_SQL);
 	} else {
@@ -449,7 +447,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_stdout)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_script)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_script) = S_ALL & ~S_MEMORY;
 	} else {
@@ -464,11 +462,11 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_script)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_scriptname)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (SUHOSIN_G(log_scriptname)) {
 		pefree(SUHOSIN_G(log_scriptname),1);
 	}
-    SUHOSIN_G(log_scriptname) = NULL;
+	SUHOSIN_G(log_scriptname) = NULL;
 	if (new_value) {
 		SUHOSIN_G(log_scriptname) = pestrdup(new_value,1);
 	}
@@ -476,7 +474,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_scriptname)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_phpscript)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_phpscript) = S_ALL & ~S_MEMORY;
 	} else {
@@ -491,7 +489,7 @@ static ZEND_INI_MH(OnUpdateSuhosin_log_phpscript)
 }
 static ZEND_INI_MH(OnUpdateSuhosin_log_file)
 {
-    LOG_PERDIR_CHECK()
+	LOG_PERDIR_CHECK()
 	if (!new_value) {
 		SUHOSIN_G(log_file) = S_ALL & ~S_MEMORY;
 	} else {
@@ -509,7 +507,7 @@ static void parse_list(HashTable **ht, char *list, zend_bool lc)
 {
 	char *s = NULL, *e, *val;
 	unsigned long dummy = 1;
-	
+
 	if (list == NULL) {
 list_destroy:
 		if (*ht) {
@@ -523,17 +521,17 @@ list_destroy:
 	if (*list == 0) {
 		goto list_destroy;
 	}
-	
+
 	*ht = pemalloc(sizeof(HashTable), 1);
 	zend_hash_init(*ht, 5, NULL, NULL, 1);
-	
+
 	if (lc) {
-        val = suhosin_str_tolower_dup(list, strlen(list));
-    } else {
-        val = estrndup(list, strlen(list));
-    }
+		val = suhosin_str_tolower_dup(list, strlen(list));
+	} else {
+		val = estrndup(list, strlen(list));
+	}
 	e = val;
-	
+
 	while (*e) {
 		switch (*e) {
 			case ' ':
@@ -561,42 +559,42 @@ list_destroy:
 
 static ZEND_INI_MH(OnUpdate_include_blacklist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(include_blacklist), new_value, 1);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_include_whitelist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(include_whitelist), new_value, 1);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_func_blacklist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(func_blacklist), new_value, 1);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_func_whitelist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(func_whitelist), new_value, 1);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_eval_blacklist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(eval_blacklist), new_value, 1);
 	return SUCCESS;
 }
 
 static ZEND_INI_MH(OnUpdate_eval_whitelist)
 {
-    EXEC_PERDIR_CHECK()
+	EXEC_PERDIR_CHECK()
 	parse_list(&SUHOSIN_G(eval_whitelist), new_value, 1);
 	return SUCCESS;
 }
@@ -662,16 +660,16 @@ static PHP_FUNCTION(suhosin_encrypt_cookie)
 	char *name, *value;
 	int name_len, value_len;
 	char cryptkey[33];
-	
+
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &name, &name_len, &value, &value_len) == FAILURE) {
 		return;
 	}
-	
+
 	if (!SUHOSIN_G(cookie_encrypt)) {
 return_plain:
 		RETURN_STRINGL(value, value_len, 1);
 	}
-	
+
 	if (SUHOSIN_G(cookie_plainlist)) {
 		if (zend_hash_exists(SUHOSIN_G(cookie_plainlist), name, name_len+1)) {
 			goto return_plain;
@@ -681,10 +679,10 @@ return_plain:
 			goto return_plain;
 		}
 	}
-	
+
 	suhosin_generate_key(SUHOSIN_G(cookie_cryptkey), SUHOSIN_G(cookie_cryptua), SUHOSIN_G(cookie_cryptdocroot), SUHOSIN_G(cookie_cryptraddr), (char *)&cryptkey TSRMLS_CC);
 	value = suhosin_encrypt_string(value, value_len, name, name_len, (char *)&cryptkey TSRMLS_CC);
-	
+
 	RETVAL_STRING(value, 0);
 }
 /* }}} */
@@ -697,9 +695,9 @@ static PHP_FUNCTION(suhosin_get_raw_cookies)
 	zval *array_ptr = return_value;
 	char *strtok_buf = NULL;
 	int val_len;
-	
+
 	array_init(array_ptr);
-	
+
 	if (SUHOSIN_G(raw_cookie)) {
 		res = estrdup(SUHOSIN_G(raw_cookie));
 	} else {
@@ -715,7 +713,7 @@ static PHP_FUNCTION(suhosin_get_raw_cookies)
 			var = res;
 		}
 		if (!*var) { continue; }
-		
+
 		val = strchr(var, '=');
 		if (val) { /* have a value */
 			*val++ = '\0';
@@ -727,7 +725,7 @@ static PHP_FUNCTION(suhosin_get_raw_cookies)
 			val = "";
 		}
 		php_register_variable_safe(var, val, val_len, array_ptr TSRMLS_CC);
-		
+
 	}
 
 	efree(res);
@@ -787,7 +785,7 @@ static zend_ini_entry shared_ini_entries[] = {
 	STD_ZEND_INI_BOOLEAN("suhosin.log.file.time",			"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateLogBool, log_file_time,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.log.phpscript.is_safe",			"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateLogBool, log_phpscript_is_safe,	zend_suhosin_globals,	suhosin_globals)
 ZEND_INI_END()
- 
+
 PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.log.max_error_length", "0", PHP_INI_SYSTEM, OnUpdateLogLong, log_max_error_length, zend_suhosin_globals, suhosin_globals)
 	ZEND_INI_ENTRY("suhosin.perdir",		"0",		ZEND_INI_SYSTEM,	OnUpdateSuhosin_perdir)
@@ -795,7 +793,7 @@ PHP_INI_BEGIN()
 	ZEND_INI_ENTRY("suhosin.executor.include.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_include_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.include.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_include_blacklist)
 	STD_ZEND_INI_BOOLEAN("suhosin.executor.include.allow_writable_files",	"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, executor_include_allow_writable_files,	zend_suhosin_globals,	suhosin_globals)
-        ZEND_INI_ENTRY("suhosin.executor.eval.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_eval_whitelist)
+	ZEND_INI_ENTRY("suhosin.executor.eval.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_eval_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.eval.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_eval_blacklist)
 	ZEND_INI_ENTRY("suhosin.executor.func.whitelist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_func_whitelist)
 	ZEND_INI_ENTRY("suhosin.executor.func.blacklist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_func_blacklist)
@@ -805,71 +803,71 @@ PHP_INI_BEGIN()
 	STD_ZEND_INI_BOOLEAN("suhosin.executor.allow_symlink",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecBool, executor_allow_symlink,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_ENTRY("suhosin.executor.max_depth",		"750",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateExecLong, max_execution_depth,	zend_suhosin_globals,	suhosin_globals)
 
-	
+
 	STD_ZEND_INI_BOOLEAN("suhosin.multiheader",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, allow_multiheader,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_ENTRY("suhosin.mail.protect",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscLong, mailprotect,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_ENTRY("suhosin.memory_limit",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscLong, memory_limit,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.simulation",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, simulation,	zend_suhosin_globals,	suhosin_globals)
-      STD_PHP_INI_ENTRY("suhosin.filter.action", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscString, filter_action, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.filter.action", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscString, filter_action, zend_suhosin_globals, suhosin_globals)
 
 	STD_ZEND_INI_BOOLEAN("suhosin.protectkey",		"1",		ZEND_INI_SYSTEM,	OnUpdateBool, protectkey,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.coredump",		"0",		ZEND_INI_SYSTEM,	OnUpdateBool, coredump,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.stealth",		"1",		ZEND_INI_SYSTEM,	OnUpdateBool, stealth,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.apc_bug_workaround",		"0",		ZEND_INI_SYSTEM,	OnUpdateBool, apc_bug_workaround,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.disable.display_errors",		"0",		ZEND_INI_SYSTEM,	OnUpdate_disable_display_errors, disable_display_errors,	zend_suhosin_globals,	suhosin_globals)
-	
-	
-
-        STD_PHP_INI_ENTRY("suhosin.request.max_vars", "1000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_request_variables, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.max_varname_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_varname_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.max_value_length", "1000000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_value_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_array_depth, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_totalname_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_array_index_length, zend_suhosin_globals, suhosin_globals)
-		STD_PHP_INI_ENTRY("suhosin.request.array_index_whitelist", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_whitelist, zend_suhosin_globals, suhosin_globals)
-		STD_PHP_INI_ENTRY("suhosin.request.array_index_blacklist", "'\"+<>;()", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_blacklist, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_nul, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.request.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_ws, zend_suhosin_globals, suhosin_globals)
-    
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_vars", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_vars, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_name_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_totalname_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_value_length", "10000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_value_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_array_depth, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_array_index_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieBool, disallow_cookie_nul, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.cookie.disallow_ws", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieBool, disallow_cookie_ws, zend_suhosin_globals, suhosin_globals)
-
-        STD_PHP_INI_ENTRY("suhosin.get.max_vars", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_vars, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_name_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_totalname_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.max_value_length", "512", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_value_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_array_depth, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_array_index_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetBool, disallow_get_nul, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.get.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetBool, disallow_get_ws, zend_suhosin_globals, suhosin_globals)
-
-        STD_PHP_INI_ENTRY("suhosin.post.max_vars", "1000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_vars, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_name_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_totalname_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.max_value_length", "1000000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_value_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_array_depth, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_array_index_length, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostBool, disallow_post_nul, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.post.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostBool, disallow_post_ws, zend_suhosin_globals, suhosin_globals)
-
-        STD_PHP_INI_ENTRY("suhosin.upload.max_uploads", "25", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_limit, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.upload.max_newlines", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_max_newlines, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.upload.disallow_elf", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_elf, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.upload.disallow_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_binary, zend_suhosin_globals, suhosin_globals)
-        STD_PHP_INI_ENTRY("suhosin.upload.remove_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_remove_binary, zend_suhosin_globals, suhosin_globals)
-#ifdef SUHOSIN_EXPERIMENTAL
-        STD_PHP_INI_BOOLEAN("suhosin.upload.allow_utf8", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_allow_utf8, zend_suhosin_globals, suhosin_globals)
-#endif
-        STD_PHP_INI_ENTRY("suhosin.upload.verification_script", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadString, upload_verification_script, zend_suhosin_globals, suhosin_globals)
 
 
-        	STD_ZEND_INI_BOOLEAN("suhosin.sql.bailout_on_error",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSQLBool, sql_bailout_on_error,	zend_suhosin_globals,	suhosin_globals)
+
+	STD_PHP_INI_ENTRY("suhosin.request.max_vars", "1000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_request_variables, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.max_varname_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_varname_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.max_value_length", "1000000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_value_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_array_depth, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_totalname_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestLong, max_array_index_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.array_index_whitelist", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_whitelist, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.array_index_blacklist", "'\"+<>;()", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, array_index_blacklist, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_nul, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.request.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateRequestBool, disallow_ws, zend_suhosin_globals, suhosin_globals)
+
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_vars", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_vars, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_name_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_totalname_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_value_length", "10000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_value_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_array_depth, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieLong, max_cookie_array_index_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieBool, disallow_cookie_nul, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.disallow_ws", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateCookieBool, disallow_cookie_ws, zend_suhosin_globals, suhosin_globals)
+
+	STD_PHP_INI_ENTRY("suhosin.get.max_vars", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_vars, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_name_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_totalname_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.max_value_length", "512", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_value_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_array_depth, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetLong, max_get_array_index_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetBool, disallow_get_nul, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.get.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateGetBool, disallow_get_ws, zend_suhosin_globals, suhosin_globals)
+
+	STD_PHP_INI_ENTRY("suhosin.post.max_vars", "1000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_vars, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.max_name_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_name_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.max_totalname_length", "256", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_totalname_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.max_value_length", "1000000", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_value_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.max_array_depth", "50", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_array_depth, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.max_array_index_length", "64", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostLong, max_post_array_index_length, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.disallow_nul", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostBool, disallow_post_nul, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.post.disallow_ws", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdatePostBool, disallow_post_ws, zend_suhosin_globals, suhosin_globals)
+
+	STD_PHP_INI_ENTRY("suhosin.upload.max_uploads", "25", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_limit, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.upload.max_newlines", "100", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadLong, upload_max_newlines, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.upload.disallow_elf", "1", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_elf, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.upload.disallow_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_disallow_binary, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.upload.remove_binary", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_remove_binary, zend_suhosin_globals, suhosin_globals)
+	#ifdef SUHOSIN_EXPERIMENTAL
+	STD_PHP_INI_BOOLEAN("suhosin.upload.allow_utf8", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadBool, upload_allow_utf8, zend_suhosin_globals, suhosin_globals)
+	#endif
+	STD_PHP_INI_ENTRY("suhosin.upload.verification_script", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateUploadString, upload_verification_script, zend_suhosin_globals, suhosin_globals)
+
+
+	STD_ZEND_INI_BOOLEAN("suhosin.sql.bailout_on_error",	"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateSQLBool, sql_bailout_on_error,	zend_suhosin_globals,	suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.sql.user_prefix", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLString, sql_user_prefix, zend_suhosin_globals, suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.sql.user_postfix", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLString, sql_user_postfix, zend_suhosin_globals, suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.sql.user_match", NULL, PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateSQLString, sql_user_match, zend_suhosin_globals, suhosin_globals)
@@ -883,8 +881,8 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.session.cryptkey", "", PHP_INI_ALL, OnUpdateMiscString, session_cryptkey, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptua",		"0",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, session_cryptua,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.session.cryptdocroot",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateMiscBool, session_cryptdocroot,	zend_suhosin_globals,	suhosin_globals)
-	STD_PHP_INI_ENTRY("suhosin.session.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_cryptraddr, zend_suhosin_globals, suhosin_globals)	
-	STD_PHP_INI_ENTRY("suhosin.session.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_checkraddr, zend_suhosin_globals, suhosin_globals)	
+	STD_PHP_INI_ENTRY("suhosin.session.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_cryptraddr, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.session.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_checkraddr, zend_suhosin_globals, suhosin_globals)
 	STD_PHP_INI_ENTRY("suhosin.session.max_id_length", "128", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateMiscLong, session_max_id_length, zend_suhosin_globals, suhosin_globals)
 #else /* HAVE_PHP_SESSION */
 #warning BUILDING SUHOSIN WITHOUT SESSION SUPPORT
@@ -895,8 +893,8 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("suhosin.cookie.cryptkey", "", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateString, cookie_cryptkey, zend_suhosin_globals, suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.cookie.cryptua",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, cookie_cryptua,	zend_suhosin_globals,	suhosin_globals)
 	STD_ZEND_INI_BOOLEAN("suhosin.cookie.cryptdocroot",		"1",		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdateBool, cookie_cryptdocroot,	zend_suhosin_globals,	suhosin_globals)
-	STD_PHP_INI_ENTRY("suhosin.cookie.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, cookie_cryptraddr, zend_suhosin_globals, suhosin_globals)	
-	STD_PHP_INI_ENTRY("suhosin.cookie.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, cookie_checkraddr, zend_suhosin_globals, suhosin_globals)	
+	STD_PHP_INI_ENTRY("suhosin.cookie.cryptraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, cookie_cryptraddr, zend_suhosin_globals, suhosin_globals)
+	STD_PHP_INI_ENTRY("suhosin.cookie.checkraddr", "0", PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateLong, cookie_checkraddr, zend_suhosin_globals, suhosin_globals)
 	ZEND_INI_ENTRY("suhosin.cookie.cryptlist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_cookie_cryptlist)
 	ZEND_INI_ENTRY("suhosin.cookie.plainlist",	NULL,		ZEND_INI_PERDIR|ZEND_INI_SYSTEM,	OnUpdate_cookie_plainlist)
 
@@ -916,7 +914,7 @@ PHP_INI_END()
  */
 char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC)
 {
-	if (sapi_module.getenv) { 
+	if (sapi_module.getenv) {
 		char *value, *tmp = sapi_module.getenv(name, name_len TSRMLS_CC);
 		if (tmp) {
 			value = estrdup(tmp);
@@ -927,7 +925,7 @@ char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC)
 	} else {
 		/* fallback to the system's getenv() function */
 		char *tmp;
-		
+
 		name = estrndup(name, name_len);
 		tmp = getenv(name);
 		efree(name);
@@ -979,25 +977,25 @@ PHP_MINIT_FUNCTION(suhosin)
 		REGISTER_MAIN_LONG_CONSTANT("S_INTERNAL", S_INTERNAL, CONST_PERSISTENT | CONST_CS);
 		REGISTER_MAIN_LONG_CONSTANT("S_ALL", S_ALL, CONST_PERSISTENT | CONST_CS);
 	}
-	
+
 	/* check if shared ini directives are already known (maybe a patched PHP) */
 	if (zend_hash_exists(EG(ini_directives), "suhosin.log.syslog", sizeof("suhosin.log.syslog"))) {
-	
+
 		/* and update them */
 		zend_ini_entry *p = (zend_ini_entry *)&shared_ini_entries;
-		
+
 		while (p->name) {
-		
+
 			zend_ini_entry *i;
-			
+
 			if (zend_hash_find(EG(ini_directives), p->name, p->name_length, (void **) &i)==FAILURE) {
 				/* continue registering them */
 				zend_register_ini_entries(p, module_number TSRMLS_CC);
 				break;
 			}
-			
+
 			SDEBUG("updating ini %s=%s", i->name, i->value);
-			
+
 			i->modifiable = p->modifiable;
 			i->module_number = module_number;
 			i->on_modify = p->on_modify;
@@ -1008,15 +1006,15 @@ PHP_MINIT_FUNCTION(suhosin)
 			p++;
 		}
 	} else {
-	
+
 		/* not registered yet, then simply use the API */
 		zend_register_ini_entries((zend_ini_entry *)&shared_ini_entries, module_number TSRMLS_CC);
-		
+
 	}
 
 	/* and register the rest of the ini entries */
 	REGISTER_INI_ENTRIES();
-	
+
 	/* Force display_errors=off */
 	if (SUHOSIN_G(disable_display_errors)) {
 		zend_ini_entry *i;
@@ -1034,14 +1032,14 @@ PHP_MINIT_FUNCTION(suhosin)
 			}
 		}
 	}
-	
+
 	/* Load invisible to other Zend Extensions */
 	if (zend_llist_count(&zend_extensions)==0 || SUHOSIN_G(stealth)==0) {
 		zend_extension extension;
 		extension = suhosin_zend_extension_entry;
 		extension.handle = NULL;
 		zend_llist_add_element(&zend_extensions, &extension);
-        ze = NULL;
+		ze = NULL;
 	} else {
 		ze = (zend_extension *)zend_llist_get_last_ex(&zend_extensions, &lp);
 		old_startup = ze->startup;
@@ -1099,12 +1097,12 @@ PHP_RINIT_FUNCTION(suhosin)
 PHP_RSHUTDOWN_FUNCTION(suhosin)
 {
 	SDEBUG("(RSHUTDOWN)");
-	
-	/* We need to clear the input filtering 
+
+	/* We need to clear the input filtering
 	   variables in the request shutdown
-	   because input filtering is done before 
+	   because input filtering is done before
 	   RINIT */
-	   
+
 	SUHOSIN_G(cur_request_variables) = 0;
 	SUHOSIN_G(cur_cookie_vars) = 0;
 	SUHOSIN_G(cur_get_vars) = 0;
@@ -1115,28 +1113,28 @@ PHP_RSHUTDOWN_FUNCTION(suhosin)
 	SUHOSIN_G(att_post_vars) = 0;
 	SUHOSIN_G(num_uploads) = 0;
 
-        SUHOSIN_G(no_more_variables) = 0;
-        SUHOSIN_G(no_more_get_variables) = 0;
-        SUHOSIN_G(no_more_post_variables) = 0;
-        SUHOSIN_G(no_more_cookie_variables) = 0;
-        SUHOSIN_G(no_more_uploads) = 0;
-	
+	SUHOSIN_G(no_more_variables) = 0;
+	SUHOSIN_G(no_more_get_variables) = 0;
+	SUHOSIN_G(no_more_post_variables) = 0;
+	SUHOSIN_G(no_more_cookie_variables) = 0;
+	SUHOSIN_G(no_more_uploads) = 0;
+
 	SUHOSIN_G(abort_request) = 0;
-	
+
 	if (SUHOSIN_G(reseed_every_request)) {
 		SUHOSIN_G(r_is_seeded) = 0;
 		SUHOSIN_G(mt_is_seeded) = 0;
 	}
-	
+
 	if (SUHOSIN_G(decrypted_cookie)) {
 		efree(SUHOSIN_G(decrypted_cookie));
 		SUHOSIN_G(decrypted_cookie)=NULL;
 	}
-    if (SUHOSIN_G(raw_cookie)) {
+	if (SUHOSIN_G(raw_cookie)) {
 		efree(SUHOSIN_G(raw_cookie));
 		SUHOSIN_G(raw_cookie)=NULL;
 	}
-	
+
 	return SUCCESS;
 }
 /* }}} */
@@ -1145,9 +1143,9 @@ PHP_RSHUTDOWN_FUNCTION(suhosin)
  */
 static void suhosin_ini_displayer(zend_ini_entry *ini_entry, int type)
 {
-    TSRMLS_FETCH();
+	TSRMLS_FETCH();
 
-    PHPWRITE("[ protected ]", strlen("[ protected ]"));
+	PHPWRITE("[ protected ]", strlen("[ protected ]"));
 }
 /* }}} */
 
@@ -1181,35 +1179,35 @@ PHP_MINFO_FUNCTION(suhosin)
 	}
 	php_info_print_box_end();
 
-    if (SUHOSIN_G(protectkey)) {
-        zend_ini_entry *i;
-		
+	if (SUHOSIN_G(protectkey)) {
+		zend_ini_entry *i;
+
 		if (zend_hash_find(EG(ini_directives), "suhosin.cookie.cryptkey", sizeof("suhosin.cookie.cryptkey"), (void **) &i)==SUCCESS) {
-            i->displayer = suhosin_ini_displayer;
-        }
+			i->displayer = suhosin_ini_displayer;
+		}
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
-            i->displayer = suhosin_ini_displayer;
-        }
+			i->displayer = suhosin_ini_displayer;
+		}
 		if (zend_hash_find(EG(ini_directives), "suhosin.rand.seedingkey", sizeof("suhosin.rand.seedingkey"), (void **) &i)==SUCCESS) {
-            i->displayer = suhosin_ini_displayer;
-        }
-    }
-    
+			i->displayer = suhosin_ini_displayer;
+		}
+	}
+
 	DISPLAY_INI_ENTRIES();
 
-    if (SUHOSIN_G(protectkey)) {
-        zend_ini_entry *i;
-		
+	if (SUHOSIN_G(protectkey)) {
+		zend_ini_entry *i;
+
 		if (zend_hash_find(EG(ini_directives), "suhosin.cookie.cryptkey", sizeof("suhosin.cookie.cryptkey"), (void **) &i)==SUCCESS) {
-            i->displayer = NULL;
-        }
+			i->displayer = NULL;
+		}
 		if (zend_hash_find(EG(ini_directives), "suhosin.session.cryptkey", sizeof("suhosin.session.cryptkey"), (void **) &i)==SUCCESS) {
-            i->displayer = NULL;
-        }
+			i->displayer = NULL;
+		}
 		if (zend_hash_find(EG(ini_directives), "suhosin.rand.seedingkey", sizeof("suhosin.rand.seedingkey"), (void **) &i)==SUCCESS) {
-            i->displayer = NULL;
-        }
-    }
+			i->displayer = NULL;
+		}
+	}
 
 }
 /* }}} */

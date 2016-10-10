@@ -1,0 +1,24 @@
+language: php
+os: linux
+
+php:
+  - 5.6
+  - 5.5
+  - 5.4
+
+env:
+  - CC=gcc-4.8 CFLAGS=""
+  - CC=clang   CFLAGS=""
+
+before_install:
+  - lsb_release -a
+  - uname -a
+
+before_script:
+  - phpize
+  - ./configure --enable-suhosin-experimental
+  - make -j2 CFLAGS="-DSUHOSIN_DEBUG=1"
+  - phpenv config-rm xdebug.ini
+
+script:
+  - make test NO_INTERACTION=1

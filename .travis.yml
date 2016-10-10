@@ -7,7 +7,7 @@ php:
   - 5.4
 
 env:
-  - CC=gcc-4.8 CFLAGS=""
+  - CC=gcc CFLAGS=""
   - CC=clang   CFLAGS=""
 
 before_install:

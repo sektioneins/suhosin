@@ -870,15 +870,15 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 						value_len = new_value_len;
 					}
 				}
-				
+
 				if (suhosin_input_filter(PARSE_POST, param, &value, value_len, &new_val_len TSRMLS_CC) == 0) {
 					SUHOSIN_G(abort_request)=1;
 					efree(param);
 					efree(value);
 					continue;
 				}
-				
-				if (++count <= PG(max_input_vars) && sapi_module.input_filter(PARSE_POST, param, &value, value_len, &new_val_len TSRMLS_CC)) {
+
+				if (++count <= PG(max_input_vars) && sapi_module.input_filter(PARSE_POST, param, &value, new_val_len, &new_val_len TSRMLS_CC)) {
 					if (&suhosin_rfc1867_filter != NULL) {
 						multipart_event_formdata event_formdata;
 						size_t newlength = new_val_len;

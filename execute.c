@@ -1087,6 +1087,11 @@ static int ih_function_exists(IH_HANDLER_PARAMS)
 		return 1;
 	}
 
+	if (name_len <= 0) {
+		RETVAL_BOOL(0);
+		return 1;
+	}
+
 	lcname = zend_str_tolower_dup(name, name_len);
 
 	/* Ignore leading "\" */

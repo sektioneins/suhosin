@@ -979,7 +979,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 			temp_filename = NULL;
 			fd = -1;
 
-			if (!skip_upload && &suhosin_rfc1867_filter != NULL) {
+			if (!skip_upload && (&suhosin_rfc1867_filter != NULL)) {
 				multipart_event_file_start event_file_start;
 
 				event_file_start.post_bytes_processed = SG(read_post_bytes);

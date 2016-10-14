@@ -5,7 +5,7 @@ PHP_ARG_ENABLE(suhosin, whether to enable suhosin support,
 [  --enable-suhosin        Enable suhosin support])
 
 if test "$PHP_SUHOSIN" != "no"; then
-  PHP_NEW_EXTENSION(suhosin, suhosin.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867_new.c log.c header.c execute.c ex_imp.c session.c aes.c crypt.c, $ext_shared)
+  PHP_NEW_EXTENSION(suhosin, suhosin.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867_new.c log.c header.c execute.c ex_imp.c session.c aes.c crypt.c pledge.c, $ext_shared)
 fi
 
 PHP_ARG_ENABLE(suhosin-experimental, whether to enable experimental suhosin features,

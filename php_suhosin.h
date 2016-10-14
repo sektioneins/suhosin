@@ -384,7 +384,7 @@ void suhosin_unhook_header_handler();
 void suhosin_hook_session(TSRMLS_D);
 void suhosin_unhook_session(TSRMLS_D);
 void suhosin_hook_sha256(TSRMLS_D);
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) && defined(SUHOSIN_EXPERIMENTAL)
 void suhosin_hook_pledge(TSRMLS_D);
 #endif
 void suhosin_hook_ex_imp(TSRMLS_D);

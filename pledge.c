@@ -17,10 +17,9 @@
   +----------------------------------------------------------------------+
 */
 
-/* $Id: pledge.c $ */
+#if defined(__OpenBSD__) && defined(SUHOSIN_EXPERIMENTAL)
 
 #include <unistd.h>
-#ifdef  __OpenBSD__
 #include <errno.h>
 #include "php.h"
 #include "ext/standard/info.h"

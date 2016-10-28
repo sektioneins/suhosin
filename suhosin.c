@@ -47,18 +47,19 @@ static zend_llist_position lp = NULL;
 static int (*old_startup)(zend_extension *extension) = NULL;
 static zend_extension *ze = NULL;
 
-static int suhosin_module_startup(zend_extension *extension);
-static void suhosin_shutdown(zend_extension *extension);
-
-
+static void (*orig_module_activate)(void) = NULL;
+static void (*orig_module_deactivate)(void) = NULL;
 static void (*orig_op_array_ctor)(zend_op_array *op_array) = NULL;
 static void (*orig_op_array_dtor)(zend_op_array *op_array) = NULL;
 static void (*orig_module_shutdown)(zend_extension *extension) = NULL;
 static int (*orig_module_startup)(zend_extension *extension) = NULL;
 
-
+static void suhosin_module_activate(void);
+static void suhosin_module_deactivate(void);
 static void suhosin_op_array_ctor(zend_op_array *op_array);
 static void suhosin_op_array_dtor(zend_op_array *op_array);
+static void suhosin_shutdown(zend_extension *extension);
+static int  suhosin_module_startup(zend_extension *extension);
 
 STATIC zend_extension suhosin_zend_extension_entry = {
 	"Suhosin",
@@ -68,8 +69,8 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 	"Copyright (c) 2007-2015",
 	suhosin_module_startup,
 	suhosin_shutdown,
-	NULL,
-	NULL,
+	suhosin_module_activate,
+	suhosin_module_deactivate,
 	NULL,
 	NULL,
 	NULL,
@@ -80,6 +81,20 @@ STATIC zend_extension suhosin_zend_extension_entry = {
 
 	STANDARD_ZEND_EXTENSION_PROPERTIES
 };
+
+static void suhosin_module_activate(void)
+{
+	TSRMLS_FETCH();
+
+	suhosin_hook_post_handlers(TSRMLS_C);
+}
+
+static void suhosin_module_deactivate(void)
+{
+	TSRMLS_FETCH();
+
+	suhosin_unhook_post_handlers(TSRMLS_C);
+}
 
 static void suhosin_op_array_ctor(zend_op_array *op_array)
 {
@@ -108,6 +123,22 @@ static void suhosin_op_array_dtor(zend_op_array *op_array)
 }
 
 /* Stealth Mode functions */
+
+static void stealth_module_activate(void)
+{
+	if (orig_module_activate != NULL) {
+		orig_module_activate();
+	}
+	suhosin_module_activate();
+}
+
+static void stealth_module_deactivate(void)
+{
+	if (orig_module_deactivate != NULL) {
+		orig_module_deactivate();
+	}
+	suhosin_module_deactivate();
+}
 
 static void stealth_op_array_ctor(zend_op_array *op_array)
 {
@@ -147,8 +178,6 @@ static int suhosin_module_startup(zend_extension *extension)
 	int resid;
 	TSRMLS_FETCH();
 
-/*	zend_register_module(&suhosin_module_entry TSRMLS_CC); */
-
 	if (zend_hash_find(&module_registry, "suhosin", sizeof("suhosin"), (void **)&module_entry_ptr)==SUCCESS) {
 
 		if (extension) {
@@ -157,10 +186,7 @@ static int suhosin_module_startup(zend_extension *extension)
 			zend_extension ext;
 			ext = suhosin_zend_extension_entry;
 			ext.handle = module_entry_ptr->handle;
-			/*
-			zend_llist_add_element(&zend_extensions, &ext);
-			extension = zend_llist_get_last(&zend_extensions);
-			*/
+
 			extension = &suhosin_zend_extension_entry;
 		}
 		module_entry_ptr->handle = NULL;
@@ -178,7 +204,6 @@ static int suhosin_module_startup(zend_extension *extension)
 	suhosin_zend_extension_entry.resource_number = resid;
 
 	suhosin_hook_treat_data();
-	suhosin_hook_post_handlers(TSRMLS_C);
 	suhosin_aes_gentables();
 	suhosin_hook_register_server_variables();
 	suhosin_hook_header_handler();
@@ -192,16 +217,15 @@ static int suhosin_module_startup(zend_extension *extension)
 
 static void suhosin_shutdown(zend_extension *extension)
 {
-	TSRMLS_FETCH();
-
 	suhosin_unhook_execute();
 	suhosin_unhook_header_handler();
-	suhosin_unhook_post_handlers(TSRMLS_C);
 	/* suhosin_unhook_session(); - enabling this causes compability problems */
 
 	if (ze != NULL) {
 		ze->startup = orig_module_startup;
 		ze->shutdown = orig_module_shutdown;
+		ze->activate = orig_module_activate;
+		ze->deactivate = orig_module_deactivate;
 		ze->op_array_ctor = orig_op_array_ctor;
 		ze->op_array_dtor = orig_op_array_dtor;
 	}
@@ -214,7 +238,6 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 	zend_extension *ex = &suhosin_zend_extension_entry;
 	char *new_info;
 	int new_info_length;
-	TSRMLS_FETCH();
 
 	/* Ugly but working hack */
 	new_info_length = sizeof("%s\n    with %s v%s, %s, by %s\n")
@@ -233,26 +256,21 @@ static int suhosin_startup_wrapper(zend_extension *ext)
 	/* Stealth Mode */
 	orig_module_startup = ze->startup;
 	orig_module_shutdown = ze->shutdown;
+	orig_module_activate = ze->activate;
+	orig_module_deactivate = ze->deactivate;
 	orig_op_array_ctor = ze->op_array_ctor;
 	orig_op_array_dtor = ze->op_array_dtor;
 
-	/*if (SUHOSIN_G(stealth) != 0) {*/
-		ze->startup = stealth_module_startup;
-		ze->shutdown = stealth_module_shutdown;
-		ze->op_array_ctor = stealth_op_array_ctor;
-		ze->op_array_dtor = stealth_op_array_dtor;
-	/*}*/
+	ze->startup = stealth_module_startup;
+	ze->shutdown = stealth_module_shutdown;
+	ze->activate = stealth_module_activate;
+	ze->deactivate = stealth_module_deactivate;
+	ze->op_array_ctor = stealth_op_array_ctor;
+	ze->op_array_dtor = stealth_op_array_dtor;
 
 	if (old_startup != NULL) {
 		res = old_startup(ext);
 	}
-
-/*	ex->name = NULL;
-	ex->author = NULL;
-	ex->copyright = NULL;
-	ex->version = NULL;*/
-
-	/*zend_extensions.head=NULL;*/
 
 	suhosin_module_startup(NULL);
 

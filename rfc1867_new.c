@@ -36,6 +36,10 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 
+#ifdef PHP_WIN32
+#include <win32/php_stdint.h>
+#endif
+
 #if defined(PHP_WIN32) && !defined(HAVE_ATOLL)
 # define atoll(s) _atoi64(s)
 # define HAVE_ATOLL 1

@@ -223,6 +223,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 
 /*	log */
 	zend_bool log_use_x_forwarded_for;
+	zend_bool log_use_x_request_id;
 	long	log_syslog;
 	long	log_syslog_facility;
 	long	log_syslog_priority;

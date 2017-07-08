@@ -110,6 +110,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	char buf[5000] = {0};
 	char error[5000] = {0};
 	char *ip_address;
+	char *request_id;
 	char *fname;
 	char *alertstring;
 	int lineno = 0;
@@ -139,6 +140,18 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		ip_address = suhosin_getenv("REMOTE_ADDR", 11 TSRMLS_CC);
 		if (ip_address == NULL) {
 			ip_address = "REMOTE_ADDR not set";
+		}
+	}
+
+	if (SUHOSIN_G(log_use_x_request_id)) {
+		request_id = suhosin_getenv("HTTP_X_REQUEST_ID", 40 TSRMLS_CC);
+		if (request_id == NULL) {
+			request_id = "X-REQUEST-ID not set";
+		}
+	} else {
+		request_id = suhosin_getenv("UNIQUE_ID", 40 TSRMLS_CC);
+		if (request_id == NULL) {
+			request_id = "UNIQUE_ID not set";
 		}
 	}
 	
@@ -177,13 +190,13 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 			lineno = zend_get_executed_lineno(TSRMLS_C);
 			fname = (char *)zend_get_executed_filename(TSRMLS_C);
 		}
-		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', file '%s', line %u)", alertstring, error, ip_address, fname, lineno);
+		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', attacker-request-id '%s', file '%s', line %u)", alertstring, error, ip_address, request_id, fname, lineno);
 	} else {
 		fname = suhosin_getenv("SCRIPT_FILENAME", 15 TSRMLS_CC);
 		if (fname==NULL) {
 			fname = "unknown";
 		}
-		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', file '%s')", alertstring, error, ip_address, fname);
+		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', attacker-request-id '%s', file '%s')", alertstring, error, ip_address, request_id, fname);
 	}
 			
 	/* Syslog-Logging disabled? */

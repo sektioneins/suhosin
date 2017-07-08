@@ -149,7 +149,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 			request_id = "X-REQUEST-ID not set";
 		}
 	} else {
-		ip_address = suhosin_getenv("UNIQUE_ID", 40 TSRMLS_CC);
+		request_id = suhosin_getenv("UNIQUE_ID", 40 TSRMLS_CC);
 		if (request_id == NULL) {
 			request_id = "UNIQUE_ID not set";
 		}

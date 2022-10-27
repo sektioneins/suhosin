@@ -57,7 +57,7 @@
 #ifdef PHP_WIN32
 static HANDLE log_source = 0;
 #endif
-
+#include <sys/file.h>
 
 static char *loglevel2string(int loglevel)
 {

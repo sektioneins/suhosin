@@ -260,13 +260,14 @@ static void suhosin_hook_session_module(TSRMLS_D)
 static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
 {
 	int r;
+	ps_module *original_mod = SUHOSIN_G(s_original_mod);
 
-	if (stage == PHP_INI_STAGE_RUNTIME && SESSION_G(session_status) == php_session_none && SUHOSIN_G(s_original_mod)
-		&& strcmp(new_value, "user") == 0 && strcmp(((ps_module*)SUHOSIN_G(s_original_mod))->s_name, "user") == 0) {
+	/* During runtime stage, to prevent infinite loops, only update when new value is different than original */
+	if (stage == PHP_INI_STAGE_RUNTIME && original_mod && strcasecmp(original_mod->s_name, new_value) == 0) {
 		return SUCCESS;
 	}
 
-	SESSION_G(mod) = SUHOSIN_G(s_original_mod);
+	SESSION_G(mod) = original_mod;
 
 	r = old_OnUpdateSaveHandler(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
 
@@ -293,9 +294,6 @@ void suhosin_hook_session(TSRMLS_D)
 	ps_serializer *serializer;
 	zend_ini_entry *ini_entry;
 	zend_module_entry *module;
-#ifdef ZTS
-	ts_rsrc_id *ps_globals_id_ptr;
-#endif
 
 	if (zend_hash_find(&module_registry, "session", sizeof("session"), (void**)&module) == FAILURE) {
 		return;

@@ -17,7 +17,7 @@
   +----------------------------------------------------------------------+
 */
 /*
-  $Id: log.c,v 1.1.1.1 2007-11-28 01:15:35 sesser Exp $ 
+  $Id: log.c,v 1.1.1.1 2007-11-28 01:15:35 sesser Exp $
 */
 
 #ifdef HAVE_CONFIG_H
@@ -56,8 +56,9 @@
 
 #ifdef PHP_WIN32
 static HANDLE log_source = 0;
-#endif
+#else
 #include <sys/file.h>
+#endif
 
 static char *loglevel2string(int loglevel)
 {
@@ -81,7 +82,7 @@ static char *loglevel2string(int loglevel)
 	    case S_VARS:
 		return "VARS";
 	    default:
-		return "UNKNOWN";    
+		return "UNKNOWN";
 	}
 }
 
@@ -92,7 +93,7 @@ static char *month_names[] = {
 
 PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 {
-	int s, r, i=0, fd;
+	int i=0, fd;
 	long written, towrite;
 	int getcaller=0;
 	char *wbuf;
@@ -100,6 +101,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	time_t now;
 	struct tm tm;
 #if defined(AF_UNIX)
+	int s, r;
 	struct sockaddr_un saun;
 #endif
 #ifdef PHP_WIN32
@@ -129,7 +131,7 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		volatile unsigned int *x = 0;
 		volatile int y = *x;
 	}
-	
+
 	if (SUHOSIN_G(log_use_x_forwarded_for)) {
 		ip_address = suhosin_getenv("HTTP_X_FORWARDED_FOR", 20 TSRMLS_CC);
 		if (ip_address == NULL) {
@@ -141,8 +143,8 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 			ip_address = "REMOTE_ADDR not set";
 		}
 	}
-	
-	
+
+
 	va_start(ap, fmt);
 	ap_php_vsnprintf(error, sizeof(error), fmt, ap);
 	va_end(ap);
@@ -153,13 +155,13 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		if (error[i] < 32) error[i] = '.';
 		i++;
 	}
-	
+
 	if (SUHOSIN_G(simulation)) {
 		alertstring = "ALERT-SIMULATION";
 	} else {
 		alertstring = "ALERT";
 	}
-	
+
 	if (zend_is_executing(TSRMLS_C)) {
 		zend_execute_data *exdata = EG(current_execute_data);
 		if (exdata) {
@@ -185,12 +187,12 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		}
 		ap_php_snprintf(buf, sizeof(buf), "%s - %s (attacker '%s', file '%s')", alertstring, error, ip_address, fname);
 	}
-			
+
 	/* Syslog-Logging disabled? */
 	if (((SUHOSIN_G(log_syslog)|S_INTERNAL) & loglevel)==0) {
 		goto log_file;
-	}	
-	
+	}
+
 #if defined(AF_UNIX)
 	ap_php_snprintf(error, sizeof(error), "<%u>suhosin[%u]: %s\n", (unsigned int)(SUHOSIN_G(log_syslog_facility)|SUHOSIN_G(log_syslog_priority)),getpid(),buf);
 
@@ -198,12 +200,12 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 	if (s == -1) {
 		goto log_file;
 	}
-	
+
 	memset(&saun, 0, sizeof(saun));
 	saun.sun_family = AF_UNIX;
 	strcpy(saun.sun_path, SYSLOG_PATH);
 	/*saun.sun_len = sizeof(saun);*/
-	
+
 	r = connect(s, (struct sockaddr *)&saun, sizeof(saun));
 	if (r) {
 		close(s);
@@ -211,20 +213,20 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		if (s == -1) {
 			goto log_file;
 		}
-	
+
 		memset(&saun, 0, sizeof(saun));
 		saun.sun_family = AF_UNIX;
 		strcpy(saun.sun_path, SYSLOG_PATH);
 		/*saun.sun_len = sizeof(saun);*/
 
 		r = connect(s, (struct sockaddr *)&saun, sizeof(saun));
-		if (r) { 
+		if (r) {
 			close(s);
 			goto log_file;
 		}
 	}
 	send(s, error, strlen(error), 0);
-	
+
 	close(s);
 #endif
 #ifdef PHP_WIN32
@@ -247,14 +249,14 @@ PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...)
 		log_source = RegisterEventSource(NULL, "Suhosin-" SUHOSIN_EXT_VERSION);
 	}
 	ReportEvent(log_source, etype, (unsigned short) SUHOSIN_G(log_syslog_priority), evid, NULL, 1, 0, strs, NULL);
-	
+
 #endif
 log_file:
 	/* File-Logging disabled? */
 	if ((SUHOSIN_G(log_file) & loglevel)==0) {
 		goto log_sapi;
 	}
-	
+
 	if (!SUHOSIN_G(log_filename) || !SUHOSIN_G(log_filename)[0]) {
 		goto log_sapi;
 	}
@@ -303,20 +305,20 @@ log_sapi:
 		FILE *in;
 		int space;
 		struct stat st;
-		
+
 		char *sname = SUHOSIN_G(log_scriptname);
-		while (isspace(*sname)) ++sname;
+		while (isspace((unsigned char)*sname)) ++sname;
 		if (*sname == 0) goto log_phpscript;
-		
+
 		if (VCWD_STAT(sname, &st) < 0) {
 			suhosin_log(S_INTERNAL, "unable to find logging shell script %s - file dropped", sname);
 			goto log_phpscript;
 		}
 		if (access(sname, X_OK|R_OK) < 0) {
 			suhosin_log(S_INTERNAL, "logging shell script %s is not executable - file dropped", sname);
-			goto log_phpscript;					
+			goto log_phpscript;
 		}
-		
+
 		/* TODO: clean up this code to calculate size of output dynamically */
 		ap_php_snprintf(cmd, sizeof(cmd) - 20, "%s %s \'", sname, loglevel2string(loglevel));
 		space = sizeof(cmd) - strlen(cmd) - 20;
@@ -344,7 +346,7 @@ log_sapi:
 		*cmdpos++ = '&';
 		*cmdpos++ = '1';
 		*cmdpos = 0;
-		
+
 		if ((in=VCWD_POPEN(cmd, "r"))==NULL) {
 			suhosin_log(S_INTERNAL, "Unable to execute logging shell script: %s", sname);
 			goto log_phpscript;
@@ -369,12 +371,12 @@ log_phpscript:
 		zend_file_handle file_handle;
 		zend_op_array *new_op_array;
 		zval *result = NULL;
-		
+
 		long orig_execution_depth = SUHOSIN_G(execution_depth);
 		char *orig_basedir = PG(open_basedir);
-		
+
 		char *phpscript = SUHOSIN_G(log_phpscriptname);
-SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));				
+SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 		if (zend_stream_open(phpscript, &file_handle TSRMLS_CC) == SUCCESS) {
 			if (!file_handle.opened_path) {
 				file_handle.opened_path = estrndup(phpscript, strlen(phpscript));
@@ -384,13 +386,13 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 			if (new_op_array) {
 				HashTable *active_symbol_table = EG(active_symbol_table);
 				zval *zerror, *zerror_class;
-				
+
 				if (active_symbol_table == NULL) {
 					active_symbol_table = &EG(symbol_table);
 				}
 				EG(return_value_ptr_ptr) = &result;
 				EG(active_op_array) = new_op_array;
-				
+
 				MAKE_STD_ZVAL(zerror);
 				MAKE_STD_ZVAL(zerror_class);
 				ZVAL_STRING(zerror, buf, 1);
@@ -398,17 +400,17 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 
 				zend_hash_update(active_symbol_table, "SUHOSIN_ERROR", sizeof("SUHOSIN_ERROR"), (void **)&zerror, sizeof(zval *), NULL);
 				zend_hash_update(active_symbol_table, "SUHOSIN_ERRORCLASS", sizeof("SUHOSIN_ERRORCLASS"), (void **)&zerror_class, sizeof(zval *), NULL);
-				
+
 				SUHOSIN_G(execution_depth) = 0;
 				if (SUHOSIN_G(log_phpscript_is_safe)) {
 					PG(open_basedir) = NULL;
 				}
-				
+
 				zend_execute(new_op_array TSRMLS_CC);
-				
+
 				SUHOSIN_G(execution_depth) = orig_execution_depth;
 				PG(open_basedir) = orig_basedir;
-				
+
 				destroy_op_array(new_op_array TSRMLS_CC);
 				efree(new_op_array);
 

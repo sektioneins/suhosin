@@ -138,6 +138,7 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 
 	long max_execution_depth;
 	zend_bool	abort_request;
+	zend_bool	hp_stopped;
 	long executor_include_max_traversal;
 	zend_bool executor_include_allow_writable_files;
 

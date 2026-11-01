@@ -26,6 +26,11 @@
 #include "SAPI.h"
 
 #define MULTIPART_CONTENT_TYPE "multipart/form-data"
+
+/* Disable external callback forwarding while preserving Suhosin's own
+ * multipart filters and cleanup. This is independent of PHP API availability. */
+#define SUHOSIN_FORWARD_RFC1867_CALLBACK 0
+
 #ifdef MULTIPART_EVENT_START
 #define HAVE_RFC1867_CALLBACK		1
 #else
@@ -78,7 +83,6 @@ typedef struct _multipart_event_end {
 
 SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler);
 
-// void destroy_uploaded_files_hash(TSRMLS_D);
 #if !HAVE_RFC1867_CALLBACK
 extern PHP_SUHOSIN_API int (*php_rfc1867_callback)(unsigned int event, void *event_data, void **extra TSRMLS_DC);
 #else

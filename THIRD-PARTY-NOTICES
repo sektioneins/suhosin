@@ -1,0 +1,40 @@
+memory-headroom guard adapted from hp_uploadprogress_guard (Hosted Power)
+https://github.com/HOSTED-POWER/php_uploadprogress_guard
+
+The following functions were taken from the component above:
+
+  hp_mem_room()
+    Checks whether there is enough memory headroom under memory_limit to
+    take the next step. Returns 1 if there is room, 0 if not.
+
+  hp_upg_filter_drop_post()
+    Empties the copy of the form fields that ext/filter keeps, so that
+    filter_input(), filter_has_var() and filter_input_array() don't
+    return a body that has been dropped.
+
+  hp_drop_request()
+    Stops a request whose multipart body would exceed the memory headroom.
+    It clears the POST and file arrays, clears the ext/filter copy, sets
+    the response code to 413, and writes an entry to the error log.
+
+MIT License
+
+Copyright (c) 2026 Hosted Power
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -90,6 +90,33 @@ static int hp_mem_room(size_t need TSRMLS_DC)
 	return used + need + HP_MEM_SLACK + reserve <= limit;
 }
 
+/* ext/filter keeps its own copy of every form field the parser registers (filter_input(INPUT_POST),
+ * filter_has_var(), filter_input_array()). When the parser drops a body, that copy is emptied too. ext/filter
+ * neither exports its globals nor lists them in its module entry, but its "filter.default" ini entry points at
+ * them (STD_PHP_INI_ENTRY: mh_arg2 = &filter_globals, or &filter_globals_id on thread-safe builds), and
+ * post_array is their first member in every PHP version. ext/filter not loaded: nothing to do. */
+static void hp_upg_filter_drop_post(TSRMLS_D)
+{
+	zend_ini_entry *ini;
+	void *g;
+	zval **post;
+	if (zend_hash_find(EG(ini_directives), "filter.default", sizeof("filter.default"), (void **) &ini) != SUCCESS) {
+		return;
+	}
+	if (!ini->mh_arg2) {
+		return;
+	}
+#ifdef ZTS
+	g = ts_resource(*(ts_rsrc_id *) ini->mh_arg2);
+#else
+	g = ini->mh_arg2;
+#endif
+	post = g;
+	if (*post && Z_TYPE_PP(post) == IS_ARRAY) {
+		zend_hash_clean(Z_ARRVAL_PP(post));
+	}
+}
+
 static void hp_drop_request(zval *post_array TSRMLS_DC)
 {
 	char msg[256];
@@ -100,6 +127,7 @@ static void hp_drop_request(zval *post_array TSRMLS_DC)
 	if (PG(http_globals)[TRACK_VARS_FILES] && Z_TYPE_P(PG(http_globals)[TRACK_VARS_FILES]) == IS_ARRAY) {
 		zend_hash_clean(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_FILES]));
 	}
+	hp_upg_filter_drop_post(TSRMLS_C);
 	SG(sapi_headers).http_response_code = 413;
 	snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, memory headroom exhausted "
 		"(memory_limit=%ld post_max_size=%ld read=%ld); request answered 413",

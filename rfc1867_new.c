@@ -304,6 +304,8 @@ static int fill_buffer(multipart_buffer *self TSRMLS_DC)
 
 	self->buf_begin = self->buffer;
 
+	/* php2shell (CVE-2026-109618): Content-Length may be absent or lying;
+	 * never read more than post_max_size (official PHP 8.2.35 fix). */
 	if (SG(post_max_size) > 0 && SG(read_post_bytes) > SG(post_max_size)) {
 		return 0;
 	}
@@ -459,6 +461,9 @@ static int find_boundary(multipart_buffer *self, char *boundary TSRMLS_DC)
 	return 0;
 }
 
+/* php2shell (CVE-2026-109618): limit which MIME headers are retained.
+ * An attacker can send a huge number of headers per multipart part; representing
+ * them all in PHP heap can exhaust memory_limit within post_max_size. */
 static zend_bool php_mime_should_save_hdr(const char *name)
 {
 	return !strcasecmp(name, "Content-Disposition")
@@ -1428,6 +1433,8 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 	}
 
 fileupload_done:
+	/* php2shell (CVE-2026-109618): actual body may exceed declared
+	 * Content-Length (official PHP 8.2.35 fix). */
 	if (SG(post_max_size) > 0 && SG(read_post_bytes) > SG(post_max_size)) {
 		sapi_module.sapi_error(E_WARNING, "Actual POST length does not match Content-Length, and exceeds %ld bytes", (long) SG(post_max_size));
 	}

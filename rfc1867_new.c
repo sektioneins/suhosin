@@ -91,6 +91,7 @@ static php_rfc1867_basename_t php_rfc1867_basename = NULL;
 /* reasons stored in SUHOSIN_G(hp_stopped) */
 #define HP_STOP_MEMORY 1
 #define HP_STOP_HEADER 2
+#define HP_STOP_LENGTH 3
 
 /* is there room for `copies` copies of `bytes` bytes? */
 static int hp_mem_room(size_t bytes, size_t copies TSRMLS_DC)
@@ -189,6 +190,10 @@ static void hp_drop_request(zval *post_array TSRMLS_DC)
 		snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, MIME part header longer than %ld bytes "
 			"(post_max_size=%ld read=%ld); request answered 413",
 			(long) HP_MAX_HDR_VALUE, (long) SG(post_max_size), (long) SG(read_post_bytes));
+	} else if (SUHOSIN_G(hp_stopped) == HP_STOP_LENGTH) {
+		snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, form field value of %d bytes or more "
+			"(post_max_size=%ld read=%ld); request answered 413",
+			INT_MAX, (long) SG(post_max_size), (long) SG(read_post_bytes));
 	} else {
 		snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, memory headroom exhausted "
 			"(memory_limit=%ld post_max_size=%ld read=%ld); request answered 413",
@@ -829,10 +834,17 @@ static unsigned int multipart_buffer_read(multipart_buffer *self, char *buf, uns
 static char *multipart_buffer_read_body(multipart_buffer *self, unsigned int *len TSRMLS_DC)
 {
 	char buf[FILLUNIT], *out=NULL;
-	unsigned int total_bytes=0, read_bytes=0;
+	size_t total_bytes=0;
+	unsigned int read_bytes=0;
 
 	while((read_bytes = multipart_buffer_read(self, buf, sizeof(buf), NULL TSRMLS_CC))) {
-		if (!hp_mem_room((size_t) total_bytes + read_bytes + 1, SUHOSIN_G(hp_value_copies) TSRMLS_CC)) {
+		/* the value goes on to int and unsigned int length APIs: it must stay below INT_MAX,
+		   and the erealloc size must not wrap (memory_limit=-1 skips the memory guard) */
+		if (total_bytes + read_bytes >= (size_t) INT_MAX) {
+			SUHOSIN_G(hp_stopped) = HP_STOP_LENGTH;
+			break;
+		}
+		if (!hp_mem_room(total_bytes + read_bytes + 1, SUHOSIN_G(hp_value_copies) TSRMLS_CC)) {
 			SUHOSIN_G(hp_stopped) = HP_STOP_MEMORY;
 			break;
 		}
@@ -844,7 +856,7 @@ static char *multipart_buffer_read_body(multipart_buffer *self, unsigned int *le
 	if (out) {
 		out[total_bytes] = '\0';
 	}
-	*len = total_bytes;
+	*len = (unsigned int) total_bytes;
 
 	return out;
 }

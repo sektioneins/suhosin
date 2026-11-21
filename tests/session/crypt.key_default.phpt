@@ -1,5 +1,5 @@
 --TEST--
-session with encryption default key
+session encryption with the former built-in key "D3F4UL7" set as cryptkey
 --SKIPIF--
 <?php include "../skipifcli.inc"; ?>
 --INI--
@@ -12,10 +12,10 @@ suhosin.session.checkraddr=0
 --FILE--
 <?php
 include "sessionhandler.inc";
-session_test_start();
+session_test_start(new CryptCheckSessionHandler("D3F4UL7"));
 $_SESSION['a'] = 'b';
 
 
 ?>
 --EXPECTF--
-SESSION: RIuy2LSSd3_s3hhDCnN89bNWyCnhvNAO0YUq7OQKuJc.
+SESSION: encrypted, tag verifies, 32 bytes ciphertext

@@ -23,6 +23,25 @@
       Not covered: session.auto_start=1 reads the session before the script
       starts, and a large session can still exhaust memory_limit there. Keep
       session.auto_start off, or keep session data small.
+    - cookie and session encryption: new format with a random IV and an
+      HMAC-SHA256 tag over the name (cookie name or session id) and the
+      ciphertext, checked before decryption. The old format had no IV and only
+      an unkeyed 32-bit checksum, so encrypted cookies could be forged.
+      Cookies and session data in the old format are rejected: users are
+      logged out once after the upgrade.
+    - an empty suhosin.cookie.cryptkey or suhosin.session.cryptkey no longer
+      falls back to a built-in key that anyone could derive: encryption of
+      that kind is off until a key is set, and a message is logged.
+      Session encryption is on by default, so set suhosin.session.cryptkey
+      to keep it.
+    - suhosin.cookie.cryptlist and plainlist are checked against the name PHP
+      registers: leading whitespace such as \v or \f no longer hides a
+      cookie from the list, and for arrays the base name decides.
+    - suhosin.log.phpscript restores the executor state after the log script;
+      before, a function that triggered an alert continued with a freed
+      op_array. The script now also sees $SUHOSIN_ERROR inside functions.
+    - multipart parser: a form field value of 2 GB or more drops the form
+      (413) instead of wrapping a 32-bit length.
 
 2015-05-21 - 0.9.38
     - removed code compatibility for PHP <5.4 (lots of code + ifdefs)

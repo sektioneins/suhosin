@@ -4,7 +4,7 @@ cookie encryption with checkraddr=4
 <?php include "../skipif.inc"; ?>
 --INI--
 suhosin.cookie.encrypt=1
-suhosin.cookie.cryptkey=
+suhosin.cookie.cryptkey=testkey
 suhosin.cookie.cryptua=Off
 suhosin.cookie.cryptdocroot=Off
 suhosin.cookie.cryptraddr=0
@@ -16,7 +16,7 @@ return <<<END
 REMOTE_ADDR=127.0.0.1
 END;
 --COOKIE--
-foo=EgJxlQxzPwoAcVFj395vssv3hy1rAem1lH9qZYUvRi8.
+foo=AmBjGEIjj6_4Ip5LOChO2zsdJfHMOrheKRXeDyRu_6_yTHcw-SLHHkM0pV6TkYTX5c7KjQod2H3pNkUKPBuG7Cg.
 --FILE--
 <?php
 var_dump($_COOKIE);

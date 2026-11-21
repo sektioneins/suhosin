@@ -688,18 +688,27 @@ return_plain:
 		RETURN_STRINGL(value, value_len, 1);
 	}
 
-	if (SUHOSIN_G(cookie_plainlist)) {
-		if (zend_hash_exists(SUHOSIN_G(cookie_plainlist), name, name_len+1)) {
-			goto return_plain;
-		}
-	} else if (SUHOSIN_G(cookie_cryptlist)) {
-		if (!zend_hash_exists(SUHOSIN_G(cookie_cryptlist), name, name_len+1)) {
+	{
+		char *norm = estrndup(name, name_len);
+		int encrypted;
+
+		normalize_varname(norm);
+		encrypted = suhosin_cookie_is_encrypted(norm TSRMLS_CC);
+		efree(norm);
+		if (!encrypted) {
 			goto return_plain;
 		}
 	}
 
+	if (!suhosin_crypt_key_set(SUHOSIN_G(cookie_cryptkey), "cookie" TSRMLS_CC)) {
+		goto return_plain;
+	}
+
 	suhosin_generate_key(SUHOSIN_G(cookie_cryptkey), SUHOSIN_G(cookie_cryptua), SUHOSIN_G(cookie_cryptdocroot), SUHOSIN_G(cookie_cryptraddr), (char *)&cryptkey TSRMLS_CC);
 	value = suhosin_encrypt_string(value, value_len, name, name_len, (char *)&cryptkey TSRMLS_CC);
+	if (value == NULL) {
+		RETURN_FALSE;
+	}
 
 	RETVAL_STRING(value, 0);
 }

@@ -1,5 +1,5 @@
 --TEST--
-session with encryption key empty and REMOTE_ADDR set
+empty cryptkey turns session encryption off and REMOTE_ADDR set
 --SKIPIF--
 <?php include "../skipifcli.inc"; ?>
 --ENV--
@@ -22,4 +22,4 @@ $_SESSION['a'] = 'b';
 
 ?>
 --EXPECTF--
-SESSION: j1YTvIOAUqxZMjuJ_ZnHPHWY5XEayycsr7O94aMzmBQ.
+SESSION: a|s:1:"b";

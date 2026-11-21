@@ -143,7 +143,7 @@ regenerate:
 
 	r = SUHOSIN_G(old_s_read)(mod_data, KEY, val, vallen TSRMLS_CC);
 
-	if (r == SUCCESS && SUHOSIN_G(session_encrypt) && *vallen > 0) {
+	if (r == SUCCESS && SUHOSIN_G(session_encrypt) && *vallen > 0 && suhosin_crypt_key_set(SUHOSIN_G(session_cryptkey), "session" TSRMLS_CC)) {
 		char cryptkey[33];
 
 		SUHOSIN_G(do_not_scan) = 1;
@@ -151,7 +151,8 @@ regenerate:
 
 		v = *val;
 		i = *vallen;
-		*val = suhosin_decrypt_string(v, i, "", 0, (char *)&cryptkey, vallen, SUHOSIN_G(session_checkraddr) TSRMLS_CC);
+		/* the session id is the name the data is bound to: data copied to another id does not decrypt */
+		*val = suhosin_decrypt_string(v, i, KEY, strlen(KEY), (char *)&cryptkey, vallen, SUHOSIN_G(session_checkraddr) TSRMLS_CC);
 		SUHOSIN_G(do_not_scan) = 0;
 	if (*val == NULL) {
 		*val = estrndup("", 0);
@@ -180,16 +181,20 @@ static int suhosin_hook_s_write(void **mod_data, const char *key, const char *va
 
 	r = vallen;
 
-	if (r > 0 && SUHOSIN_G(session_encrypt)) {
+	if (r > 0 && SUHOSIN_G(session_encrypt) && suhosin_crypt_key_set(SUHOSIN_G(session_cryptkey), "session" TSRMLS_CC)) {
 		char cryptkey[33];
 
 		SUHOSIN_G(do_not_scan) = 1;
 
 		suhosin_generate_key(SUHOSIN_G(session_cryptkey), SUHOSIN_G(session_cryptua), SUHOSIN_G(session_cryptdocroot), SUHOSIN_G(session_cryptraddr), (char *)&cryptkey TSRMLS_CC);
 
-		v = suhosin_encrypt_string(v, vallen, "", 0, (char *)&cryptkey TSRMLS_CC);
+		v = suhosin_encrypt_string(v, vallen, (char *)key, strlen(key), (char *)&cryptkey TSRMLS_CC);
 
 		SUHOSIN_G(do_not_scan) = 0;
+		if (v == NULL) {
+			r = FAILURE;
+			goto return_write;
+		}
 		r = strlen(v);
 	}
 

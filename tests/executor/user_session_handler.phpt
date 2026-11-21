@@ -7,6 +7,7 @@ suhosin.log.syslog=0
 suhosin.log.script=0
 suhosin.log.sapi=2
 suhosin.session.encrypt=On
+suhosin.session.cryptkey=testkey
 session.save_path=SUHOSIN_TEST_CASE
 --FILE--
 <?php

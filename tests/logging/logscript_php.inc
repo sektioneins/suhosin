@@ -1,0 +1,2 @@
+<?php
+echo "LOG: $SUHOSIN_ERRORCLASS $SUHOSIN_ERROR\n";

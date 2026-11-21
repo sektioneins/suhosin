@@ -386,12 +386,17 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 			if (new_op_array) {
 				HashTable *active_symbol_table = EG(active_symbol_table);
 				zval *zerror, *zerror_class;
+				/* the log script runs in the middle of the current frame:
+				   save the engine state it changes, as zend_eval_stringl does */
+				zend_op_array *orig_active_op_array = EG(active_op_array);
+				zval **orig_return_value_ptr_ptr = EG(return_value_ptr_ptr);
+				zend_op **orig_opline_ptr = EG(opline_ptr);
+				HashTable *orig_active_symbol_table = EG(active_symbol_table);
+				zend_bool bailout = 0;
 
 				if (active_symbol_table == NULL) {
 					active_symbol_table = &EG(symbol_table);
 				}
-				EG(return_value_ptr_ptr) = &result;
-				EG(active_op_array) = new_op_array;
 
 				MAKE_STD_ZVAL(zerror);
 				MAKE_STD_ZVAL(zerror_class);
@@ -406,7 +411,20 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 					PG(open_basedir) = NULL;
 				}
 
-				zend_execute(new_op_array TSRMLS_CC);
+				EG(return_value_ptr_ptr) = &result;
+				EG(active_op_array) = new_op_array;
+				EG(active_symbol_table) = active_symbol_table;
+
+				zend_try {
+					zend_execute(new_op_array TSRMLS_CC);
+				} zend_catch {
+					bailout = 1;
+				} zend_end_try();
+
+				EG(active_symbol_table) = orig_active_symbol_table;
+				EG(opline_ptr) = orig_opline_ptr;
+				EG(active_op_array) = orig_active_op_array;
+				EG(return_value_ptr_ptr) = orig_return_value_ptr_ptr;
 
 				SUHOSIN_G(execution_depth) = orig_execution_depth;
 				PG(open_basedir) = orig_basedir;
@@ -414,12 +432,12 @@ SDEBUG("scriptname %s", SUHOSIN_G(log_phpscriptname));
 				destroy_op_array(new_op_array TSRMLS_CC);
 				efree(new_op_array);
 
-				if (!EG(exception))
-				{
-					if (EG(return_value_ptr_ptr)) {
-						zval_ptr_dtor(EG(return_value_ptr_ptr));
-						EG(return_value_ptr_ptr) = NULL;
-					}
+				if (result) {
+					zval_ptr_dtor(&result);
+				}
+
+				if (bailout) {
+					zend_bailout();
 				}
 			} else {
 				suhosin_log(S_INTERNAL, "Unable to execute logging PHP script: %s", SUHOSIN_G(log_phpscriptname));

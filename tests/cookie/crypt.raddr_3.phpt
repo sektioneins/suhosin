@@ -4,7 +4,7 @@ cookie encryption using REMOTE_ADDR (cryptraddr=3)
 <?php include "../skipif.inc"; ?>
 --INI--
 suhosin.cookie.encrypt=1
-suhosin.cookie.cryptkey=
+suhosin.cookie.cryptkey=testkey
 suhosin.cookie.cryptua=Off
 suhosin.cookie.cryptdocroot=Off
 suhosin.cookie.cryptraddr=3
@@ -20,8 +20,8 @@ a=b
 --FILE--
 <?php
 setcookie('foo', 'bar');
-$ch = preg_grep("/^Set-Cookie:/", headers_list());
-echo join("\n", array_values($ch));
+include "../crypt.inc";
+suhosin_show_set_cookies("testkey127.0.0");
 ?>
 --EXPECTF--
-Set-Cookie: foo=q2LriHN5UE2RN8YKu8N-k2hE5ShtXbk8vZooBU0idWg.
+Set-Cookie: foo=<encrypted, tag verifies, 16 bytes ciphertext>

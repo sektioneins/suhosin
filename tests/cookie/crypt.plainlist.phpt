@@ -4,7 +4,7 @@ cookie encryption with plainlist set
 <?php include "../skipif.inc"; ?>
 --INI--
 suhosin.cookie.encrypt=1
-suhosin.cookie.cryptkey=
+suhosin.cookie.cryptkey=testkey
 suhosin.cookie.cryptua=0
 suhosin.cookie.cryptdocroot=0
 suhosin.cookie.cryptraddr=0
@@ -21,9 +21,9 @@ a=b
 <?php
 setcookie('foo', 'bar');
 setcookie('foo2', 'bar2');
-$ch = preg_grep("/^Set-Cookie:/", headers_list());
-echo join("\n", array_values($ch));
+include "../crypt.inc";
+suhosin_show_set_cookies("testkey");
 ?>
 --EXPECTF--
-Set-Cookie: foo=EgJxlQxzPwoAcVFj395vssv3hy1rAem1lH9qZYUvRi8.
+Set-Cookie: foo=<encrypted, tag verifies, 16 bytes ciphertext>
 Set-Cookie: foo2=bar2

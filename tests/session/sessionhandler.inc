@@ -28,10 +28,21 @@ class WriteSessionHandler extends GenericSessionHandler
 		return true;
 	}
 }
+class CryptCheckSessionHandler extends GenericSessionHandler
+{
+	private $material;
+	function __construct($material) { $this->material = $material; }
+	function write($id, $data)
+	{
+		include_once dirname(__FILE__) . "/../crypt.inc";
+		echo "SESSION: " . suhosin_crypt_check($id, $data, $this->material) . "\n";
+		return true;
+	}
+}
 class RemoteAddrSessionHandler extends GenericSessionHandler
 {
-	## key empty and REMOTE_ADDR set to 127.0.0.1
-	function read($id) { return (string)"j1YTvIOAUqxZMjuJ_ZnHPHWY5XEayycsr7O94aMzmBQ."; }
+	## a|s:1:"b"; for session id "suhosintest", cryptkey D3F4UL7, REMOTE_ADDR 127.0.0.1
+	function read($id) { return (string)"Ati_E3olSluESjlhfCvZeGxBEgT7TbVtBP5wIooS48MYbL32JMpJk0TyfWmsVBrqOSR4lE40f_dqmUbo6FMjsKOiUH0QglgbG9deCo2Z8Zv4"; }
 }
 
 

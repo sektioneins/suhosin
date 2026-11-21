@@ -16,10 +16,10 @@ suhosin.session.checkraddr=0
 --FILE--
 <?php
 include "sessionhandler.inc";
-session_test_start();
+session_test_start(new CryptCheckSessionHandler("D3F4UL7127"));
 $_SESSION['a'] = 'b';
 
 
 ?>
 --EXPECTF--
-SESSION: wkiQGgZgWnBFDyCs_4QYD_oaw_m35l_5I35XRg0wX_g.
+SESSION: encrypted, tag verifies, 32 bytes ciphertext

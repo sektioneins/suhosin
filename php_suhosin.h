@@ -377,6 +377,7 @@ suhosin_str_tolower_dup(const char *source, unsigned int length)
 PHP_SUHOSIN_API void suhosin_log(int loglevel, char *fmt, ...);
 char *suhosin_encrypt_string(char *str, int len, char *var, int vlen, char *key TSRMLS_DC);
 char *suhosin_decrypt_string(char *str, int padded_len, char *var, int vlen, char *key, int *orig_len, int check_ra TSRMLS_DC);
+int suhosin_crypt_key_set(const char *key, const char *which TSRMLS_DC);
 char *suhosin_generate_key(char *key, zend_bool ua, zend_bool dr, long raddr, char *cryptkey TSRMLS_DC);
 char *suhosin_cookie_decryptor(TSRMLS_D);
 char *suhosin_getenv(char *name, size_t name_len TSRMLS_DC);

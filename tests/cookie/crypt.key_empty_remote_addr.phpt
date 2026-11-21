@@ -1,5 +1,5 @@
 --TEST--
-cookie encryption with empty key and REMOTE_ADDR set
+empty cryptkey turns cookie encryption off and REMOTE_ADDR set
 --SKIPIF--
 <?php include "../skipif.inc"; ?>
 --INI--
@@ -20,8 +20,13 @@ a=b
 --FILE--
 <?php
 setcookie('foo', 'bar');
+var_dump($_COOKIE);
 $ch = preg_grep("/^Set-Cookie:/", headers_list());
 echo join("\n", array_values($ch));
 ?>
 --EXPECTF--
-Set-Cookie: foo=EgJxlQxzPwoAcVFj395vssv3hy1rAem1lH9qZYUvRi8.
+array(1) {
+  ["a"]=>
+  string(1) "b"
+}
+Set-Cookie: foo=bar

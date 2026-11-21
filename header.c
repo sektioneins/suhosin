@@ -89,6 +89,12 @@ char *suhosin_encrypt_single_cookie(char *name, int name_len, char *value, int v
 	value_len = php_url_decode(buf2, value_len);
 
 	d = suhosin_encrypt_string(buf2, value_len, buf, name_len, key TSRMLS_CC);
+	if (d == NULL) {
+		/* never send a cookie that should be encrypted in the clear */
+		efree(buf);
+		efree(buf2);
+		return estrndup("", 0);
+	}
 	d_url = php_url_encode(d, strlen(d), &l);
 	efree(d);
 	efree(buf);
@@ -254,7 +260,8 @@ int suhosin_header_handler(sapi_header_struct *sapi_header, sapi_header_op_enum 
 
 	/* Handle a potential cookie */
 
-	if (SUHOSIN_G(cookie_encrypt) && (strncasecmp("Set-Cookie:", sapi_header->header, sizeof("Set-Cookie:")-1) == 0)) {
+	if (SUHOSIN_G(cookie_encrypt) && (strncasecmp("Set-Cookie:", sapi_header->header, sizeof("Set-Cookie:")-1) == 0)
+	    && suhosin_crypt_key_set(SUHOSIN_G(cookie_cryptkey), "cookie" TSRMLS_CC)) {
 
 		char *start, *end, *rend, *tmp;
 		char *name, *value;

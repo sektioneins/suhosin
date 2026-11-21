@@ -4,7 +4,7 @@ cookie encryption with invalid cookie
 <?php include "../skipif.inc"; ?>
 --INI--
 suhosin.cookie.encrypt=1
-suhosin.cookie.cryptkey=
+suhosin.cookie.cryptkey=testkey
 suhosin.cookie.cryptua=Off
 suhosin.cookie.cryptdocroot=Off
 suhosin.cookie.cryptraddr=0

@@ -4,7 +4,7 @@ cookie with encryption using HTTP_USER_AGENT
 <?php include "../skipif.inc"; ?>
 --INI--
 suhosin.cookie.encrypt=1
-suhosin.cookie.cryptkey=
+suhosin.cookie.cryptkey=testkey
 suhosin.cookie.cryptua=On
 suhosin.cookie.cryptdocroot=0
 suhosin.cookie.cryptraddr=0
@@ -20,8 +20,8 @@ a=b
 --FILE--
 <?php
 setcookie('foo', 'bar');
-$ch = preg_grep("/^Set-Cookie:/", headers_list());
-echo join("\n", array_values($ch));
+include "../crypt.inc";
+suhosin_show_set_cookies("testkeytest");
 ?>
 --EXPECTF--
-Set-Cookie: foo=ZWvJsNdplAsT5Uz57vuUq7-_pbjyXTGeMrUfSrgre5w.
+Set-Cookie: foo=<encrypted, tag verifies, 16 bytes ciphertext>

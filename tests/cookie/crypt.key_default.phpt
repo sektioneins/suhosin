@@ -1,5 +1,5 @@
 --TEST--
-cookie encryption with default key
+cookie encryption with the former built-in key "D3F4UL7" set as cryptkey
 --SKIPIF--
 <?php include "../skipif.inc"; ?>
 --INI--
@@ -16,8 +16,8 @@ a=b
 --FILE--
 <?php
 setcookie('foo', 'bar');
-$ch = preg_grep("/^Set-Cookie:/", headers_list());
-echo join("\n", array_values($ch));
+include "../crypt.inc";
+suhosin_show_set_cookies("D3F4UL7");
 ?>
 --EXPECTF--
-Set-Cookie: foo=Jq5FsTmo4aEWrLMKdoEeUuFxZ4IujCzrQjg-8Y-xphg.
+Set-Cookie: foo=<encrypted, tag verifies, 16 bytes ciphertext>

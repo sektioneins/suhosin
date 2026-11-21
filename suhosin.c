@@ -700,8 +700,15 @@ return_plain:
 		}
 	}
 
+	if (!suhosin_crypt_key_set(SUHOSIN_G(cookie_cryptkey), "cookie" TSRMLS_CC)) {
+		goto return_plain;
+	}
+
 	suhosin_generate_key(SUHOSIN_G(cookie_cryptkey), SUHOSIN_G(cookie_cryptua), SUHOSIN_G(cookie_cryptdocroot), SUHOSIN_G(cookie_cryptraddr), (char *)&cryptkey TSRMLS_CC);
 	value = suhosin_encrypt_string(value, value_len, name, name_len, (char *)&cryptkey TSRMLS_CC);
+	if (value == NULL) {
+		RETURN_FALSE;
+	}
 
 	RETVAL_STRING(value, 0);
 }

@@ -5,7 +5,6 @@ session encryption with checkraddr=4
 --ENV--
 return <<<END
 REMOTE_ADDR=127.0.0.1
-PHPSESSID=test
 END;
 --INI--
 suhosin.session.encrypt=On
@@ -18,6 +17,7 @@ suhosin.session.checkraddr=4
 <?php
 include "sessionhandler.inc";
 
+session_id("suhosintest");
 session_test_start(new RemoteAddrSessionHandler());
 var_dump($_SESSION);
 

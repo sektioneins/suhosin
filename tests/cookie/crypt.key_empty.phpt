@@ -1,5 +1,5 @@
 --TEST--
-cookie encryption with empty key
+empty cryptkey turns cookie encryption off
 --SKIPIF--
 <?php include "../skipif.inc"; ?>
 --INI--
@@ -16,8 +16,13 @@ a=b
 --FILE--
 <?php
 setcookie('foo', 'bar');
+var_dump($_COOKIE);
 $ch = preg_grep("/^Set-Cookie:/", headers_list());
 echo join("\n", array_values($ch));
 ?>
 --EXPECTF--
-Set-Cookie: foo=Jq5FsTmo4aEWrLMKdoEeUuFxZ4IujCzrQjg-8Y-xphg.
+array(1) {
+  ["a"]=>
+  string(1) "b"
+}
+Set-Cookie: foo=bar

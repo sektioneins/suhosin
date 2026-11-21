@@ -106,7 +106,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 	} else if (arg == PARSE_COOKIE) {		/* Cookie data */
 		c_var = SG(request_info).cookie_data;
 		if (c_var && *c_var) {
-			if (SUHOSIN_G(cookie_encrypt)) {
+			if (SUHOSIN_G(cookie_encrypt) && suhosin_crypt_key_set(SUHOSIN_G(cookie_cryptkey), "cookie" TSRMLS_CC)) {
 				res = (char *) estrdup(suhosin_cookie_decryptor(TSRMLS_C));
 			} else {
 				res = (char *) estrdup(c_var);

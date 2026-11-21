@@ -1,5 +1,5 @@
 --TEST--
-session with encryption key empty
+empty cryptkey turns session encryption off
 --SKIPIF--
 <?php include "../skipifcli.inc"; ?>
 --INI--
@@ -18,4 +18,4 @@ $_SESSION['a'] = 'b';
 
 ?>
 --EXPECTF--
-SESSION: RIuy2LSSd3_s3hhDCnN89bNWyCnhvNAO0YUq7OQKuJc.
+SESSION: a|s:1:"b";

@@ -34,6 +34,39 @@
 
 static int (*orig_header_handler)(sapi_header_struct *sapi_header, sapi_header_op_enum op, sapi_headers_struct *sapi_headers TSRMLS_DC) = NULL;
 
+/* {{{ suhosin_cookie_is_encrypted
+   Decides from a url-decoded, normalize_varname()d cookie name whether the cookie is encrypted.
+   The lists are checked against the name PHP registers (php_register_variable_ex): the part before
+   the first '[' for an array, or the name with that '[' turned into '_' when no ']' follows it. */
+int suhosin_cookie_is_encrypted(const char *name TSRMLS_DC)
+{
+	char *reg, *br;
+	int r = 1;
+
+	if (!SUHOSIN_G(cookie_plainlist) && !SUHOSIN_G(cookie_cryptlist)) {
+		return 1;
+	}
+
+	reg = estrdup(name);
+	br = strchr(reg, '[');
+	if (br) {
+		if (strchr(br, ']')) {
+			*br = 0;
+		} else {
+			*br = '_';
+		}
+	}
+
+	if (SUHOSIN_G(cookie_plainlist)) {
+		r = !zend_hash_exists(SUHOSIN_G(cookie_plainlist), reg, strlen(reg)+1);
+	} else {
+		r = zend_hash_exists(SUHOSIN_G(cookie_cryptlist), reg, strlen(reg)+1);
+	}
+	efree(reg);
+	return r;
+}
+/* }}} */
+
 char *suhosin_encrypt_single_cookie(char *name, int name_len, char *value, int value_len, char *key TSRMLS_DC)
 {
 	char *buf, *buf2, *d, *d_url;
@@ -46,16 +79,9 @@ char *suhosin_encrypt_single_cookie(char *name, int name_len, char *value, int v
 	normalize_varname(buf);
 	name_len = strlen(buf);
 
-	if (SUHOSIN_G(cookie_plainlist)) {
-		if (zend_hash_exists(SUHOSIN_G(cookie_plainlist), buf, name_len+1)) {
-encrypt_return_plain:
-			efree(buf);
-			return estrndup(value, value_len);
-		}
-	} else if (SUHOSIN_G(cookie_cryptlist)) {
-		if (!zend_hash_exists(SUHOSIN_G(cookie_cryptlist), buf, name_len+1)) {
-			goto encrypt_return_plain;
-		}
+	if (!suhosin_cookie_is_encrypted(buf TSRMLS_CC)) {
+		efree(buf);
+		return estrndup(value, value_len);
 	}
 
 	buf2 = estrndup(value, value_len);
@@ -82,21 +108,14 @@ char *suhosin_decrypt_single_cookie(char *name, int name_len, char *value, int v
 	normalize_varname(buf);
 	name_len = strlen(buf);
 
-	if (SUHOSIN_G(cookie_plainlist)) {
-		if (zend_hash_exists(SUHOSIN_G(cookie_plainlist), buf, name_len+1)) {
-decrypt_return_plain:
-			efree(buf);
-			memcpy(*where, name, o_name_len);
-			*where += o_name_len;
-			**where = '='; *where +=1;
-			memcpy(*where, value, value_len);
-			*where += value_len;
-			return *where;
-		}
-	} else if (SUHOSIN_G(cookie_cryptlist)) {
-		if (!zend_hash_exists(SUHOSIN_G(cookie_cryptlist), buf, name_len+1)) {
-			goto decrypt_return_plain;
-		}
+	if (!suhosin_cookie_is_encrypted(buf TSRMLS_CC)) {
+		efree(buf);
+		memcpy(*where, name, o_name_len);
+		*where += o_name_len;
+		**where = '='; *where +=1;
+		memcpy(*where, value, value_len);
+		*where += value_len;
+		return *where;
 	}
 
 
@@ -147,7 +166,9 @@ char *suhosin_cookie_decryptor(TSRMLS_D)
 	j = 0; tmp = raw_cookie;
 	while (*tmp) {
 		char *d_url;int varlen;
-		while (*tmp == '\t' || *tmp == ' ') tmp++;
+		/* skip what suhosin_treat_data() skips before a cookie name, or the list
+		   check sees a different name from the one PHP registers */
+		while (isspace((unsigned char)*tmp)) tmp++;
 		var = tmp;
 		while (*tmp && *tmp != ';' && *tmp != '=') tmp++;
 

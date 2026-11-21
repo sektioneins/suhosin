@@ -688,12 +688,14 @@ return_plain:
 		RETURN_STRINGL(value, value_len, 1);
 	}
 
-	if (SUHOSIN_G(cookie_plainlist)) {
-		if (zend_hash_exists(SUHOSIN_G(cookie_plainlist), name, name_len+1)) {
-			goto return_plain;
-		}
-	} else if (SUHOSIN_G(cookie_cryptlist)) {
-		if (!zend_hash_exists(SUHOSIN_G(cookie_cryptlist), name, name_len+1)) {
+	{
+		char *norm = estrndup(name, name_len);
+		int encrypted;
+
+		normalize_varname(norm);
+		encrypted = suhosin_cookie_is_encrypted(norm TSRMLS_CC);
+		efree(norm);
+		if (!encrypted) {
 			goto return_plain;
 		}
 	}

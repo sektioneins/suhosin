@@ -404,6 +404,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 unsigned int suhosin_input_filter_wrapper(int arg, char *var, char **val, unsigned int val_len, unsigned int *new_val_len TSRMLS_DC);
 extern unsigned int (*old_input_filter)(int arg, char *var, char **val, unsigned int val_len, unsigned int *new_val_len TSRMLS_DC);
 void normalize_varname(char *varname);
+int suhosin_cookie_is_encrypted(const char *name TSRMLS_DC);
 int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TSRMLS_DC);
 void suhosin_bailout(TSRMLS_D);
 size_t suhosin_strnspn(const char *input, size_t n, const char *accept);

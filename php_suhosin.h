@@ -138,7 +138,10 @@ ZEND_BEGIN_MODULE_GLOBALS(suhosin)
 
 	long max_execution_depth;
 	zend_bool	abort_request;
-	zend_bool	hp_stopped;
+	zend_bool	hp_stopped;	/* 0, or why the multipart parser stopped (HP_STOP_* in rfc1867_new.c) */
+	zend_bool	hp_request_early;	/* multipart memory guard, see rfc1867_new.c */
+	size_t	hp_mem_start;
+	size_t	hp_value_copies;
 	long executor_include_max_traversal;
 	zend_bool executor_include_allow_writable_files;
 

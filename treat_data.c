@@ -140,7 +140,7 @@ SAPI_TREAT_DATA_FUNC(suhosin_treat_data)
 
 		if (arg == PARSE_COOKIE) {
 			/* Remove leading spaces from cookie names, needed for multi-cookie header where ; can be followed by a space */
-			while (isspace(*var)) {
+			while (isspace((unsigned char)*var)) {
 				var++;
 			}
 		}

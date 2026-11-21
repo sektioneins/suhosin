@@ -36,6 +36,10 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_smart_str.h"
 
+#ifdef PHP_WIN32
+#include <win32/php_stdint.h>
+#endif
+
 #if defined(PHP_WIN32) && !defined(HAVE_ATOLL)
 # define atoll(s) _atoi64(s)
 # define HAVE_ATOLL 1
@@ -57,6 +61,141 @@ static php_rfc1867_set_input_encoding_t php_rfc1867_set_input_encoding = NULL;
 static php_rfc1867_getword_t php_rfc1867_getword = php_ap_getword;
 static php_rfc1867_getword_conf_t php_rfc1867_getword_conf = php_ap_getword_conf;
 static php_rfc1867_basename_t php_rfc1867_basename = NULL;
+
+/*
+ * memory-headroom guard adapted from hp_uploadprogress_guard (Hosted Power)
+ * https://github.com/HOSTED-POWER/php_uploadprogress_guard
+ *
+ * hp_uploadprogress_guard v3: this parser never exhausts memory_limit, so the pre-RINIT out-of-memory
+ * bailout that CVE-2026-109618 is built on cannot be reached through multipart input. zend_memory_usage(1)
+ * is the figure the allocator compares with the limit. HP_MEM_SLACK covers the chunk the next small
+ * allocation may need; an eighth of the limit (at least 4 MB) stays free for RINIT and the script. When a
+ * step would cross that line the request is stopped, everything parsed so far is dropped and the response
+ * code is set to 413, mirroring the patched engine, which fails such a request.
+ *
+ * Two things can allocate more than that before RINIT has run:
+ * - With auto_globals_jit=0, $_REQUEST is built from the parsed form before RINIT. That costs a fraction of
+ *   what parsing allocated (about a quarter, for many small fields), so half of it is reserved on top.
+ * - ext/filter's input filter keeps a raw copy of every value. A default filter other than unsafe_raw also
+ *   writes up to 6 bytes per input byte (&#255;) and holds old and new buffer while the result grows. On
+ *   PHP 5.6.40 the peak reached about 14 bytes per input byte (stripped with FILTER_FLAG_ENCODE_HIGH), against
+ *   about 3 for unsafe_raw, so such a value is counted HP_COPIES_FILTER times instead of HP_COPIES_RAW times.
+ * session.auto_start=1 reads and unserializes the session in RINIT; its size is not known here and is not
+ * covered. */
+#define HP_MEM_CHUNK ((size_t) 2 * 1024 * 1024)
+#define HP_MEM_SLACK ((size_t) 4 * 1024 * 1024)
+#define HP_MAX_HDR_VALUE ((size_t) 64 * 1024)
+#define HP_COPIES_RAW ((size_t) 2)
+#define HP_COPIES_FILTER ((size_t) 16)
+
+/* reasons stored in SUHOSIN_G(hp_stopped) */
+#define HP_STOP_MEMORY 1
+#define HP_STOP_HEADER 2
+
+/* is there room for `copies` copies of `bytes` bytes? */
+static int hp_mem_room(size_t bytes, size_t copies TSRMLS_DC)
+{
+	size_t limit, used, reserve, need;
+
+	if (PG(memory_limit) <= 0) {
+		return 1;
+	}
+	limit = (size_t) PG(memory_limit);
+	if (copies && bytes > limit / copies) {
+		return 0;
+	}
+	need = bytes * copies;
+	used = zend_memory_usage(1 TSRMLS_CC);
+	reserve = limit / 8 < HP_MEM_SLACK ? HP_MEM_SLACK : limit / 8;
+	if (SUHOSIN_G(hp_request_early) && used > SUHOSIN_G(hp_mem_start)) {
+		reserve += (used - SUHOSIN_G(hp_mem_start)) / 2;
+	}
+	need = (need + HP_MEM_CHUNK - 1) & ~(HP_MEM_CHUNK - 1);
+	/* written as subtractions so that no sum can wrap around on 32-bit builds */
+	if (used > limit || HP_MEM_SLACK + reserve > limit - used) {
+		return 0;
+	}
+	return need <= limit - used - HP_MEM_SLACK - reserve;
+}
+
+/* ext/filter neither exports its globals nor lists them in its module entry, but its "filter.default" ini
+ * entry points at them: STD_PHP_INI_ENTRY sets mh_arg1 to the offset of default_filter and mh_arg2 to
+ * &filter_globals (&filter_globals_id on thread-safe builds). Returns NULL when ext/filter is not loaded. */
+static void *hp_filter_globals(zend_ini_entry **entry TSRMLS_DC)
+{
+	zend_ini_entry *ini;
+
+	if (zend_hash_find(EG(ini_directives), "filter.default", sizeof("filter.default"), (void **) &ini) != SUCCESS
+		|| !ini->mh_arg2) {
+		return NULL;
+	}
+	if (entry) {
+		*entry = ini;
+	}
+#ifdef ZTS
+	return ts_resource(*(ts_rsrc_id *) ini->mh_arg2);
+#else
+	return ini->mh_arg2;
+#endif
+}
+
+/* FILTER_UNSAFE_RAW in ext/filter, the same value in every PHP version that has ext/filter */
+#define HP_FILTER_UNSAFE_RAW 0x0204
+
+/* set up the guard for one request */
+static void hp_mem_start(TSRMLS_D)
+{
+	zend_auto_global *ag;
+	zend_ini_entry *ini = NULL;
+	char *g = hp_filter_globals(&ini TSRMLS_CC);
+
+	SUHOSIN_G(hp_stopped) = 0;
+	SUHOSIN_G(hp_mem_start) = zend_memory_usage(1 TSRMLS_CC);
+	/* $_REQUEST is built before RINIT unless it is a just-in-time auto global */
+	SUHOSIN_G(hp_request_early) = zend_hash_find(CG(auto_globals), "_REQUEST", sizeof("_REQUEST"), (void **) &ag) == SUCCESS && !ag->jit;
+	/* Ask ext/filter which default filter it resolved filter.default to, instead of comparing names: it
+	 * matches names without regard to case and falls back to unsafe_raw for names it does not know.
+	 * ext/filter not loaded: values are not filtered. */
+	SUHOSIN_G(hp_value_copies) = (g == NULL || *(long *) (g + (size_t) ini->mh_arg1) == HP_FILTER_UNSAFE_RAW)
+		? HP_COPIES_RAW : HP_COPIES_FILTER;
+}
+
+/* ext/filter keeps its own copy of every form field the parser registers (filter_input(INPUT_POST),
+ * filter_has_var(), filter_input_array()). When the parser drops a body, that copy is emptied too.
+ * post_array is the first member of ext/filter's globals in every PHP version (see hp_filter_globals).
+ * ext/filter not loaded: nothing to do. */
+static void hp_upg_filter_drop_post(TSRMLS_D)
+{
+	zval **post = hp_filter_globals(NULL TSRMLS_CC);
+
+	if (post && *post && Z_TYPE_PP(post) == IS_ARRAY) {
+		zend_hash_clean(Z_ARRVAL_PP(post));
+	}
+}
+
+static void hp_drop_request(zval *post_array TSRMLS_DC)
+{
+	char msg[256];
+
+	if (Z_TYPE_P(post_array) == IS_ARRAY) {
+		zend_hash_clean(Z_ARRVAL_P(post_array));
+	}
+	if (PG(http_globals)[TRACK_VARS_FILES] && Z_TYPE_P(PG(http_globals)[TRACK_VARS_FILES]) == IS_ARRAY) {
+		zend_hash_clean(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_FILES]));
+	}
+	hp_upg_filter_drop_post(TSRMLS_C);
+	SG(sapi_headers).http_response_code = 413;
+	if (SUHOSIN_G(hp_stopped) == HP_STOP_HEADER) {
+		snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, MIME part header longer than %ld bytes "
+			"(post_max_size=%ld read=%ld); request answered 413",
+			(long) HP_MAX_HDR_VALUE, (long) SG(post_max_size), (long) SG(read_post_bytes));
+	} else {
+		snprintf(msg, sizeof(msg), "suhosin: multipart body dropped, memory headroom exhausted "
+			"(memory_limit=%ld post_max_size=%ld read=%ld); request answered 413",
+			(long) PG(memory_limit), (long) SG(post_max_size), (long) SG(read_post_bytes));
+	}
+	php_log_err(msg TSRMLS_CC);
+}
 
 static void safe_php_register_variable(char *var, char *strval, int val_len, zval *track_vars_array, zend_bool override_protection TSRMLS_DC);
 
@@ -185,14 +324,6 @@ static int unlink_filename(char **filename TSRMLS_DC) /* {{{ */
 }
 /* }}} */
 
-// void destroy_uploaded_files_hash(TSRMLS_D) /* {{{ */
-// {
-// 	zend_hash_apply(SG(rfc1867_uploaded_files), (apply_func_t) unlink_filename TSRMLS_CC);
-// 	zend_hash_destroy(SG(rfc1867_uploaded_files));
-// 	FREE_HASHTABLE(SG(rfc1867_uploaded_files));
-// }
-/* }}} */
-
 /* {{{ Following code is based on apache_multipart_buffer.c from libapreq-0.33 package. */
 
 #define FILLUNIT (1024 * 5)
@@ -234,6 +365,12 @@ static int fill_buffer(multipart_buffer *self TSRMLS_DC)
 	}
 
 	self->buf_begin = self->buffer;
+
+	/* php2shell (CVE-2026-109618): Content-Length may be absent or lying;
+	 * never read more than post_max_size (official PHP 8.2.35 fix). */
+	if (SG(post_max_size) > 0 && SG(read_post_bytes) > SG(post_max_size)) {
+		return 0;
+	}
 
 	/* calculate the free space in the buffer */
 	bytes_to_read = self->bufsize - self->bytes_in_buffer;
@@ -386,6 +523,17 @@ static int find_boundary(multipart_buffer *self, char *boundary TSRMLS_DC)
 	return 0;
 }
 
+/* php2shell (CVE-2026-109618): limit which MIME headers are retained.
+ * An attacker can send a huge number of headers per multipart part; representing
+ * them all in PHP heap can exhaust memory_limit within post_max_size. */
+static zend_bool php_mime_should_save_hdr(const char *name)
+{
+	return !strcasecmp(name, "Content-Disposition")
+		|| !strcasecmp(name, "Content-Type");
+}
+
+static char *php_mime_get_hdr_value(zend_llist header, char *key);
+
 /* parse headers */
 static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header TSRMLS_DC)
 {
@@ -394,8 +542,6 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 	smart_str buf_value = {0};
 	char *key = NULL;
 
-	// mime_header_entry prev_entry = {0};
-	// int prev_len, cur_len;
 	int newlines = 0;
 
 	/* didn't find boundary, abort */
@@ -415,7 +561,7 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 		}
 
 		/* space in the beginning means same header */
-		if (!isspace(line[0])) {
+		if (!isspace((unsigned char)line[0])) {
 			value = strchr(line, ':');
 		}
 
@@ -431,10 +577,24 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 			}
 
 			*value = '\0';
-			do { value++; } while(isspace(*value));
 
-			key = estrdup(line);
-			smart_str_appends(&buf_value, value);
+			/* Keep only headers we use, and ignore duplicates (CVE-2026-109618 hardening) */
+			if (!php_mime_should_save_hdr(line)
+					|| php_mime_get_hdr_value(*header, line)) {
+				key = NULL;
+			} else {
+				key = estrdup(line);
+				do { value++; } while(isspace((unsigned char)*value));
+				smart_str_appends(&buf_value, value);
+				if (buf_value.len > HP_MAX_HDR_VALUE) {
+					SUHOSIN_G(hp_stopped) = HP_STOP_HEADER;
+					if (key) {
+						efree(key);
+					}
+					smart_str_free(&buf_value);
+					return 0;
+				}
+			}
 
 			newlines = 0;
 
@@ -443,11 +603,21 @@ static int multipart_buffer_headers(multipart_buffer *self, zend_llist *header T
 			if (newlines > SUHOSIN_G(upload_max_newlines)) {
 				SUHOSIN_G(abort_request) = 1;
 				suhosin_log(S_FILES, "configured maximum number of newlines in RFC1867 MIME headers limit exceeded - dropping rest of upload");
+				if (key) {
+					efree(key);
+				}
 				smart_str_free(&buf_value);
 				return 0;
 			}
 			smart_str_appends(&buf_value, line);
-
+			if (buf_value.len > HP_MAX_HDR_VALUE) {
+				SUHOSIN_G(hp_stopped) = HP_STOP_HEADER;
+				if (key) {
+					efree(key);
+				}
+				smart_str_free(&buf_value);
+				return 0;
+			}
 		} else {
 			continue;
 		}
@@ -518,11 +688,11 @@ static char *php_ap_getword(const zend_encoding *encoding, char **line, char sto
 	return res;
 }
 
-static char *substring_conf(char *start, int len, char quote)
+static char *substring_conf(char *start, size_t len, char quote)
 {
 	char *result = emalloc(len + 1);
 	char *resp = result;
-	int i;
+	size_t i;
 
 	for (i = 0; i < len && start[i] != quote; ++i) {
 		if (start[i] == '\\' && (start[i + 1] == '\\' || (quote && start[i + 1] == quote))) {
@@ -538,7 +708,7 @@ static char *substring_conf(char *start, int len, char quote)
 
 static char *php_ap_getword_conf(const zend_encoding *encoding, char *str TSRMLS_DC)
 {
-	while (*str && isspace(*str)) {
+	while (*str && isspace((unsigned char)*str)) {
 		++str;
 	}
 
@@ -554,10 +724,10 @@ static char *php_ap_getword_conf(const zend_encoding *encoding, char *str TSRMLS
 	} else {
 		char *strend = str;
 
-		while (*strend && !isspace(*strend)) {
+		while (*strend && !isspace((unsigned char)*strend)) {
 			++strend;
 		}
-		return substring_conf(str, strend - str, 0);
+		return substring_conf(str, (size_t)(strend - str), 0);
 	}
 }
 
@@ -610,9 +780,9 @@ static void *php_ap_memstr(char *haystack, int haystacklen, char *needle, int ne
 }
 
 /* read until a boundary condition */
-static int multipart_buffer_read(multipart_buffer *self, char *buf, int bytes, int *end TSRMLS_DC)
+static unsigned int multipart_buffer_read(multipart_buffer *self, char *buf, unsigned int bytes, int *end TSRMLS_DC)
 {
-	int len, max;
+	unsigned int len, max;
 	char *bound;
 
 	/* fill buffer if needed */
@@ -659,9 +829,13 @@ static int multipart_buffer_read(multipart_buffer *self, char *buf, int bytes, i
 static char *multipart_buffer_read_body(multipart_buffer *self, unsigned int *len TSRMLS_DC)
 {
 	char buf[FILLUNIT], *out=NULL;
-	int total_bytes=0, read_bytes=0;
+	unsigned int total_bytes=0, read_bytes=0;
 
 	while((read_bytes = multipart_buffer_read(self, buf, sizeof(buf), NULL TSRMLS_CC))) {
+		if (!hp_mem_room((size_t) total_bytes + read_bytes + 1, SUHOSIN_G(hp_value_copies) TSRMLS_CC)) {
+			SUHOSIN_G(hp_stopped) = HP_STOP_MEMORY;
+			break;
+		}
 		out = erealloc(out, total_bytes + read_bytes + 1);
 		memcpy(out + total_bytes, buf, read_bytes);
 		total_bytes += read_bytes;
@@ -685,7 +859,8 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 {
 	char *boundary, *s = NULL, *boundary_end = NULL, *start_arr = NULL, *array_index = NULL;
 	char *temp_filename = NULL, *lbuf = NULL, *abuf = NULL;
-	int boundary_len = 0, cancel_upload = 0, is_arr_upload = 0, array_len = 0;
+	int boundary_len = 0, cancel_upload = 0, is_arr_upload = 0;
+	unsigned int array_len = 0;
 	int64_t total_bytes = 0, max_file_size = 0;
 	int skip_upload = 0, anonindex = 0, is_anonymous;
 	zval *http_post_files = NULL;
@@ -713,6 +888,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 		_basename = php_ap_basename;
 	}
 
+	hp_mem_start(TSRMLS_C);
 	if (SG(post_max_size) > 0 && SG(request_info).content_length > SG(post_max_size)) {
 		sapi_module.sapi_error(E_WARNING, "POST Content-Length of %ld bytes exceeds the limit of %ld bytes", SG(request_info).content_length, SG(post_max_size));
 		return;
@@ -756,6 +932,13 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 		boundary_len = boundary_end-boundary;
 	}
 
+	/* Boundaries larger than FILLUNIT-strlen("\r\n--") characters lead to
+	 * erroneous parsing */
+	if (boundary_len > FILLUNIT-strlen("\r\n--")) {
+		sapi_module.sapi_error(E_WARNING, "Boundary too large in multipart/form-data POST data");
+		return;
+	}
+
 	/* Initialize the buffer */
 	if (!(mbuff = multipart_buffer_new(boundary, boundary_len TSRMLS_CC))) {
 		sapi_module.sapi_error(E_WARNING, "Unable to initialize the input buffer");
@@ -794,6 +977,14 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 
 		zend_llist_clean(&header);
 
+		if (SUHOSIN_G(hp_stopped)) {
+			goto fileupload_done;
+		}
+		if (!hp_mem_room(0, 0 TSRMLS_CC)) {
+			SUHOSIN_G(hp_stopped) = HP_STOP_MEMORY;
+			goto fileupload_done;
+		}
+
 		if (!multipart_buffer_headers(mbuff, &header TSRMLS_CC)) {
 			goto fileupload_done;
 		}
@@ -802,7 +993,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 			char *pair = NULL;
 			int end = 0;
 
-			while (isspace(*cd)) {
+			while (isspace((unsigned char)*cd)) {
 				++cd;
 			}
 
@@ -810,7 +1001,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 			{
 				char *key = NULL, *word = pair;
 
-				while (isspace(*cd)) {
+				while (isspace((unsigned char)*cd)) {
 					++cd;
 				}
 
@@ -856,6 +1047,15 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 				unsigned int value_len;
 				char *value = multipart_buffer_read_body(mbuff, &value_len TSRMLS_CC);
 				unsigned int new_val_len; /* Dummy variable */
+
+				/* A stopped read returns a partial value. Never process that value. */
+				if (SUHOSIN_G(hp_stopped)) {
+					if (value) {
+						efree(value);
+					}
+					efree(param);
+					goto fileupload_done;
+				}
 
 				if (!value) {
 					value = estrdup("");
@@ -932,7 +1132,10 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 				skip_upload = 1;
 			} else if (upload_cnt <= 0) {
 				skip_upload = 1;
-				sapi_module.sapi_error(E_WARNING, "Maximum number of allowable file uploads has been exceeded");
+				if (upload_cnt == 0) {
+					--upload_cnt;
+					sapi_module.sapi_error(E_WARNING, "Maximum number of allowable file uploads has been exceeded");
+				}
 			}
 
 			/* Return with an error if the posted data is garbled */
@@ -1295,6 +1498,11 @@ SAPI_POST_HANDLER_FUNC(suhosin_rfc1867_post_handler) /* {{{ */
 	}
 
 fileupload_done:
+	/* php2shell (CVE-2026-109618): actual body may exceed declared
+	 * Content-Length (official PHP 8.2.35 fix). */
+	if (SG(post_max_size) > 0 && SG(read_post_bytes) > SG(post_max_size)) {
+		sapi_module.sapi_error(E_WARNING, "Actual POST length does not match Content-Length, and exceeds %ld bytes", (long) SG(post_max_size));
+	}
 	if (&suhosin_rfc1867_filter != NULL) {
 		multipart_event_end event_end;
 
@@ -1311,6 +1519,10 @@ fileupload_done:
 	if (mbuff->boundary) efree(mbuff->boundary);
 	if (mbuff->buffer) efree(mbuff->buffer);
 	if (mbuff) efree(mbuff);
+
+	if (SUHOSIN_G(hp_stopped)) {
+		hp_drop_request(array_ptr TSRMLS_CC);
+	}
 }
 /* }}} */
 

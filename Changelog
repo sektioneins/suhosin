@@ -8,6 +8,21 @@
     - better debian integration
     - fixed perdir checks
     - merged PHP changes to RFC1867 code
+    - multipart parser no longer passes upload events on to other extensions
+      (CVE-2026-109619, CVE-2026-115560). Session upload progress and the
+      PECL uploadprogress extension therefore do not work with Suhosin;
+      session.upload_progress.enabled is forced off and cannot be switched on.
+    - multipart parser stops before memory_limit is reached, drops the form
+      and answers 413 (CVE-2026-109618). The same happens for a MIME part
+      header longer than 64 KB. The reason is written to the error log.
+      An eighth of memory_limit, at least 4 MB, stays free, so with a
+      memory_limit of 8 MB or less every multipart form is refused. Forms
+      are refused earlier with auto_globals_jit=0 and when filter.default
+      selects a filter other than unsafe_raw, which need more memory before
+      the script starts.
+      Not covered: session.auto_start=1 reads the session before the script
+      starts, and a large session can still exhaust memory_limit there. Keep
+      session.auto_start off, or keep session data small.
 
 2015-05-21 - 0.9.38
     - removed code compatibility for PHP <5.4 (lots of code + ifdefs)

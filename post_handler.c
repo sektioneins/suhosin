@@ -180,8 +180,8 @@ SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
 		memset(&post_data, 0, sizeof(post_data));
 
 		while (!php_stream_eof(s)) {
-			char buf[BUFSIZ] = {0};
-			size_t len = php_stream_read(s, buf, BUFSIZ);
+			char buf[SAPI_POST_BLOCK_SIZE] = {0};
+			size_t len = php_stream_read(s, buf, SAPI_POST_BLOCK_SIZE);
 
 			if (len && len != (size_t) -1) {
 				smart_str_appendl(&post_data.str, buf, len);
@@ -194,7 +194,7 @@ SAPI_POST_HANDLER_FUNC(suhosin_std_post_handler)
 				}
 			}
 
-			if (len != BUFSIZ){
+			if (len != SAPI_POST_BLOCK_SIZE){
 				break;
 			}
 		}

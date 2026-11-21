@@ -251,10 +251,12 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 				multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
 
 				char *cp, *cpend;
+#ifdef SUHOSIN_EXPERIMENTAL
 				int n;
+#endif
 				cpend = mefd->data + mefd->length;
 				for (cp = mefd->data; cp < cpend; cp++) {
-					if (*cp >= 32 || isspace(*cp)) {
+					if (*cp >= 32 || isspace((unsigned char)*cp)) {
 						continue;
 					}
 #ifdef SUHOSIN_EXPERIMENTAL
@@ -278,10 +280,12 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 
 				multipart_event_file_data *mefd = (multipart_event_file_data *) event_data;
 				size_t i, j;
+#ifdef SUHOSIN_EXPERIMENTAL
 				int n;
+#endif
 
 				for (i=0, j=0; i<mefd->length; i++) {
-					if (mefd->data[i] >= 32 || isspace(mefd->data[i])) {
+					if (mefd->data[i] >= 32 || isspace((unsigned char)mefd->data[i])) {
 						mefd->data[j++] = mefd->data[i];
 					}
 #ifdef SUHOSIN_EXPERIMENTAL
@@ -323,7 +327,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 				}
 
 				/* ignore empty scriptnames */
-				while (isspace(*sname)) ++sname;
+				while (isspace((unsigned char)*sname)) ++sname;
 				if (*sname == 0) {
 					SUHOSIN_G(num_uploads)++;
 					break;
@@ -402,7 +406,7 @@ int suhosin_rfc1867_filter(unsigned int event, void *event_data, void **extra TS
 			goto continue_with_failure;
 	}
 continue_with_next:
-#if HAVE_RFC1867_CALLBACK
+#if HAVE_RFC1867_CALLBACK && SUHOSIN_FORWARD_RFC1867_CALLBACK
 	if (php_rfc1867_callback != NULL) {
 		return php_rfc1867_callback(event, event_data, extra TSRMLS_CC);
 	}

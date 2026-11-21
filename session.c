@@ -41,6 +41,7 @@
 
 #ifdef HAVE_PHP_SESSION
 #include "ext/session/php_session.h"
+#include "suhosin_rfc1867.h"
 
 #ifdef ZTS
 static ts_rsrc_id session_globals_id = 0;
@@ -260,13 +261,16 @@ static void suhosin_hook_session_module(TSRMLS_D)
 static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
 {
 	int r;
+	ps_module *original_mod = SUHOSIN_G(s_original_mod);
 
-	if (stage == PHP_INI_STAGE_RUNTIME && SESSION_G(session_status) == php_session_none && SUHOSIN_G(s_original_mod)
-		&& strcmp(new_value, "user") == 0 && strcmp(((ps_module*)SUHOSIN_G(s_original_mod))->s_name, "user") == 0) {
+	/* During runtime stage, to prevent infinite loops, only update when new value is different than original.
+	 * With an active session, pass the call on, so that ext/session refuses it with its warning. */
+	if (stage == PHP_INI_STAGE_RUNTIME && SESSION_G(session_status) == php_session_none
+		&& original_mod && strcasecmp(original_mod->s_name, new_value) == 0) {
 		return SUCCESS;
 	}
 
-	SESSION_G(mod) = SUHOSIN_G(s_original_mod);
+	SESSION_G(mod) = original_mod;
 
 	r = old_OnUpdateSaveHandler(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
 
@@ -275,6 +279,54 @@ static PHP_INI_MH(suhosin_OnUpdateSaveHandler)
 	return r;
 }
 
+
+#if !SUHOSIN_FORWARD_RFC1867_CALLBACK
+/* CVE-2026-109619, CVE-2026-115560: Suhosin's multipart parser does not pass upload events on to
+ * php_rfc1867_callback, so session upload progress never runs. session.upload_progress.enabled is forced
+ * off at startup and every attempt to switch it on fails, so that ini_get(), phpinfo() and ini_set() tell
+ * the truth. The refusal sits in on_modify rather than in the entry's modifiable flags, because php-fpm
+ * applies pool settings (php_value, php_admin_value) through on_modify without looking at those flags. */
+static ZEND_INI_MH((*old_OnUpdateUploadProgressEnabled)) = NULL;
+
+static zend_bool suhosin_ini_bool(const char *value, uint len)
+{
+	/* the same reading as OnUpdateBool */
+	if ((len == 2 && strcasecmp("on", value) == 0) || (len == 3 && strcasecmp("yes", value) == 0)
+		|| (len == 4 && strcasecmp("true", value) == 0)) {
+		return 1;
+	}
+	return atoi(value) != 0;
+}
+
+static PHP_INI_MH(suhosin_OnUpdateUploadProgressEnabled)
+{
+	if (new_value && suhosin_ini_bool(new_value, new_value_length)) {
+		return FAILURE;
+	}
+	return old_OnUpdateUploadProgressEnabled(entry, new_value, new_value_length, mh_arg1, mh_arg2, mh_arg3, stage TSRMLS_CC);
+}
+
+static void suhosin_lock_upload_progress(TSRMLS_D)
+{
+	zend_ini_entry *ini_entry;
+
+	if (old_OnUpdateUploadProgressEnabled != NULL) {
+		return;
+	}
+	if (zend_hash_find(EG(ini_directives), "session.upload_progress.enabled", sizeof("session.upload_progress.enabled"), (void **) &ini_entry) == FAILURE
+		|| ini_entry->on_modify == NULL) {
+		return;
+	}
+	if (ini_entry->on_modify(ini_entry, "0", 1, ini_entry->mh_arg1, ini_entry->mh_arg2, ini_entry->mh_arg3, ZEND_INI_STAGE_STARTUP TSRMLS_CC) != SUCCESS) {
+		return;
+	}
+	/* the old value belongs to the configuration hash or is the built-in default; neither is ours to free */
+	ini_entry->value = "0";
+	ini_entry->value_length = 1;
+	old_OnUpdateUploadProgressEnabled = ini_entry->on_modify;
+	ini_entry->on_modify = suhosin_OnUpdateUploadProgressEnabled;
+}
+#endif
 
 static int suhosin_hook_session_RINIT(INIT_FUNC_ARGS)
 {
@@ -293,9 +345,6 @@ void suhosin_hook_session(TSRMLS_D)
 	ps_serializer *serializer;
 	zend_ini_entry *ini_entry;
 	zend_module_entry *module;
-#ifdef ZTS
-	ts_rsrc_id *ps_globals_id_ptr;
-#endif
 
 	if (zend_hash_find(&module_registry, "session", sizeof("session"), (void**)&module) == FAILURE) {
 		return;
@@ -328,6 +377,10 @@ void suhosin_hook_session(TSRMLS_D)
 	/* replace OnUpdateMemoryLimit handler */
 	old_OnUpdateSaveHandler = ini_entry->on_modify;
 	ini_entry->on_modify = suhosin_OnUpdateSaveHandler;
+
+#if !SUHOSIN_FORWARD_RFC1867_CALLBACK
+	suhosin_lock_upload_progress(TSRMLS_C);
+#endif
 
 	suhosin_hook_session_module(TSRMLS_C);
 

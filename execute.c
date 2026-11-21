@@ -761,7 +761,7 @@ int ih_mail(IH_HANDLER_PARAMS)
 				tmp = strchr(to, '\r');
 			if (tmp == NULL) break;
 			to = tmp + 1;
-			if (!isspace(*to)) break;
+			if (!isspace((unsigned char)*to)) break;
 		} while (1);
 		if (tmp != NULL) {
 			suhosin_log(S_MAIL, "mail() - newline in To header, possible injection, mail dropped");
@@ -778,7 +778,7 @@ int ih_mail(IH_HANDLER_PARAMS)
 				tmp = strchr(subject, '\r');
 			if (tmp == NULL) break;
 			subject = tmp + 1;
-			if (!isspace(*subject)) break;
+			if (!isspace((unsigned char)*subject)) break;
 		} while (1);
 		if (tmp != NULL) {
 			suhosin_log(S_MAIL, "mail() - newline in Subject header, possible injection, mail dropped");
@@ -1325,12 +1325,15 @@ static void suhosin_gen_entropy(php_uint32 *entropybuf TSRMLS_DC)
     unsigned long stack_value = (unsigned long)&code_value;
     unsigned long heap_value  = (unsigned long)SUHOSIN_G(r_state);
     suhosin_SHA256_CTX   context;
+#ifndef PHP_WIN32
     int fd;
+#endif
 
+#if SIZEOF_LONG==8
     code_value ^= code_value >> 32;
     stack_value ^= stack_value >> 32;
     heap_value ^= heap_value >> 32;
-
+#endif
     seedbuf[0] = code_value;
     seedbuf[1] = stack_value;
     seedbuf[2] = heap_value;
@@ -1646,30 +1649,14 @@ internal_function_handler ihandlers[] = {
 
 static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, zend_fcall_info *fci, int return_value_used TSRMLS_DC)
 {
-	zval *return_value;
 	zval **return_value_ptr;
 	zval *this_ptr;
-	int ht;
-
-	if (fci) {
-		return_value = *fci->retval_ptr_ptr;
-		return_value_ptr = fci->retval_ptr_ptr;
-		this_ptr = fci->object_ptr;
-		ht = fci->param_count;
-	} else {
-		temp_variable *ret = &EX_T(execute_data_ptr->opline->result.var);
-		zend_function *fbc = execute_data_ptr->function_state.function;
-		return_value = ret->var.ptr;
-		return_value_ptr = (fbc->common.fn_flags & ZEND_ACC_RETURN_REFERENCE) ? &ret->var.ptr : NULL;
-		this_ptr = execute_data_ptr->object;
-		ht = execute_data_ptr->opline->extended_value;
-	}
 #else
 static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int return_value_used TSRMLS_DC)
 {
-	zval *return_value;
-	int ht = execute_data_ptr->opline->extended_value;
 #endif
+	zval *return_value;
+	int ht;
 	char *lcname;
 	int function_name_strlen, free_lcname = 0;
 	zend_class_entry *ce = NULL;
@@ -1691,10 +1678,6 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 		lcname[function_name_strlen] = 0;
 		zend_str_tolower(lcname, function_name_strlen);
 	}
-
-#if PHP_VERSION_ID < 50500
-	return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
-#endif
 
 	SDEBUG("function: %s", lcname);
 
@@ -1745,6 +1728,25 @@ static void suhosin_execute_internal(zend_execute_data *execute_data_ptr, int re
 
 		int retval = 0;
 		void *handler = ((zend_internal_function *) execute_data_ptr->function_state.function)->handler;
+
+#if PHP_VERSION_ID < 50500
+		return_value = (*(temp_variable *)((char *) execute_data_ptr->Ts + execute_data_ptr->opline->result.var)).var.ptr;
+		ht = execute_data_ptr->opline->extended_value;
+#else
+		if (fci) {
+			return_value = *fci->retval_ptr_ptr;
+			return_value_ptr = fci->retval_ptr_ptr;
+			this_ptr = fci->object_ptr;
+			ht = fci->param_count;
+		} else {
+			temp_variable *ret = &EX_T(execute_data_ptr->opline->result.var);
+			zend_function *fbc = execute_data_ptr->function_state.function;
+			return_value = ret->var.ptr;
+			return_value_ptr = (fbc->common.fn_flags & ZEND_ACC_RETURN_REFERENCE) ? &ret->var.ptr : NULL;
+			this_ptr = execute_data_ptr->object;
+			ht = execute_data_ptr->opline->extended_value;
+		}
+#endif
 
 		if (handler != ZEND_FN(display_disabled_function)) {
 		    retval = ih->handler(IH_HANDLER_PARAM_PASSTHRU);

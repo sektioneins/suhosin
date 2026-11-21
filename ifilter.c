@@ -390,7 +390,7 @@ unsigned int suhosin_input_filter(int arg, char *var, char **val, unsigned int v
 	}
 
 	/* Drop this variable if it begins with whitespace which is disallowed */
-	if (isspace(*var)) {
+	if (isspace((unsigned char)*var)) {
 		if (SUHOSIN_G(disallow_ws)) {
 			suhosin_log(S_VARS, "request variable name begins with disallowed whitespace - dropped variable '%s'", var);
 			if (!SUHOSIN_G(simulation)) {

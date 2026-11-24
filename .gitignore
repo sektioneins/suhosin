@@ -12,6 +12,7 @@
 /.libs/
 /Makefile
 /Makefile.*
+!/Makefile.frag
 /ac*.m4
 /autom4te.cache/
 /build/

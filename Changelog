@@ -42,6 +42,11 @@
       op_array. The script now also sees $SUHOSIN_ERROR inside functions.
     - multipart parser: a form field value of 2 GB or more drops the form
       (413) instead of wrapping a 32-bit length.
+    - build: every object now depends on the extension's headers, so make
+      rebuilds all of them after a header change. Before, objects built
+      against an old php_suhosin.h read the settings at the wrong place,
+      dropped valid variables and refused includes (#123). Run phpize and
+      configure once to pick this up.
 
 2015-05-21 - 0.9.38
     - removed code compatibility for PHP <5.4 (lots of code + ifdefs)

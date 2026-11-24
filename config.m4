@@ -5,7 +5,16 @@ PHP_ARG_ENABLE(suhosin, whether to enable suhosin support,
 [  --enable-suhosin        Enable suhosin support])
 
 if test "$PHP_SUHOSIN" != "no"; then
-  PHP_NEW_EXTENSION(suhosin, suhosin.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867_new.c log.c header.c execute.c ex_imp.c session.c aes.c crypt.c pledge.c, $ext_shared)
+  suhosin_sources="suhosin.c sha256.c memory_limit.c treat_data.c ifilter.c post_handler.c ufilter.c rfc1867_new.c log.c header.c execute.c ex_imp.c session.c aes.c crypt.c pledge.c"
+  PHP_NEW_EXTENSION(suhosin, $suhosin_sources, $ext_shared)
+
+  dnl object list for the header dependencies in Makefile.frag
+  SUHOSIN_OBJECTS=
+  for suhosin_src in $suhosin_sources; do
+    SUHOSIN_OBJECTS="$SUHOSIN_OBJECTS $ext_builddir/`echo $suhosin_src | $SED -e 's/\.c$/.lo/'`"
+  done
+  PHP_SUBST(SUHOSIN_OBJECTS)
+  PHP_ADD_MAKEFILE_FRAGMENT
 fi
 
 PHP_ARG_ENABLE(suhosin-experimental, whether to enable experimental suhosin features,
